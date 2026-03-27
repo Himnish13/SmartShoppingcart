@@ -1,72 +1,101 @@
-const db = require('../config/sqlite');
+const fs = require("fs");
+const path = require("path");
+const sqlite3 = require("sqlite3").verbose();
 
 function initializeTables() {
 
-  db.run(`
-  CREATE TABLE IF NOT EXISTS products (
-    product_id INTEGER PRIMARY KEY,
-    barcode TEXT UNIQUE,
-    name TEXT,
-    category TEXT,
-    price REAL,
-    node_id INTEGER
-  )
-`);
+  const dbPath = path.join(__dirname, "../../data/cart.db");
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS shopping_list (
-    product_id INTEGER PRIMARY KEY,
-    quantity INTEGER DEFAULT 1,
-    picked INTEGER DEFAULT 0,
-    FOREIGN KEY (product_id)
-      REFERENCES products(product_id)
-      ON DELETE CASCADE
-  )
-`);
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+    console.log("Old DB deleted");
+  }
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS cart_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id INTEGER,
-    quantity INTEGER DEFAULT 1,
-    price_at_scan REAL,
-    FOREIGN KEY (product_id)
-      REFERENCES products(product_id)
-      ON DELETE CASCADE
-  )
-`);
+  const db = new sqlite3.Database(dbPath);
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS sync_meta (
-    last_sync_time TEXT
-  )
-`);
+  db.serialize(() => {
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS user_session (
-    session_id TEXT PRIMARY KEY,
-    user_id INTEGER,
-    started_at TEXT
-  )
-`);
+    // ✅ products (will be filled after sync)
+    db.run(`
+      CREATE TABLE products (
+        product_id INTEGER PRIMARY KEY,
+        barcode TEXT UNIQUE,
+        name TEXT,
+        category TEXT,
+        price REAL,
+        node_id INTEGER
+      )
+    `);
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS beacons (
-    beacon_id TEXT PRIMARY KEY,
-    node_id INTEGER
-  )
-`);
+    // ✅ nodes (routing)
+    db.run(`
+      CREATE TABLE nodes (
+        node_id INTEGER PRIMARY KEY,
+        x REAL,
+        y REAL
+      )
+    `);
 
-db.get(`SELECT COUNT(*) AS c FROM sync_meta`, (err, row) => {
-  if (!err && row.c === 0) {
+    // ✅ edges (graph)
+    db.run(`
+      CREATE TABLE edges (
+        from_node INTEGER,
+        to_node INTEGER,
+        distance REAL
+      )
+    `);
+
+    // ✅ beacons
+    db.run(`
+      CREATE TABLE beacons (
+        beacon_id TEXT PRIMARY KEY,
+        node_id INTEGER
+      )
+    `);
+
+    // ✅ cart_items
+    db.run(`
+      CREATE TABLE cart_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER,
+        quantity INTEGER DEFAULT 1,
+        price_at_scan REAL
+      )
+    `);
+
+    // ✅ shopping_list
+    db.run(`
+      CREATE TABLE shopping_list (
+        product_id INTEGER,
+        quantity INTEGER DEFAULT 1,
+        picked INTEGER DEFAULT 0,
+        picked_quantity INTEGER DEFAULT 0
+      )
+    `);
+
+    // ✅ user_session
+    db.run(`
+      CREATE TABLE user_session (
+        session_id TEXT PRIMARY KEY,
+        user_id INTEGER,
+        started_at TEXT
+      )
+    `);
+
+    // ✅ sync_meta
+    db.run(`
+      CREATE TABLE sync_meta (
+        last_sync_time TEXT
+      )
+    `);
+
     db.run(
       `INSERT INTO sync_meta (last_sync_time) VALUES (?)`,
       ["1970-01-01T00:00:00"]
     );
-  }
-});
 
-console.log("Cart DB tables ready (with FKs)");
+    console.log("Cart DB initialized with all tables (empty)");
+  });
 }
 
 module.exports = initializeTables;

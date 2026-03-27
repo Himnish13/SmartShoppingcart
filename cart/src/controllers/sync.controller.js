@@ -1,62 +1,74 @@
 const db = require("../config/sqlite");
-const axios = require("axios");
 
 exports.fullSync = async (req, res) => {
     try {
-        const response = await axios.get("http://MAIN_SERVER_URL/full-sync");
 
-        const { products, nodes, edges, category, beacons } = response.data;
+        // ✅ MOCK SERVER RESPONSE (replace later)
+        const response = {
+            data: {
+                last_updated: "2026-03-27T18:00:00Z",
+                products: [
+                    { product_id: 1, barcode: "111", name: "Milk", category: "Dairy", price: 50, node_id: 2 }
+                ],
+                nodes: [
+                    { node_id: 1, x: 0, y: 0 },
+                    { node_id: 2, x: 1, y: 1 }
+                ],
+                edges: [
+                    { from_node: 1, to_node: 2, distance: 1 }
+                ],
+                beacons: []
+            }
+        };
 
-        db.serialize(() => {
+        const { last_updated, products, nodes, edges, beacons } = response.data;
 
-            // clear old data
-            db.run(`DELETE FROM products`);
-            db.run(`DELETE FROM nodes`);
-            db.run(`DELETE FROM edges`);
-            db.run(`DELETE FROM category`);
-            db.run(`DELETE FROM beacons`);
+        // ✅ Check last sync time
+        db.get(`SELECT last_sync_time FROM sync_meta`, (err, row) => {
 
-            // insert products
-            products.forEach(p => {
-                db.run(
-                    `INSERT INTO products 
-                     (product_id, barcode, name, category, price, node_id)
-                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    [p.product_id, p.barcode, p.name, p.category, p.price, p.node_id]
-                );
-            });
+            const lastSync = row.last_sync_time;
 
-            // insert nodes
-            nodes.forEach(n => {
-                db.run(
-                    `INSERT INTO nodes (node_id, x, y)
-                     VALUES (?, ?, ?)`,
-                    [n.node_id, n.x, n.y]
-                );
-            });
-
-            // insert edges
-            edges.forEach(e => {
-                db.run(
-                    `INSERT INTO edges (from_node, to_node, distance)
-                     VALUES (?, ?, ?)`,
-                    [e.from_node, e.to_node, e.distance]
-                );
-            });
-
-            // insert category
-            if (category) {
-                category.forEach(c => {
-                    db.run(
-                        `INSERT INTO category (category_id, name)
-                         VALUES (?, ?)`,
-                        [c.category_id, c.name]
-                    );
+            // 🧠 compare timestamps
+            if (last_updated <= lastSync) {
+                return res.json({
+                    message: "No changes, sync skipped"
                 });
             }
 
-            // insert beacons
-            if (beacons) {
+            console.log("Changes detected → syncing...");
+
+            db.serialize(() => {
+
+                db.run(`DELETE FROM products`);
+                db.run(`DELETE FROM nodes`);
+                db.run(`DELETE FROM edges`);
+                db.run(`DELETE FROM beacons`);
+
+                products.forEach(p => {
+                    db.run(
+                        `INSERT INTO products 
+                         (product_id, barcode, name, category, price, node_id)
+                         VALUES (?, ?, ?, ?, ?, ?)`,
+                        [p.product_id, p.barcode, p.name, p.category, p.price, p.node_id]
+                    );
+                });
+
+                nodes.forEach(n => {
+                    db.run(
+                        `INSERT INTO nodes (node_id, x, y)
+                         VALUES (?, ?, ?)`,
+                        [n.node_id, n.x, n.y]
+                    );
+                });
+
+                edges.forEach(e => {
+                    db.run(
+                        `INSERT INTO edges (from_node, to_node, distance)
+                         VALUES (?, ?, ?)`,
+                        [e.from_node, e.to_node, e.distance]
+                    );
+                });
+
                 beacons.forEach(b => {
                     db.run(
                         `INSERT INTO beacons (beacon_id, node_id)
@@ -64,25 +76,21 @@ exports.fullSync = async (req, res) => {
                         [b.beacon_id, b.node_id]
                     );
                 });
-            }
 
-            // update sync meta
-            db.run(
-                `DELETE FROM sync_meta`
-            );
+                // ✅ update sync time
+                db.run(
+                    `UPDATE sync_meta SET last_sync_time = ?`,
+                    [last_updated]
+                );
+            });
 
-            db.run(
-                `INSERT INTO sync_meta (last_sync_time) VALUES (?)`,
-                [new Date().toISOString()]
-            );
+            res.json({
+                message: "Sync completed",
+                synced_at: last_updated
+            });
         });
-
-        res.json({ message: "Full sync completed successfully" });
 
     } catch (err) {
-        res.status(500).json({
-            message: "Full sync failed",
-            error: err.message
-        });
+        res.status(500).json({ error: err.message });
     }
 };
