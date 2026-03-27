@@ -10,26 +10,33 @@ exports.syncList = (req, res) => {
     db.serialize(() => {
         db.run(`DELETE FROM shopping_list`);
 
+        let done = 0;
+
         items.forEach(item => {
             db.get(
-                `SELECT product_id FROM products WHERE name LIKE ?`,
-                [`%${item.name}%`],
+                `SELECT product_id FROM products 
+                 WHERE LOWER(name) LIKE LOWER(?)`,
+                [`%${item.name.trim()}%`],
                 (err, product) => {
+
                     if (product) {
                         db.run(
-                            `INSERT INTO shopping_list (product_id, quantity, picked)
+                            `INSERT INTO shopping_list 
+                             (product_id, quantity, picked)
                              VALUES (?, ?, 0)`,
                             [product.product_id, item.quantity || 1]
                         );
+                    }
+
+                    done++;
+                    if (done === items.length) {
+                        res.json({ message: "Shopping list synced" });
                     }
                 }
             );
         });
     });
-
-    res.json({ message: "Shopping list synced" });
 };
-
 exports.getList = (req, res) => {
     db.all(
         `SELECT s.product_id, p.name, p.barcode, s.quantity, s.picked
