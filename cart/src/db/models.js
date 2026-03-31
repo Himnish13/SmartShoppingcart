@@ -1,72 +1,81 @@
-const db = require('../config/sqlite');
+const fs = require("fs");
+const path = require("path");
+const sqlite3 = require("sqlite3").verbose();
 
 function initializeTables() {
 
-  db.run(`
-  CREATE TABLE IF NOT EXISTS products (
-    product_id INTEGER PRIMARY KEY,
-    barcode TEXT UNIQUE,
-    name TEXT,
-    category TEXT,
-    price REAL,
-    node_id INTEGER
-  )
-`);
+  const dbPath = path.join(__dirname, "../../data/cart.db");
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS shopping_list (
-    product_id INTEGER PRIMARY KEY,
-    quantity INTEGER DEFAULT 1,
-    picked INTEGER DEFAULT 0,
-    FOREIGN KEY (product_id)
-      REFERENCES products(product_id)
-      ON DELETE CASCADE
-  )
-`);
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS cart_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id INTEGER,
-    quantity INTEGER DEFAULT 1,
-    price_at_scan REAL,
-    FOREIGN KEY (product_id)
-      REFERENCES products(product_id)
-      ON DELETE CASCADE
-  )
-`);
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS sync_meta (
-    last_sync_time TEXT
-  )
-`);
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS user_session (
-    session_id TEXT PRIMARY KEY,
-    user_id INTEGER,
-    started_at TEXT
-  )
-`);
-
-db.run(`
-  CREATE TABLE IF NOT EXISTS beacons (
-    beacon_id TEXT PRIMARY KEY,
-    node_id INTEGER
-  )
-`);
-
-db.get(`SELECT COUNT(*) AS c FROM sync_meta`, (err, row) => {
-  if (!err && row.c === 0) {
-    db.run(
-      `INSERT INTO sync_meta (last_sync_time) VALUES (?)`,
-      ["1970-01-01T00:00:00"]
-    );
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath);
+    console.log("Old DB deleted");
   }
-});
 
-console.log("Cart DB tables ready (with FKs)");
+  const db = new sqlite3.Database(dbPath);
+
+  db.serialize(() => {
+
+    db.run(`CREATE TABLE products (
+      product_id INTEGER PRIMARY KEY,
+      barcode TEXT,
+      name TEXT,
+      category TEXT,
+      price REAL,
+      node_id INTEGER
+    )`);
+
+    db.run(`CREATE TABLE nodes (
+      node_id INTEGER PRIMARY KEY,
+      x REAL,
+      y REAL
+    )`);
+
+    db.run(`CREATE TABLE edges (
+      from_node INTEGER,
+      to_node INTEGER,
+      distance REAL
+    )`);
+
+    db.run(`CREATE TABLE beacons (
+      beacon_id TEXT PRIMARY KEY,
+      node_id INTEGER
+    )`);
+
+    // ✅ NEW TABLE
+    db.run(`CREATE TABLE offers (
+      offer_id INTEGER PRIMARY KEY,
+      product_id INTEGER,
+      node_id INTEGER,
+      discount REAL
+    )`);
+
+    db.run(`CREATE TABLE cart_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER,
+      quantity INTEGER,
+      price_at_scan REAL
+    )`);
+
+    db.run(`CREATE TABLE shopping_list (
+      product_id INTEGER,
+      quantity INTEGER,
+      picked INTEGER DEFAULT 0,
+      picked_quantity INTEGER DEFAULT 0
+    )`);
+
+    db.run(`CREATE TABLE user_session (
+      session_id TEXT PRIMARY KEY,
+      started_at TEXT
+    )`);
+
+    db.run(`CREATE TABLE sync_meta (
+      last_sync_time TEXT
+    )`);
+
+    db.run(`INSERT INTO sync_meta VALUES ('1970-01-01T00:00:00Z')`);
+
+    console.log("Cart DB ready with offers table");
+  });
 }
 
 module.exports = initializeTables;
