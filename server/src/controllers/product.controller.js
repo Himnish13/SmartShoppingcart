@@ -43,8 +43,58 @@ async function searchProducts(req, res) {
   }
 }
 
+async function addProduct(req, res) {
+  try {
+    const result = await productService.addProduct(req.body);
+    res.json({ message: "Product added", id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function updateProduct(req, res) {
+  try {
+    await productService.updateProduct(req.params.id, req.body);
+    res.json({ message: "Product updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function toggleProduct(req, res) {
+  try {
+    await productService.toggleProduct(req.params.id, req.body.is_active);
+    res.json({ message: "Status updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function updateStock(req, res) {
+  try {
+    await productService.updateStock(req.params.id, req.body.stock);
+    res.json({ message: "Stock updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function deleteProduct(req, res) {
+  try {
+    await productService.deleteProduct(req.params.id);
+    res.json({ message: "Product deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getProductByBarcode,
   getAllProducts,
-  searchProducts
+  searchProducts,
+  addProduct,
+  updateProduct,
+  toggleProduct,
+  updateStock,
+  deleteProduct
 };

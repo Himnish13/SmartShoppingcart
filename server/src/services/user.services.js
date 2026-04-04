@@ -1,5 +1,39 @@
-const db = require("../config/db");
+const userModel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const db = require("../config/db");
+
+const SECRET = process.env.JWT_SECRET || "smartcart_secret";
+
+async function login(identifier, password) {
+  const user = await userModel.findUser(identifier);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password_hash);
+
+  if (!isMatch) {
+    throw new Error("Invalid password");
+  }
+
+  const token = jwt.sign(
+    {
+      user_id: user.user_id,
+      role: user.role
+    },
+    SECRET,
+    { expiresIn: "1d" }
+  );
+
+  return {
+    message: "Login successful",
+    token,
+    role: user.role,
+    user_id: user.user_id
+  };
+}
 function addUser(data) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -22,7 +56,6 @@ function addUser(data) {
   });
 }
 
-// DELETE STAFF
 function deleteStaff(user_id) {
   return new Promise((resolve, reject) => {
     db.query(
@@ -36,7 +69,6 @@ function deleteStaff(user_id) {
   });
 }
 
-// GET ALL STAFF
 function getStaff() {
   return new Promise((resolve, reject) => {
     db.query(
@@ -50,26 +82,10 @@ function getStaff() {
     );
   });
 }
-function findUser(identifier) {
-  return new Promise((resolve, reject) => {
-
-    const query = `
-      SELECT * FROM users
-      WHERE (user_id = ? OR phone_number = ?)
-      AND is_active = 1
-    `;
-
-    db.query(query, [identifier, identifier], (err, results) => {
-      if (err) return reject(err);
-      resolve(results[0] || null);
-    });
-  });
-}
-
 
 module.exports = {
-    findUser,
+  login,
     addUser,
     deleteStaff,
-    getStaff,
+    getStaff
 };

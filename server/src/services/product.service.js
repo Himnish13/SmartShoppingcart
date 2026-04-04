@@ -14,8 +14,34 @@ async function fetchProductByBarcode(barcode) {
 async function searchProducts(name, category) {
   return await productModel.searchProductsFromDB(name, category);
 }
+
+function addProduct(data) {
+  return productModel.insertProduct(data);
+}
+
+function updateProduct(id, data) {
+  return productModel.updateProduct(id, data);
+}
+
+function toggleProduct(id, status) {
+  return productModel.toggleProduct(id, status);
+}
+
+function updateStock(id, stock) {
+  return productModel.updateStock(id, stock);
+}
+
+function deleteProduct(id) {
+  return productModel.deleteProduct(id);
+}
+
 module.exports = {
   fetchAllProducts,
   fetchProductByBarcode,
-  searchProducts
+  searchProducts,
+  addProduct,
+  updateProduct,
+  toggleProduct,
+  updateStock,
+  deleteProduct
 };
