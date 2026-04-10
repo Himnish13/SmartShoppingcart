@@ -9,7 +9,6 @@ exports.syncList = (req, res) => {
 
     db.serialize(() => {
 
-        // ✅ 1. Store user_id in session
         if (user_id) {
             db.run(
                 `UPDATE user_session SET user_id = ? WHERE session_id = ?`,
@@ -17,7 +16,7 @@ exports.syncList = (req, res) => {
             );
         }
 
-        // ✅ 2. Clear old list
+       
         db.run(`DELETE FROM shopping_list`);
 
         let done = 0;

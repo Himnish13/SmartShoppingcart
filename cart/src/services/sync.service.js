@@ -3,18 +3,17 @@ const db = require("../config/sqlite");
 
 const SERVER_URL = "http://MAIN_SERVER_URL";
 
-// 🔥 helper to get cart_id
+
 function getCartId(callback) {
     db.get(`SELECT cart_id FROM user_session LIMIT 1`, (err, row) => {
         if (err || !row) {
             console.log("Cart ID not found");
-            return callback("C1"); // fallback
+            return callback("C1"); 
         }
         callback(row.cart_id);
     });
 }
 
-// ✅ Send Shopping List
 exports.sendShoppingList = () => {
 
     getCartId((cart_id) => {
@@ -33,7 +32,7 @@ exports.sendShoppingList = () => {
     });
 };
 
-// ✅ Send Cart Items (Billing)
+
 exports.sendCartItems = () => {
 
     getCartId((cart_id) => {
@@ -63,7 +62,7 @@ exports.sendCartItems = () => {
     });
 };
 
-// ✅ Send Position
+
 exports.sendPosition = (node_id) => {
 
     getCartId(async (cart_id) => {

@@ -11,7 +11,7 @@ function updatePosition(node) {
 
     console.log("📍 Node changed:", node);
 
-    // ✅ Update DB
+  
     db.run(
         `UPDATE cart_position 
          SET node_id = ?, updated_at = datetime('now') 
@@ -19,11 +19,11 @@ function updatePosition(node) {
         [node]
     );
 
-    // ✅ Send immediately
+    
     positionService.sendPosition(node);
 }
 
-// 🔥 resend periodically (reliability)
+
 function startAutoSync() {
 
     setInterval(() => {
@@ -38,7 +38,7 @@ function startAutoSync() {
             }
         );
 
-    }, 5000); // every 5 sec
+    }, 5000); 
 }
 
 module.exports = { updatePosition, startAutoSync };

@@ -35,12 +35,12 @@ exports.getRoute = (req, res) => {
             let targets = rows.map(r => r.node_id);
             targets = targets.filter(node => graph[node]);
 
-            // ✅ GET CROWD DATA
+    
             crowdService.getCrowdData((crowdData) => {
 
                 console.log("Crowd:", crowdData);
 
-                // ✅ MULTI ROUTE (CROWD AWARE)
+               
                 if (targets.length > 0) {
 
                     const path = multiRoute(
@@ -59,7 +59,7 @@ exports.getRoute = (req, res) => {
                     });
                 }
 
-                // ✅ SINGLE ROUTE (CROWD AWARE)
+           
                 if (productId) {
 
                     db.get(

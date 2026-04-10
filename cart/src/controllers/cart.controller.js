@@ -18,7 +18,7 @@ exports.addItem = (req, res) => {
 
                     let discount = offer ? offer.discount : 0;
 
-                    // ✅ CALCULATE FINAL PRICE
+                    
                     let finalPrice = product.price * (1 - discount / 100);
 
                     db.get(
@@ -37,11 +37,10 @@ exports.addItem = (req, res) => {
                                 db.run(
                                     `INSERT INTO cart_items (product_id, quantity, price_at_scan) 
                                      VALUES (?, ?, ?)`,
-                                    [product.product_id, qty, finalPrice]  // ✅ USE UPDATED PRICE
+                                    [product.product_id, qty, finalPrice]  
                                 );
                             }
 
-                            // shopping_list logic unchanged
                             db.run(
                                 `UPDATE shopping_list
                                  SET picked_quantity = picked_quantity + ?,

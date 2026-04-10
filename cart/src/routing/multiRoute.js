@@ -16,12 +16,12 @@ function multiRoute(graph, start, targets, heuristic, crowdData) {
 
             if (!graph[target]) continue;
 
-            // ✅ pass crowdData
+            
             const path = aStar(graph, current, target, heuristic, crowdData);
 
             if (!path) continue;
 
-            // ✅ cost already includes crowd
+           
             const cost = path.length;
 
             if (cost < bestCost) {

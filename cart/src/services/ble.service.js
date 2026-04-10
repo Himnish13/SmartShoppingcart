@@ -17,7 +17,7 @@ function startBLE() {
         const beaconId = peripheral.id;
         const rssi = peripheral.rssi;
 
-        if (rssi < -75) return; // filter weak signals
+        if (rssi < -75) return; 
 
         db.get(
             `SELECT node_id FROM beacons WHERE beacon_id = ?`,
