@@ -28,7 +28,7 @@ exports.fullSync = async (req, res) => {
             }
         };
 
-        const { last_updated, products, nodes, edges, offers, beacons } = response.data;
+        const { last_updated, products, nodes, edges, offers, beacons,crowd} = response.data;
 
         db.get(`SELECT last_sync_time FROM sync_meta`, (err, row) => {
 
@@ -43,6 +43,7 @@ exports.fullSync = async (req, res) => {
                 db.run(`DELETE FROM edges`);
                 db.run(`DELETE FROM offers`);
                 db.run(`DELETE FROM beacons`);
+                db.run(`DELETE FROM crowd`);
 
                 products.forEach(p => {
                     db.run(`INSERT INTO products VALUES (?, ?, ?, ?, ?, ?)`,
@@ -58,6 +59,16 @@ exports.fullSync = async (req, res) => {
                     db.run(`INSERT INTO edges VALUES (?, ?, ?)`,
                         [e.from_node, e.to_node, e.distance]);
                 });
+
+                if (crowd) {
+                    crowd.forEach(c => {
+                        db.run(
+                            `INSERT INTO crowd (node_id, density, last_updated)
+                            VALUES (?, ?, ?)`,
+                            [c.node_id, c.density, c.last_updated]
+                        );
+                    });
+                }
 
                 offers.forEach(o => {
                     db.run(`INSERT INTO offers VALUES (?, ?, ?, ?)`,
