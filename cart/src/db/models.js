@@ -41,7 +41,6 @@ function initializeTables() {
       node_id INTEGER
     )`);
 
-    // ✅ NEW TABLE
     db.run(`CREATE TABLE offers (
       offer_id INTEGER PRIMARY KEY,
       product_id INTEGER,
@@ -63,8 +62,11 @@ function initializeTables() {
       picked_quantity INTEGER DEFAULT 0
     )`);
 
+    // ✅ UPDATED user_session with cart_id
     db.run(`CREATE TABLE user_session (
       session_id TEXT PRIMARY KEY,
+      user_id INTEGER,
+      cart_id TEXT,
       started_at TEXT
     )`);
 
@@ -74,8 +76,21 @@ function initializeTables() {
 
     db.run(`INSERT INTO sync_meta VALUES ('1970-01-01T00:00:00Z')`);
 
-    console.log("Cart DB ready with offers table");
+    // ✅ INSERT DEFAULT SESSION (IMPORTANT)
+    db.run(
+      `INSERT INTO user_session (session_id, user_id, cart_id, started_at)
+       VALUES (?, ?, ?, datetime('now'))`,
+      ["session1", 1, "C1"]
+    );
+
+    console.log("Cart DB ready with cart_id support");
   });
+
+  return db;
 }
 
 module.exports = initializeTables;
+
+if (require.main === module) {
+  initializeTables();
+}

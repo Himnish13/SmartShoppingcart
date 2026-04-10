@@ -13,6 +13,9 @@ const multiRoute = require("../routing/multiRoute");
 //         const path = aStar(graph, startNode, goalNode, heuristic);
 //     });
 // });
+
+const crowdService = require("../services/crowd.service");
+
 exports.getRoute = (req, res) => {
     const { startNode, productId } = req.body;
 
@@ -26,50 +29,71 @@ exports.getRoute = (req, res) => {
          JOIN products p ON s.product_id = p.product_id`,
         [],
         (err, rows) => {
-            if (err) return res.status(500).json(err);
 
-            console.log("DB rows:", rows);
+            if (err) return res.status(500).json(err);
 
             let targets = rows.map(r => r.node_id);
             targets = targets.filter(node => graph[node]);
 
-            console.log("Targets:", targets);
+            // ✅ GET CROWD DATA
+            crowdService.getCrowdData((crowdData) => {
 
-            // ✅ MULTI ROUTE
-            if (targets.length > 0) {
-                const path = multiRoute(graph, startNode, targets, heuristic);
+                console.log("Crowd:", crowdData);
+
+                // ✅ MULTI ROUTE (CROWD AWARE)
+                if (targets.length > 0) {
+
+                    const path = multiRoute(
+                        graph,
+                        startNode,
+                        targets,
+                        heuristic,
+                        crowdData   // 🔥 NEW
+                    );
+
+                    return res.json({
+                        type: "multi",
+                        targets,
+                        path,
+                        crowd: crowdData
+                    });
+                }
+
+                // ✅ SINGLE ROUTE (CROWD AWARE)
+                if (productId) {
+
+                    db.get(
+                        `SELECT node_id FROM products WHERE product_id = ?`,
+                        [productId],
+                        (err, product) => {
+
+                            if (!product || !graph[product.node_id]) {
+                                return res.status(404).json({ message: "Invalid product node" });
+                            }
+
+                            const path = aStar(
+                                graph,
+                                startNode,
+                                product.node_id,
+                                heuristic,
+                                crowdData   // 🔥 NEW
+                            );
+
+                            return res.json({
+                                type: "single",
+                                path,
+                                crowd: crowdData
+                            });
+                        }
+                    );
+                    return;
+                }
 
                 return res.json({
-                    type: "multi",
-                    targets,
-                    path
+                    type: "none",
+                    path: [],
+                    message: "No shopping list or product selected"
                 });
-            }
-
-            // ✅ SINGLE ROUTE
-            if (productId) {
-                db.get(
-                    `SELECT node_id FROM products WHERE product_id = ?`,
-                    [productId],
-                    (err, product) => {
-                        if (!product || !graph[product.node_id]) {
-                            return res.status(404).json({ message: "Invalid product node" });
-                        }
-
-                        const path = aStar(graph, startNode, product.node_id, heuristic);
-
-                        return res.json({
-                            type: "single",
-                            path
-                        });
-                    }
-                );
-                return;
-            }
-            return res.json({
-                type: "none",
-                path: [],
-                message: "No shopping list or product selected"
             });
         }
     );
