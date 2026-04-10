@@ -82,6 +82,15 @@ function initializeTables() {
        VALUES (?, ?, ?, datetime('now'))`,
       ["session1", 1, "C1"]
     );
+    db.run(`CREATE TABLE cart_position (
+      id INTEGER PRIMARY KEY,
+      node_id INTEGER,
+      updated_at TEXT
+    )`);
+
+    // insert initial row
+    db.run(`INSERT INTO cart_position (id, node_id, updated_at)
+            VALUES (1, NULL, datetime('now'))`);
 
     console.log("Cart DB ready with cart_id support");
   });
