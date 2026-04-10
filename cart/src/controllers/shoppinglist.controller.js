@@ -16,16 +16,20 @@ exports.syncList = (req, res) => {
             );
         }
 
-       
         db.run(`DELETE FROM shopping_list`);
 
         let done = 0;
 
         items.forEach(item => {
             db.get(
-                `SELECT product_id FROM products WHERE LOWER(name) LIKE LOWER(?)`,
+                `SELECT product_id 
+                 FROM products 
+                 WHERE LOWER(name) LIKE LOWER(?) 
+                 LIMIT 1`,
                 [`%${item.name.trim()}%`],
                 (err, product) => {
+
+                    if (err) return res.status(500).json(err);
 
                     if (product) {
                         db.run(
@@ -47,9 +51,16 @@ exports.syncList = (req, res) => {
 
 exports.getList = (req, res) => {
     db.all(
-        `SELECT s.product_id, p.name, p.barcode, s.quantity, s.picked
+        `SELECT 
+            s.product_id, 
+            p.name, 
+            p.barcode, 
+            s.quantity, 
+            s.picked,
+            c.category_name
          FROM shopping_list s
-         JOIN products p ON s.product_id = p.product_id`,
+         JOIN products p ON s.product_id = p.product_id
+         LEFT JOIN category c ON p.category_id = c.category_id`,
         [],
         (err, rows) => {
             if (err) return res.status(500).json(err);
@@ -57,8 +68,10 @@ exports.getList = (req, res) => {
         }
     );
 };
+
 exports.clearList = (req, res) => {
-    db.run(`DELETE FROM shopping_list`, () => {
+    db.run(`DELETE FROM shopping_list`, (err) => {
+        if (err) return res.status(500).json(err);
         res.json({ message: "Shopping list cleared" });
     });
 };

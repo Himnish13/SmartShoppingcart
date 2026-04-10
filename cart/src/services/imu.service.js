@@ -1,15 +1,15 @@
-function startIMU(onMove) {
+// function startIMU(onMove) {
 
-    setInterval(() => {
+//     setInterval(() => {
 
-        const moving = Math.random() > 0.6;
+//         const moving = Math.random() > 0.6;
 
-        if (moving) {
-            console.log("🚶 Movement detected");
-            onMove();
-        }
+//         if (moving) {
+//             console.log("🚶 Movement detected");
+//             onMove();
+//         }
 
-    }, 3000);
-}
+//     }, 3000);
+// }
 
-module.exports = { startIMU };
+// module.exports = { startIMU };

@@ -10,15 +10,13 @@ exports.addItem = (req, res) => {
         (err, product) => {
             if (err) return res.status(500).json(err);
             if (!product) return res.status(404).json({ message: "Product not found" });
-            
+
             db.get(
                 `SELECT discount FROM offers WHERE product_id = ?`,
                 [product.product_id],
                 (err, offer) => {
 
-                    let discount = offer ? offer.discount : 0;
-
-                    
+                    let discount = offer?.discount || 0;
                     let finalPrice = product.price * (1 - discount / 100);
 
                     db.get(
@@ -37,7 +35,7 @@ exports.addItem = (req, res) => {
                                 db.run(
                                     `INSERT INTO cart_items (product_id, quantity, price_at_scan) 
                                      VALUES (?, ?, ?)`,
-                                    [product.product_id, qty, finalPrice]  
+                                    [product.product_id, qty, finalPrice]
                                 );
                             }
 
@@ -50,7 +48,7 @@ exports.addItem = (req, res) => {
                                      END
                                  WHERE product_id = ?`,
                                 [qty, qty, product.product_id],
-                                () => res.json({ 
+                                () => res.json({
                                     message: "Item added & updated",
                                     price_at_scan: finalPrice,
                                     discount_applied: discount
@@ -63,11 +61,19 @@ exports.addItem = (req, res) => {
         }
     );
 };
+
 exports.getItems = (req, res) => {
     db.all(
-        `SELECT c.id, p.name, p.barcode, c.quantity, c.price_at_scan 
+        `SELECT 
+            c.id, 
+            p.name, 
+            p.barcode, 
+            c.quantity, 
+            c.price_at_scan,
+            cat.category_name
          FROM cart_items c 
-         JOIN products p ON c.product_id = p.product_id`,
+         JOIN products p ON c.product_id = p.product_id
+         LEFT JOIN category cat ON p.category_id = cat.category_id`,
         [],
         (err, rows) => {
             if (err) return res.status(500).json(err);
@@ -120,7 +126,6 @@ exports.removeItem = (req, res) => {
                             [newQty, product.product_id]
                         );
 
-                        // ✅ CORRECT LOGIC
                         db.run(
                             `UPDATE shopping_list
                              SET picked_quantity = MAX(picked_quantity - ?, 0),

@@ -1,44 +1,44 @@
-const db = require("../config/sqlite");
-const positionService = require("./sync.service");
+// const db = require("../config/sqlite");
+// const positionService = require("./sync.service");
 
-let currentNode = null;
+// let currentNode = null;
 
-function updatePosition(node) {
+// function updatePosition(node) {
 
-    if (node === currentNode) return;
+//     if (node === currentNode) return;
 
-    currentNode = node;
+//     currentNode = node;
 
-    console.log("📍 Node changed:", node);
+//     console.log("📍 Node changed:", node);
 
   
-    db.run(
-        `UPDATE cart_position 
-         SET node_id = ?, updated_at = datetime('now') 
-         WHERE id = 1`,
-        [node]
-    );
+//     db.run(
+//         `UPDATE cart_position 
+//          SET node_id = ?, updated_at = datetime('now') 
+//          WHERE id = 1`,
+//         [node]
+//     );
 
     
-    positionService.sendPosition(node);
-}
+//     positionService.sendPosition(node);
+// }
 
 
-function startAutoSync() {
+// function startAutoSync() {
 
-    setInterval(() => {
+//     setInterval(() => {
 
-        db.get(
-            `SELECT node_id FROM cart_position WHERE id = 1`,
-            (err, row) => {
+//         db.get(
+//             `SELECT node_id FROM cart_position WHERE id = 1`,
+//             (err, row) => {
 
-                if (!row || row.node_id == null) return;
+//                 if (!row || row.node_id == null) return;
 
-                positionService.sendPosition(row.node_id);
-            }
-        );
+//                 positionService.sendPosition(row.node_id);
+//             }
+//         );
 
-    }, 5000); 
-}
+//     }, 5000); 
+// }
 
-module.exports = { updatePosition, startAutoSync };
+// module.exports = { updatePosition, startAutoSync };

@@ -11,13 +11,14 @@ exports.getNearbyRecommendations = (req, res) => {
     db.all(`SELECT * FROM offers`, [], (err, offers) => {
 
         db.all(
-            `SELECT p.category 
+            `SELECT c.category_name 
              FROM shopping_list s
-             JOIN products p ON s.product_id = p.product_id`,
+             JOIN products p ON s.product_id = p.product_id
+             JOIN category c ON p.category_id = c.category_id`,
             [],
             (err, shopping) => {
 
-                const categories = shopping.map(s => s.category);
+                const categories = shopping.map(s => s.category_name);
 
                 const result = [];
 
@@ -31,13 +32,16 @@ exports.getNearbyRecommendations = (req, res) => {
                     if (distance <= MAX_DISTANCE) {
 
                         db.get(
-                            `SELECT name, category FROM products WHERE product_id = ?`,
+                            `SELECT p.name, c.category_name 
+                             FROM products p
+                             JOIN category c ON p.category_id = c.category_id
+                             WHERE p.product_id = ?`,
                             [o.product_id],
                             (err, product) => {
 
                                 if (!product) return;
 
-                                if (categories.includes(product.category)) {
+                                if (categories.includes(product.category_name)) {
 
                                     result.push({
                                         product_id: o.product_id,

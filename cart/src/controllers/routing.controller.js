@@ -1,10 +1,13 @@
+
+
 const db = require("../config/sqlite");
 
-const graph = require("../routing/graph");        // ✅ ADD THIS
+const graph = require("../routing/graph");
 const heuristic = require("../routing/heuristic");
 const aStar = require("../routing/astar");
 const multiRoute = require("../routing/multiRoute");
 
+const crowdService = require("../services/crowd.service");
 // const loadGraph = require("../routing/graphLoader");
 // const getHeuristic = require("../routing/heuristic");
 
@@ -13,9 +16,6 @@ const multiRoute = require("../routing/multiRoute");
 //         const path = aStar(graph, startNode, goalNode, heuristic);
 //     });
 // });
-
-const crowdService = require("../services/crowd.service");
-
 exports.getRoute = (req, res) => {
     const { startNode, productId } = req.body;
 
@@ -26,7 +26,8 @@ exports.getRoute = (req, res) => {
     db.all(
         `SELECT p.node_id 
          FROM shopping_list s
-         JOIN products p ON s.product_id = p.product_id`,
+         JOIN products p ON s.product_id = p.product_id
+         WHERE p.node_id IS NOT NULL`,
         [],
         (err, rows) => {
 
@@ -35,12 +36,10 @@ exports.getRoute = (req, res) => {
             let targets = rows.map(r => r.node_id);
             targets = targets.filter(node => graph[node]);
 
-    
             crowdService.getCrowdData((crowdData) => {
 
                 console.log("Crowd:", crowdData);
 
-               
                 if (targets.length > 0) {
 
                     const path = multiRoute(
@@ -48,7 +47,7 @@ exports.getRoute = (req, res) => {
                         startNode,
                         targets,
                         heuristic,
-                        crowdData   // 🔥 NEW
+                        crowdData
                     );
 
                     return res.json({
@@ -59,7 +58,6 @@ exports.getRoute = (req, res) => {
                     });
                 }
 
-           
                 if (productId) {
 
                     db.get(
@@ -67,7 +65,9 @@ exports.getRoute = (req, res) => {
                         [productId],
                         (err, product) => {
 
-                            if (!product || !graph[product.node_id]) {
+                            if (err) return res.status(500).json(err);
+
+                            if (!product || !product.node_id || !graph[product.node_id]) {
                                 return res.status(404).json({ message: "Invalid product node" });
                             }
 
@@ -76,7 +76,7 @@ exports.getRoute = (req, res) => {
                                 startNode,
                                 product.node_id,
                                 heuristic,
-                                crowdData   // 🔥 NEW
+                                crowdData
                             );
 
                             return res.json({
