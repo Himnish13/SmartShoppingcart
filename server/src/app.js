@@ -8,7 +8,10 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
-// routes
+
+
+app.use("/admin", require("./routes/admin.routes"));
+app.use("/staff", require("./routes/staff.routes"));
 app.use("/sync", require("./routes/sync.routes"));
 app.use("/products", require("./routes/products.routes"));
 app.use("/users", require("./routes/users.routes"));

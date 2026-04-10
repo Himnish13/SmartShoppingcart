@@ -1,11 +1,11 @@
 const mysql = require("mysql2");
 
 const db = mysql.createConnection({
-  host: "127.0.0.1",        // better than localhost (avoids IPv6 issues)
-  port: 3307,               // ✅ explicit MySQL port
-  user: "root",
-  password: "root",
-  database: "main_server"   // 🔥 FIX: match your actual DB name (lowercase)
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "11111111",
+  database: process.env.DB_NAME || "Main_Server",
 });
 
 db.connect(err => {

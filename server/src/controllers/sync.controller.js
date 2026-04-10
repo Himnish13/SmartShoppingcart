@@ -1,22 +1,78 @@
-const { fetchProducts, fetchMap } = require("../services/sync.service");
+const syncService = require("../services/sync.service");
 
-async function getProducts(req, res) {
+// FULL SYNC
+const fullSync = async (req, res) => {
   try {
-    const lastSync = req.query.lastSync;
-    const data = await fetchProducts(lastSync);
+    const data = await syncService.fetchFullSync();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: "Sync failed" });
+    console.error(err);
+    res.status(500).json({ error: "Full sync failed" });
   }
-}
+};
 
-async function getMap(req, res) {
+// INDIVIDUAL SYNC
+
+const syncProducts = async (req, res) => {
   try {
-    const map = await fetchMap();
-    res.json(map);
+    const data = await syncService.fetchProductsSync();
+    res.json(data);
   } catch (err) {
-    res.status(500).json({ error: "Map fetch failed" });
+    res.status(500).json({ error: "Products sync failed" });
   }
-}
+};
 
-module.exports = { getProducts, getMap };
+const syncOffers = async (req, res) => {
+  try {
+    const data = await syncService.fetchOffersSync();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Offers sync failed" });
+  }
+};
+
+const syncCrowd = async (req, res) => {
+  try {
+    const data = await syncService.fetchCrowdSync();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Crowd sync failed" });
+  }
+};
+
+const syncNodes = async (req, res) => {
+  try {
+    const data = await syncService.fetchNodesSync();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Nodes sync failed" });
+  }
+};
+
+const syncEdges = async (req, res) => {
+  try {
+    const data = await syncService.fetchEdgesSync();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Edges sync failed" });
+  }
+};
+
+const syncCategories = async (req, res) => {
+  try {
+    const data = await syncService.fetchCategoriesSync();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Categories sync failed" });
+  }
+};
+
+module.exports = {
+  fullSync,
+  syncProducts,
+  syncOffers,
+  syncCrowd,
+  syncNodes,
+  syncEdges,
+  syncCategories
+};
