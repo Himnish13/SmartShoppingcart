@@ -1,0 +1,365 @@
+.review-container {
+  display: flex;
+  gap: 32px;
+  padding: 28px;
+  background: #f5f5f5;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+
+.review-container .left {
+  flex: 2;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 26px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.review-container .back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: #f3f1ff;
+  color: #2b2b2b;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 650;
+  margin-bottom: 14px;
+}
+
+.review-container .back-btn:hover {
+  filter: brightness(0.98);
+}
+
+.review-container .header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.review-container .left h2 {
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.review-container .total-items {
+  font-size: 14px;
+  color: #2b2b2b;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.review-container .search-row {
+  position: relative;
+  margin: 10px 0 14px;
+}
+
+.review-container .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.review-container .search {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px 0 42px;
+  border-radius: 14px;
+  border: none;
+  outline: none;
+  background: #c8c6f3;
+  color: #1f1f1f;
+}
+
+.review-container .search::placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.review-container .category-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 18px;
+  flex-wrap: wrap;
+}
+
+.review-container .category-label {
+  font-size: 14px;
+  color: #2b2b2b;
+  opacity: 0.85;
+  margin-right: 2px;
+}
+
+.review-container .category-pill {
+  border: none;
+  background: transparent;
+  color: #2b2b2b;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.review-container .category-pill.active {
+  background: #f3f1ff;
+}
+
+.review-container .items {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.review-container .items::-webkit-scrollbar {
+  width: 10px;
+}
+
+.review-container .items::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 999px;
+}
+
+.review-container .items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.review-container .item-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.review-container .item-image {
+  width: 78px;
+  height: 78px;
+  border-radius: 16px;
+  background: #f6e7cf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.review-container .item-image img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.review-container .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-container .info h4 {
+  font-size: 18px;
+  font-weight: 650;
+  margin: 0 0 6px 0;
+  color: #1f1f1f;
+}
+
+.review-container .info p {
+  font-size: 14px;
+  margin: 0;
+  color: #6b6b6b;
+}
+
+.review-container .qty-controls {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-container .qty-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #f3f1ff;
+  color: #2b2b2b;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-container .qty-btn:hover {
+  filter: brightness(0.98);
+}
+
+.review-container .qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 650;
+  color: #1f1f1f;
+  font-size: 14px;
+}
+
+.review-container .remove {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #f6d38b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.review-container .remove:hover {
+  filter: brightness(0.97);
+}
+
+.review-container .right {
+  flex: 1;
+  background: #f6e7cf;
+  border-radius: 22px;
+  padding: 42px 34px;
+  min-height: calc(100vh - 56px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.review-container .right-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: -10px;
+  margin-bottom: 14px;
+}
+
+.review-container .right-indicator span {
+  width: 10px;
+  height: 6px;
+  border-radius: 6px;
+  background: #f3d39a;
+}
+
+.review-container .right-top {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.review-container .right h2 {
+  font-size: 36px;
+  margin: 0 0 10px 0;
+  font-weight: 750;
+  color: #1f1f1f;
+}
+
+.review-container .right p {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 15px;
+}
+
+.review-container .smart-title {
+  margin-top: 26px;
+  margin-bottom: 12px;
+  font-weight: 650;
+  color: #2b2b2b;
+}
+
+.review-container .suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.review-container .suggestion-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.review-container .suggestion-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.review-container .suggestion-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #f6e7cf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.review-container .suggestion-img img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.review-container .suggestion-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2b2b2b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-container .suggestion-card button {
+  background: #f6d38b;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.review-container .route-btn {
+  margin: 52px auto 0;
+  display: block;
+  width: min(360px, 100%);
+  height: 52px;
+  background: #6159c9;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 10px 18px rgba(97, 89, 201, 0.25);
+}
+
+.review-container .route-btn:hover {
+  filter: brightness(0.98);
+}
+
+@media (max-width: 980px) {
+  .review-container {
+    flex-direction: column;
+  }
+  .review-container .right {
+    min-height: unset;
+  }
+}
