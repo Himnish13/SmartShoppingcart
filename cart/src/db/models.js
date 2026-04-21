@@ -33,6 +33,7 @@ function initializeTables() {
     db.run(`CREATE TABLE products (
       product_id INTEGER PRIMARY KEY,
       barcode TEXT UNIQUE,
+      image_url TEXT,
       name TEXT,
       price REAL,
       category_id INTEGER,
