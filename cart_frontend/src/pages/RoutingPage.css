@@ -494,13 +494,157 @@
   font-size: 12px;
 }
 
-/* ===== ROUTE ACTIONS ===== */
-.route-actions {
+/* ===== ROUTE STEP WITH MAP ===== */
+.route-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.routing-container.route-step {
+  transition: all 0.3s ease;
+}
+
+.routing-container.fullscreen-active {
+  padding: 0;
+}
+
+.routing-container.fullscreen-active .routing-header {
+  display: none;
+}
+
+/* ===== ROUTE INFO GRID ===== */
+.route-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.route-card {
+  background: #f8f6ff;
+  border: 1px solid #e8e5ff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.route-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin: 0 0 12px 0;
+}
+
+.route-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.route-stat span {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.route-stat strong {
+  color: #6159c9;
+  font-weight: 700;
+}
+
+.crowd-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.crowd-zone {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.crowd-zone span:first-child {
+  color: rgba(0, 0, 0, 0.65);
+  font-weight: 500;
+}
+
+.density {
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.density.high {
+  background: #ffe0e0;
+  color: #c00000;
+}
+
+.density.medium {
+  background: #fff5e0;
+  color: #ff9500;
+}
+
+.density.low {
+  background: #e0ffe0;
+  color: #00aa00;
+}
+
+/* ===== ROUTE ACTIONS SECTION ===== */
+.route-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 12px;
+}
+
+.route-buttons {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid #f0f0f0;
+  justify-content: flex-end;
+}
+
+.route-buttons .action-btn {
+  min-width: 140px;
+}
+
+/*===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .routing-content {
+    grid-template-columns: 1fr;
+  }
+
+  .route-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .routing-container {
+    padding: 12px;
+  }
+
+  .routing-header {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .selection-panel,
+  .route-info-grid {
+    padding: 16px;
+  }
+
+  .route-buttons {
+    flex-direction: column;
+  }
+
+  .route-buttons .action-btn {
+    width: 100%;
+  }
 }
 
 /* ===== RESPONSIVE ===== */

@@ -11,6 +11,7 @@ const shoppingListRoutes = require("./routes/shoppinglist.routes");
 const routingRoutes = require("./routes/routing.routes");
 const syncRoutes = require("./routes/sync.routes");
 const recRoutes = require("./routes/recommendations.routes");
+const positionRoutes = require("./routes/position.routes");
 // const { initPositionSystem } = require("./services/position.system");
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
@@ -18,6 +19,7 @@ app.use("/shopping-list", shoppingListRoutes);
 app.use("/routing", routingRoutes);
 app.use("/sync", syncRoutes);
 app.use("/recommend", recRoutes);
+app.use("/position", positionRoutes);
 
 
 // initPositionSystem();

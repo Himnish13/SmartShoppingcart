@@ -1,0 +1,77 @@
+.route-visualization {
+  width: 100%;
+  border-radius: 18px;
+  padding: 16px;
+
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Header */
+.route-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.route-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.route-length {
+  font-size: 12px;
+  background: #dcfce7;
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+/* List */
+.route-simple-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.route-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f9fafb;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.route-dot {
+  width: 10px;
+  height: 10px;
+  background: #6366f1;
+  border-radius: 50%;
+}
+
+/* Aisles */
+.aisles-summary {
+  margin-top: 12px;
+}
+
+.aisles-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.aisle-card {
+  background: #eef2ff;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* 📱 Responsive */
+@media (max-width: 600px) {
+  .route-row {
+    font-size: 13px;
+  }
+}

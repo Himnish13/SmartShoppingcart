@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./RoutingPage.css";
 import { useNavigate } from "react-router-dom";
+import MapDisplay from "../components/MapDisplay";
+import ProgressTracker from "../components/ProgressTracker";
+import RouteVisualization from "../components/RouteVisualization";
+import { routingService } from "../services/routing.service";
 
 const RoutingPage = () => {
   const [items, setItems] = useState([]);
@@ -9,8 +13,14 @@ const RoutingPage = () => {
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState(null);
   const [crowdData, setCrowdData] = useState(null);
+  const [storeLayout, setStoreLayout] = useState(null);
+  const [mapNodes, setMapNodes] = useState({});
+  const [currentPosition, setCurrentPosition] = useState(null);
+  const [hasBackendPosition, setHasBackendPosition] = useState(false);
   const [error, setError] = useState("");
   const [step, setStep] = useState("select"); // "select" or "route"
+  const [fullscreen, setFullscreen] = useState(false);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   const fetchJson = async (url, options) => {
@@ -47,8 +57,108 @@ const RoutingPage = () => {
     }
   };
 
+  // ✅ FETCH MAP DATA
+  const fetchMapData = async () => {
+    try {
+      const [nodesResponse, layoutResponse] = await Promise.all([
+        routingService.fetchMapNodes(),
+        routingService.fetchStoreLayout(),
+      ]);
+      if (nodesResponse) setMapNodes(nodesResponse);
+      if (layoutResponse) setStoreLayout(layoutResponse);
+    } catch (err) {
+      console.error("Failed to fetch map data:", err);
+    }
+  };
+
   useEffect(() => {
     fetchShoppingList();
+    fetchMapData();
+  }, []);
+
+  // ✅ LIVE MOVEMENT (smooth playback along the generated path)
+  useEffect(() => {
+    if (hasBackendPosition) return;
+    if (!route?.path || !mapNodes || Object.keys(mapNodes).length === 0) {
+      setCurrentPosition(null);
+      return;
+    }
+
+    const ids = route.path
+      .map((id) => (id === null || id === undefined ? null : String(id)))
+      .filter(Boolean);
+
+    const points = ids
+      .map((id) => mapNodes[id])
+      .filter(Boolean)
+      .map((n) => ({ x: n.x, y: n.y }));
+
+    if (points.length < 2) {
+      setCurrentPosition(null);
+      return;
+    }
+
+    const segments = [];
+    let total = 0;
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i];
+      const b = points[i + 1];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      segments.push({ a, b, len, start: total, end: total + len });
+      total += len;
+    }
+
+    if (total <= 0) {
+      setCurrentPosition(null);
+      return;
+    }
+
+    const speedUnitsPerSec = 1.25;
+    let raf = 0;
+    let startTs = 0;
+    const tick = (ts) => {
+      if (!startTs) startTs = ts;
+      const elapsed = (ts - startTs) / 1000;
+      const dist = (elapsed * speedUnitsPerSec) % total;
+
+      const seg = segments.find((s) => dist >= s.start && dist <= s.end) || segments[0];
+      const t = seg.len > 0 ? (dist - seg.start) / seg.len : 0;
+      const x = seg.a.x + (seg.b.x - seg.a.x) * t;
+      const y = seg.a.y + (seg.b.y - seg.a.y) * t;
+      const heading = Math.atan2(seg.b.y - seg.a.y, seg.b.x - seg.a.x);
+      setCurrentPosition({ x, y, heading });
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [route, mapNodes, hasBackendPosition]);
+
+  // ✅ REALTIME POSITION FROM BACKEND (BLE+IMU fusion)
+  useEffect(() => {
+    let alive = true;
+    let timer = null;
+
+    async function poll() {
+      const snapshot = await routingService.fetchCurrentPosition();
+      if (!alive) return;
+
+      if (snapshot && snapshot.x !== null && snapshot.x !== undefined && snapshot.y !== null && snapshot.y !== undefined) {
+        setHasBackendPosition(true);
+        setCurrentPosition({ x: snapshot.x, y: snapshot.y, heading: snapshot.heading });
+      } else {
+        setHasBackendPosition(false);
+      }
+    }
+
+    poll();
+    timer = setInterval(poll, 300);
+
+    return () => {
+      alive = false;
+      if (timer) clearInterval(timer);
+    };
   }, []);
 
   // ✅ HANDLE SELECT ALL
@@ -90,25 +200,12 @@ const RoutingPage = () => {
 
       console.log("📍 Generating route for products:", Array.from(selectedItems));
 
-      const response = await fetch("http://localhost:3500/routing/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          startNode: startNode,
-          productIds: Array.from(selectedItems),
-        }),
-      });
+      const routeData = await routingService.generateRoute(
+        startNode,
+        Array.from(selectedItems)
+      );
 
-      console.log("🔄 Response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Backend error:", errorData);
-        throw new Error(errorData.message || "Failed to generate route");
-      }
-
-      const routeData = await response.json();
-      console.log("✅ Route generated:", routeData);
+      console.log("✅ Route data received:", routeData);
       setRoute(routeData);
       setCrowdData(routeData.crowd);
       setStep("route");
@@ -246,148 +343,173 @@ const RoutingPage = () => {
     );
   }
 
-  // ✅ RENDER ROUTE STEP
+  // ✅ RENDER ROUTE STEP WITH MAP
+  const routeItems = Array.isArray(route?.items)
+    ? route.items
+    : Array.isArray(route?.selectedProducts)
+      ? route.selectedProducts
+      : [];
+
+  const remainingItems = routeItems.filter((i) => {
+    const picked = Number(i?.picked_quantity || 0);
+    const qty = Number(i?.quantity || 0);
+    return qty > picked;
+  });
+
+  const filteredRemaining = (() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return remainingItems;
+    return remainingItems.filter((i) => String(i?.name || "").toLowerCase().includes(q));
+  })();
+
   return (
-    <div className="routing-container">
-      <div className="routing-header">
-        <button 
-          type="button"
-          className="routing-back-btn"
-          onClick={() => setStep("select")}
-        >
-          ← Back to Selection
-        </button>
-        <h1>Your Shopping Route</h1>
-        <p>Follow the route for an optimized shopping experience</p>
-      </div>
+    <div className={`routing-shell ${fullscreen ? "fullscreen-active" : ""}`}>
+      {/* LEFT SIDEBAR (5 options) */}
+      {!fullscreen && (
+        <aside className="routing-sidebar">
+          <h2 className="routing-logo">
+            <span className="routing-logo-icon">🛒</span> Smart Cart
+          </h2>
+          <nav className="routing-menu">
+            <button type="button" className="routing-menu-item" onClick={() => navigate("/home")}
+              title="Home">
+              <span className="routing-menu-icon">🏠</span>
+              <span>Home</span>
+            </button>
+            <button type="button" className="routing-menu-item routing-menu-item-active" title="Explore">
+              <span className="routing-menu-icon">🧭</span>
+              <span>Explore</span>
+            </button>
+            <button type="button" className="routing-menu-item" title="ItemsAdded">
+              <span className="routing-menu-icon">🧺</span>
+              <span>ItemsAdded</span>
+            </button>
+            <button type="button" className="routing-menu-item" onClick={() => navigate("/review-list")} title="List">
+              <span className="routing-menu-icon">📋</span>
+              <span>List</span>
+            </button>
+            <button type="button" className="routing-menu-item" title="Offers">
+              <span className="routing-menu-icon">🏷️</span>
+              <span>Offers</span>
+            </button>
+          </nav>
+        </aside>
+      )}
 
-      <div className="route-content">
-        <div className="route-display">
-          <div className="route-map">
-            <div className="map-placeholder">
-              <svg viewBox="0 0 400 300" className="store-map">
-                {/* Simple store layout */}
-                <rect x="10" y="10" width="380" height="280" fill="#f5f5f5" stroke="#999" strokeWidth="2" />
-                
-                {/* Aisles */}
-                {[1, 2, 3, 4, 5].map((aisle) => (
-                  <g key={aisle}>
-                    <line
-                      x1={50 + aisle * 60}
-                      y1="40"
-                      x2={50 + aisle * 60}
-                      y2="260"
-                      stroke="#ddd"
-                      strokeWidth="1"
-                    />
-                    <text
-                      x={50 + aisle * 60}
-                      y="35"
-                      textAnchor="middle"
-                      fontSize="12"
-                      fill="#666"
-                    >
-                      A{aisle}
-                    </text>
-                  </g>
-                ))}
-
-                {/* Start point */}
-                <circle cx="20" cy="150" r="8" fill="#6159c9" />
-                <text x="20" y="180" textAnchor="middle" fontSize="12" fill="#666">
-                  START
-                </text>
-
-                {/* Route path */}
-                {route?.path && route.path.length > 1 && (
-                  <polyline
-                    points={route.path.map(node => `${node.x || 100},${node.y || 150}`).join(" ")}
-                    fill="none"
-                    stroke="#f6d38b"
-                    strokeWidth="3"
-                    opacity="0.7"
-                  />
-                )}
-              </svg>
-            </div>
+      {/* CENTER */}
+      <main className="routing-main">
+        {!fullscreen && (
+          <div className="routing-main-header">
+            <h1>Explore</h1>
           </div>
+        )}
 
-          <div className="route-details">
-            <div className="route-info-card">
-              <h3>📍 Route Information</h3>
-              <div className="route-stat">
-                <span>Type:</span>
-                <strong>{route?.type === "multi" ? "Multi-Location Route" : "Single Location Route"}</strong>
-              </div>
-              <div className="route-stat">
-                <span>Stops:</span>
-                <strong>{route?.targets?.length || 0} locations</strong>
-              </div>
-              <div className="route-stat">
-                <span>Total Steps:</span>
-                <strong>{route?.path?.length || 0}</strong>
-              </div>
+        <div className="routing-map-card">
+          <MapDisplay
+            storeLayout={storeLayout}
+            nodes={mapNodes}
+            path={route?.path}
+            currentPosition={currentPosition}
+            fullscreen={fullscreen}
+            onFullscreenToggle={() => setFullscreen(!fullscreen)}
+          />
+        </div>
+
+        {!fullscreen && (
+          <section className="routing-bottom">
+            <div className="routing-card">
+              <ProgressTracker
+                totalItems={route?.totalItems || routeItems.length || 0}
+                completed={route?.completed || 0}
+                items={routeItems}
+              />
             </div>
 
-            <div className="route-info-card">
-              <h3>👥 Crowd Data</h3>
+            <div className="routing-card routing-crowd-card">
+              <div className="routing-card-header">
+                <h3>Crowd detection</h3>
+                <span className="routing-card-sub">Live aisle density</span>
+              </div>
+
               {crowdData ? (
-                <>
-                  <div className="crowd-info">
-                    {Object.entries(crowdData).map(([zone, density]) => (
-                      <div key={zone} className="crowd-zone">
-                        <span className="zone-name">{zone}:</span>
+                <div className="routing-crowd-list">
+                  {Object.entries(crowdData)
+                    .slice(0, 4)
+                    .map(([zone, density]) => (
+                      <div key={zone} className="routing-crowd-row">
+                        <span className="routing-crowd-zone">{zone}</span>
                         <span className={`density ${density > 0.7 ? "high" : density > 0.4 ? "medium" : "low"}`}>
                           {Math.round(density * 100)}%
                         </span>
                       </div>
                     ))}
-                  </div>
-                </>
+                </div>
               ) : (
-                <p>No crowd data available</p>
+                <p className="routing-muted">No crowd data</p>
               )}
-            </div>
 
-            <div className="route-info-card">
-              <h3>🛒 Selected Products ({selectedItems.size})</h3>
-              <div className="selected-items-preview">
-                {items
-                  .filter(item => selectedItems.has(item.product_id))
-                  .slice(0, 5)
-                  .map((item) => (
-                    <div key={item.product_id} className="preview-item">
-                      <img src={item.image_url} alt={item.name} />
-                      <span title={item.name}>{item.name}</span>
-                    </div>
-                  ))}
-                {selectedItems.size > 5 && (
-                  <div className="preview-item more">
-                    +{selectedItems.size - 5} more
-                  </div>
-                )}
+              <div className="routing-actions">
+                <button type="button" className="action-btn secondary" onClick={() => setStep("select")}>
+                  Modify Route
+                </button>
+                <button type="button" className="action-btn primary" onClick={() => navigate("/home")}>
+                  Start Shopping
+                </button>
               </div>
             </div>
-          </div>
-        </div>
+          </section>
+        )}
+      </main>
 
-        <div className="route-actions">
-          <button
-            type="button"
-            className="action-btn secondary"
-            onClick={() => setStep("select")}
-          >
-            Modify Selection
-          </button>
-          <button
-            type="button"
-            className="action-btn primary"
-            onClick={() => navigate("/home")}
-          >
-            Start Shopping
-          </button>
-        </div>
-      </div>
+      {/* RIGHT PANEL: Items Remaining */}
+      {!fullscreen && (
+        <aside className="routing-right">
+          <div className="routing-search-wrap">
+            <span className="routing-search-icon" aria-hidden="true">🔎</span>
+            <input
+              className="routing-search"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <h3 className="routing-right-title">Items remaining:</h3>
+
+          {filteredRemaining.length === 0 ? (
+            <p className="routing-muted">No remaining items</p>
+          ) : (
+            <div className="routing-remaining-list">
+              {filteredRemaining.slice(0, 8).map((item, idx) => {
+                const key = item.product_id || `${item.name}-${idx}`;
+                const picked = Number(item?.picked_quantity || 0);
+                const qty = Number(item?.quantity || 0);
+                const remaining = Math.max(0, qty - picked);
+                return (
+                  <div key={key} className="routing-remaining-row">
+                    <img
+                      className="routing-remaining-img"
+                      src={item.image_url}
+                      alt={item.name}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                    <div className="routing-remaining-info">
+                      <strong className="routing-remaining-name">{item.name}</strong>
+                      <span className="routing-remaining-qty">Remaining: {remaining}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {filteredRemaining.length > 8 && (
+            <div className="routing-more">+{filteredRemaining.length - 8} more</div>
+          )}
+        </aside>
+      )}
     </div>
   );
 };

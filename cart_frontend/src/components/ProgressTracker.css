@@ -1,0 +1,102 @@
+.progress-tracker {
+  width: 100%;
+  border-radius: 18px;
+  padding: 16px;
+
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Header */
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.progress-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.progress-count {
+  font-size: 12px;
+  background: #eef2ff;
+  color: #6366f1;
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+/* Layout */
+.progress-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Circle */
+.progress-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: conic-gradient(#6366f1 0% 45%, #e5e7eb 45%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Info */
+.progress-info-box {
+  display: flex;
+  gap: 10px;
+}
+
+.mini-card {
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.mini-card p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.mini-card span {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* Items */
+.items-breakdown {
+  margin-top: 10px;
+}
+
+.item-compact {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.item-compact.completed {
+  background: #dcfce7;
+}
+
+/* 📱 Responsive */
+@media (max-width: 700px) {
+  .progress-main {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progress-circle {
+    width: 65px;
+    height: 65px;
+  }
+}
