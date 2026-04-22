@@ -5,10 +5,16 @@ import CreateListPage from "./pages/CreateListPage";
 import ReviewListPage from "./pages/ReviewListPage";
 import RoutingPage from "./pages/RoutingPage";
 import HomePage from "./pages/HomePage";
+import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
+import GlobalHeader from "./components/GlobalHeader";
+import SettingsModal from "./components/SettingsModal";
 
 function App() {
   return (
     <BrowserRouter>
+      <GlobalHeader />
+      <VirtualKeyboardGlobal />
+      <SettingsModal />
       <Routes>
         <Route path="/" element={<StartPage />} />
         <Route path="/list-choice" element={<ListChoicePage />} />

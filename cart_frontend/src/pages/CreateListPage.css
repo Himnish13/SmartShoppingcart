@@ -44,6 +44,81 @@
   width: 100%;
 }
 
+/* Paste import box */
+.paste-box {
+  margin: 16px 0;
+  background: linear-gradient(90deg, #ffffff, #fbfbff);
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.06);
+}
+
+.paste-title {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.paste-textarea {
+  width: 100%;
+  min-height: 90px;
+  border-radius: 10px;
+  border: 1px solid #e6e6f2;
+  padding: 10px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.paste-suggestions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.paste-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid #f0f0f6;
+}
+
+.paste-suggestion img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.paste-actions { margin-top: 10px; }
+.import-btn { background: #6b63c6; color: #fff; padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer; }
+
+/* virtual keyboard */
+.vk-toggle {
+  background: #fff;
+  border: 1px solid #e6e6f2;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.virtual-keyboard {
+  margin-top: 10px;
+  background: linear-gradient(180deg,#fff,#fafaff);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.06);
+  max-width: 520px;
+}
+.vk-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px }
+.vk-key { padding:8px 10px; border-radius:6px; border:1px solid #f0f0f8; background:#fff; cursor:pointer }
+.vk-wide { padding:8px 26px }
+
 h3 {
   margin: 25px 0 15px;
 }

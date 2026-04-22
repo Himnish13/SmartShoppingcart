@@ -1,0 +1,4 @@
+.global-header { background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 11000 }
+.global-header-inner { max-width: 1200px; margin: 0 auto; display:flex; align-items:center; justify-content:space-between; padding:8px 12px }
+.brand { font-weight:700 }
+.vk-toggle { background: rgba(0,0,0,0.04); border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer }

@@ -14,7 +14,9 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.14.0"
+    "react-router-dom": "^7.14.0",
+    "react-simple-keyboard": "^3.8.195",
+    "simple-keyboard": "^3.8.134"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
