@@ -279,7 +279,7 @@ const CreateListPage = () => {
 
         <button
           className="review-btn"
-          onClick={() => navigate("/review", { state: { cart } })}
+          onClick={() => navigate("/review-list", { state: { cart } })}
         >
           Review list
         </button>

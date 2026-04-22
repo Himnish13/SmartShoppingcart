@@ -15,7 +15,7 @@ const recRoutes = require("./routes/recommendations.routes");
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/shopping-list", shoppingListRoutes);
-app.use("/route", routingRoutes);
+app.use("/routing", routingRoutes);
 app.use("/sync", syncRoutes);
 app.use("/recommend", recRoutes);
 

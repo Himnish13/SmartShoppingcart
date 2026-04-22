@@ -9,6 +9,10 @@ const ReviewListPage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchAutocomplete, setSearchAutocomplete] = useState([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
   const navigate = useNavigate();
 
   const fetchJson = async (url, options) => {
@@ -83,6 +87,14 @@ const ReviewListPage = () => {
     const load = async () => {
       const list = await fetchAllList();
       fetchSuggestions(list);
+      
+      // Fetch all products for search autocomplete
+      try {
+        const allProds = await fetchJson("http://localhost:3500/products");
+        setAllProducts(allProds);
+      } catch (err) {
+        console.log(err);
+      }
     };
     load();
 
@@ -165,6 +177,43 @@ const ReviewListPage = () => {
     return name.includes(search.trim().toLowerCase());
   });
 
+  // Handle search autocomplete
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    
+    if (value.trim().length === 0) {
+      setSearchAutocomplete([]);
+      setShowAutocomplete(false);
+      return;
+    }
+
+    const filtered = allProducts.filter((product) =>
+      product.name.toLowerCase().includes(value.toLowerCase())
+    );
+    
+    setSearchAutocomplete(filtered.slice(0, 6)); // Limit to 6 suggestions
+    setShowAutocomplete(true);
+  };
+
+  const handleAddSearchResult = async (product) => {
+    await fetch("http://localhost:3500/shopping-list/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product_id: product.product_id,
+        quantity: 1,
+      }),
+    });
+
+    const list = await fetchAllList();
+    if (selectedCategory !== null) {
+      await fetchListByCategory(selectedCategory);
+    }
+    fetchSuggestions(list);
+    setSearchQuery("");
+    setShowAutocomplete(false);
+  };
+
   const handleCategorySelect = async (categoryId) => {
     setSelectedCategory(categoryId);
     if (categoryId === null) {
@@ -184,7 +233,7 @@ const ReviewListPage = () => {
           className="back-btn"
           onClick={() => navigate("/create-list")}
         >
-          ← Back to Create List
+          ← Add More Items
         </button>
 
         <div className="header-row">
@@ -293,6 +342,45 @@ const ReviewListPage = () => {
           <p>Check if anything missing in the list</p>
         </div>
 
+        <div className="search-product-section">
+          <div className="search-product-container">
+            <svg className="search-product-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+              <line x1="14" y1="14" x2="20" y2="20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text"
+              className="search-product-input"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onFocus={() => searchQuery && setShowAutocomplete(true)}
+            />
+            {showAutocomplete && searchAutocomplete.length > 0 && (
+              <div className="autocomplete-dropdown">
+                {searchAutocomplete.map((product) => (
+                  <div key={product.product_id} className="autocomplete-item">
+                    <div className="autocomplete-item-content">
+                      <img src={product.image_url} alt={product.name} className="autocomplete-img" />
+                      <div className="autocomplete-text">
+                        <div className="autocomplete-name">{product.name}</div>
+                        <div className="autocomplete-price">Rs. {product.price}</div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="autocomplete-add-btn"
+                      onClick={() => handleAddSearchResult(product)}
+                    >
+                      +
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="smart-title">Smart suggestions</div>
 
         <div className="suggestions">
@@ -314,8 +402,8 @@ const ReviewListPage = () => {
           ))}
         </div>
 
-        <button className="route-btn" onClick={() => navigate("/home")}>
-          Generate Route
+        <button className="route-btn" onClick={() => navigate("/routing")}>
+          Plan Route & Shop
         </button>
 
       </div>

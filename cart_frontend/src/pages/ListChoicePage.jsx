@@ -56,7 +56,7 @@ const ListChoicePage = () => {
           <h1>Have Your list Ready?</h1>
           <p>Scan the QR code to import your list</p>
 
-          <div className="qr-box">
+          <div className="qr-box" onClick={() => navigate("/scan-qr")} style={{ cursor: "pointer" }}>
             <span className="qr-icon">▣ ▣ ▣</span>
           </div>
 
