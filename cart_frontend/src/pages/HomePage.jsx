@@ -400,9 +400,37 @@ const HomePage = () => {
             <span className="menu-icon">🧭</span>
             <span>Explore</span>
           </button>
-          <button type="button" className="menu-item">
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => navigate("/cart")}
+            style={{ position: "relative" }}
+          >
             <span className="menu-icon">🧺</span>
             <span>ItemsAdded</span>
+            {cartItems.length > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "0.35rem",
+                  right: "0.5rem",
+                  background: "#22c55e",
+                  color: "#fff",
+                  borderRadius: "999px",
+                  fontSize: "0.65rem",
+                  fontWeight: 800,
+                  minWidth: "1.25rem",
+                  height: "1.25rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 0.3rem",
+                  lineHeight: 1,
+                }}
+              >
+                {cartItems.length}
+              </span>
+            )}
           </button>
           <button
             type="button"

@@ -5,6 +5,7 @@ import CreateListPage from "./pages/CreateListPage";
 import ReviewListPage from "./pages/ReviewListPage";
 import RoutingPage from "./pages/RoutingPage";
 import HomePage from "./pages/HomePage";
+import CartPage from "./pages/CartPage";
 import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
 import OffersPage from "./pages/OffersPage";
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/review-list" element={<ReviewListPage />} />
         <Route path="/routing" element={<RoutingPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/cart" element={<CartPage />} />
         <Route path="/offers" element={<OffersPage />} />
       </Routes>
     </BrowserRouter>
