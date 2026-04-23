@@ -151,3 +151,119 @@ exports.clearList = (req, res) => {
         res.json({ message: "Shopping list cleared" });
     });
 };
+
+function parsePasteText(text) {
+    if (!text) return [];
+    const lines = text.split(/\r?\n/);
+    const items = [];
+
+    for (let raw of lines) {
+        let line = raw.trim();
+        if (!line) continue;
+
+        // try to find a number and optional unit
+        const re = /(\d+[\.,]?\d*)\s*(kg|g|ml|l|litre|liter|dozen)?/i;
+        const m = line.match(re);
+
+        let qty = null;
+        let unit = null;
+
+        if (m) {
+            qty = parseFloat(m[1].replace(',', '.'));
+            unit = m[2] ? m[2].toLowerCase() : null;
+            // remove the matched quantity+unit from line to extract name
+            line = line.replace(m[0], '').trim();
+        }
+
+        // if no numeric match, also try patterns like "eggs dozen" or trailing 'dozen'
+        if (!m) {
+            const dozenRe = /(?:^|\s)(dozen)(?:$|\s)/i;
+            if (dozenRe.test(line)) {
+                qty = 1;
+                unit = 'dozen';
+                line = line.replace(dozenRe, '').trim();
+            }
+        }
+
+        // if quantity still null but line starts with a number (e.g., "2 Apples")
+        if (qty === null) {
+            const startNum = line.match(/^([\d]+)\s+/);
+            if (startNum) {
+                qty = parseFloat(startNum[1]);
+                line = line.replace(startNum[0], '').trim();
+            }
+        }
+
+        // default quantity
+        if (qty === null) qty = 1;
+
+        // normalize units
+        let normalizedQty = qty;
+        if (unit) {
+            unit = unit.toLowerCase();
+            if (unit === 'g') normalizedQty = qty / 1000; // g -> kg
+            else if (unit === 'ml') normalizedQty = qty / 1000; // ml -> L
+            else if (unit === 'dozen') normalizedQty = qty * 12;
+            else normalizedQty = qty; // kg, l, litre, etc.
+        }
+
+        // clean item name: remove remaining numbers/units and special chars
+        let name = line.replace(/[\d\*#@!\$%\^&\(\)\[\]\{\};:<>\/?\\|~`+=,]+/g, '');
+        name = name.replace(/\s{2,}/g, ' ').trim();
+        if (!name) continue;
+
+        items.push({ name: name, quantity: Number(normalizedQty) });
+    }
+
+    // merge duplicates (case-insensitive)
+    const map = {};
+    for (const it of items) {
+        const key = it.name.toLowerCase();
+        if (!map[key]) map[key] = { name: it.name, quantity: 0 };
+        map[key].quantity += it.quantity;
+    }
+
+    return Object.values(map);
+}
+
+exports.pasteList = (req, res) => {
+    const { text } = req.body;
+    const items = parsePasteText(text);
+
+    if (!items || items.length === 0) {
+        return res.status(400).json({ message: 'No valid items found' });
+    }
+
+    db.serialize(() => {
+        db.run(`DELETE FROM shopping_list`);
+
+        let done = 0;
+
+        items.forEach(item => {
+            db.get(
+                `SELECT product_id 
+                 FROM products 
+                 WHERE LOWER(name) LIKE LOWER(?) 
+                 LIMIT 1`,
+                [`%${item.name.trim()}%`],
+                (err, product) => {
+
+                    if (err) return res.status(500).json(err);
+
+                    if (product) {
+                        db.run(
+                            `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
+                             VALUES (?, ?, 0, 0)`,
+                            [product.product_id, item.quantity || 1]
+                        );
+                    }
+
+                    done++;
+                    if (done === items.length) {
+                        res.json({ message: 'Pasted shopping list imported' });
+                    }
+                }
+            );
+        });
+    });
+};
