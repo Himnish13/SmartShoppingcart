@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./CreateListPage.css";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +14,20 @@ const CreateListPage = () => {
   const [showVK, setShowVK] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const navigate = useNavigate();
+
+  const billingCategoryIds = useMemo(() => {
+    const ids = (categories || [])
+      .filter((cat) => String(cat?.category_name || "").trim().toLowerCase() === "billing")
+      .map((cat) => Number(cat?.category_id))
+      .filter(Number.isFinite);
+    return new Set(ids);
+  }, [categories]);
+
+  const visibleCategories = useMemo(() => {
+    return (categories || []).filter(
+      (cat) => !billingCategoryIds.has(Number(cat?.category_id))
+    );
+  }, [categories, billingCategoryIds]);
 
   // ✅ FETCH ALL PRODUCTS
   const fetchAllProducts = () => {
@@ -35,6 +49,11 @@ const CreateListPage = () => {
 
   // ✅ FETCH BY CATEGORY
   const fetchByCategory = (id) => {
+    if (id && billingCategoryIds.has(Number(id))) {
+      fetchAllProducts();
+      setSelectedCategory(null);
+      return;
+    }
     if (!id) {
       fetchAllProducts();
       setSelectedCategory(null);
@@ -271,9 +290,12 @@ const CreateListPage = () => {
   };
 
   // 🔍 SEARCH
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products.filter((p) => {
+    if (billingCategoryIds.has(Number(p?.category_id))) return false;
+    return String(p?.name || "")
+      .toLowerCase()
+      .includes(String(search || "").toLowerCase());
+  });
 
   // 🧠 GROUP BY CATEGORY
   const groupedProducts = filtered.reduce((acc, item) => {
@@ -347,7 +369,7 @@ const CreateListPage = () => {
           All
         </div>
 
-        {categories.map((cat) => (
+        {visibleCategories.map((cat) => (
           <div
             key={cat.category_id}
             className={`category-card ${
@@ -368,7 +390,7 @@ const CreateListPage = () => {
 
             <h3 className="category-title">
               {
-                categories.find(c => c.category_id === selectedCategory)?.category_name
+                visibleCategories.find(c => c.category_id === selectedCategory)?.category_name
               }
             </h3>
 
@@ -404,6 +426,8 @@ const CreateListPage = () => {
             const category = categories.find(
               (c) => c.category_id === Number(catId)
             );
+
+            if (billingCategoryIds.has(Number(catId))) return null;
 
             return (
               <div key={catId} className="category-section">

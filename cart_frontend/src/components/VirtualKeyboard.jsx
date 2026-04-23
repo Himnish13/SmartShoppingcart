@@ -14,58 +14,111 @@ const selectors = [
 export default function VirtualKeyboardGlobal() {
   const [visible, setVisible] = useState(false);
   const targetRef = useRef(null);
-  const [layoutName, setLayoutName] = useState('default');
-  const [enabled, setEnabled] = useState(() => {
-    try { return localStorage.getItem('vk_enabled') !== 'false'; } catch (e) { return true; }
-  });
+  const keyboardRef = useRef(null);
+  const dragRef = useRef({ dragging: false, pointerId: null, startX: 0, startY: 0, startLeft: 0, startTop: 0 });
   const [keyboardStyle, setKeyboardStyle] = useState({});
-  const [docked, setDocked] = useState(() => {
-    try { return localStorage.getItem('vk_docked') === 'true'; } catch (e) { return false; }
-  });
+  const [docked, setDocked] = useState(true);
   const [dockSide, setDockSide] = useState(() => {
     try { return localStorage.getItem('vk_dockSide') || 'right'; } catch (e) { return 'right'; }
   });
-  const [compact, setCompact] = useState(() => {
-    try { return localStorage.getItem('vk_compact') === 'true'; } catch (e) { return false; }
+
+  const [manualPos, setManualPos] = useState(() => {
+    try {
+      const raw = localStorage.getItem('vk_manualPos');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
   });
-  const [helpOpen, setHelpOpen] = useState(false);
+
+  const isTextTarget = (el) => {
+    if (!el) return false;
+    if (el.tagName === 'TEXTAREA') return !el.readOnly && !el.disabled;
+    if (el.tagName !== 'INPUT') return false;
+    const type = (el.getAttribute('type') || 'text').toLowerCase();
+    if (type === 'password') return false;
+    return !el.readOnly && !el.disabled;
+  };
+
+  const isSupportedTarget = (el) => {
+    if (!isTextTarget(el)) return false;
+    if (!el.matches) return false;
+    return selectors.some((sel) => el.matches(sel));
+  };
+
+  const getTargetElement = () => {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return active;
+    return targetRef.current;
+  };
+
+  const computeKeyboardStyle = (el) => {
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+    const kbWidth = Math.min(44 * 16, vw - 16); // ~44rem max width; clamp to viewport
+
+    if (!docked && manualPos && typeof manualPos.left === 'number' && typeof manualPos.top === 'number') {
+      const left = Math.max(8, Math.min(manualPos.left, vw - kbWidth - 8));
+      const top = Math.max(8, Math.min(manualPos.top, vh - 8));
+      return { position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${kbWidth}px`, right: 'auto', bottom: 'auto' };
+    }
+
+    if (!el) {
+      // Default: docked to bottom side.
+      const style = { position: 'fixed', bottom: '0.5rem', width: `${kbWidth}px`, top: 'auto' };
+      if (dockSide === 'right') {
+        style.right = '0.5rem';
+        style.left = 'auto';
+      } else {
+        style.left = '0.5rem';
+        style.right = 'auto';
+      }
+      return style;
+    }
+
+    // Docked mode: pin to bottom-left/right.
+    const style = { position: 'fixed', bottom: '0.5rem', width: `${kbWidth}px`, top: 'auto' };
+    if (dockSide === 'right') {
+      style.right = '0.5rem';
+      style.left = 'auto';
+    } else {
+      style.left = '0.5rem';
+      style.right = 'auto';
+    }
+    return style;
+  };
 
   useEffect(() => {
     const onFocusIn = (e) => {
-      try {
-        const el = e.target;
-        if (!el) return;
-        for (const sel of selectors) {
-          if (el.matches && el.matches(sel)) {
-            targetRef.current = el;
-            setVisible(true);
-            return;
-          }
-        }
-        setVisible(false);
-      } catch (err) {
-        setVisible(false);
+      const el = e.target;
+      if (isSupportedTarget(el)) {
+        targetRef.current = el;
+        setVisible(true);
+        requestAnimationFrame(() => setKeyboardStyle(computeKeyboardStyle(el)));
       }
     };
+    window.addEventListener('focusin', onFocusIn);
 
-    const onFocusOut = () => {
-      setTimeout(() => {
-        const active = document.activeElement;
-        if (!active) return setVisible(false);
-        for (const sel of selectors) {
-          if (active.matches && active.matches(sel)) return; // keep visible
-        }
-        setVisible(false);
-      }, 50);
+    const onPointerDownCapture = (e) => {
+      const t = e.target;
+      if (keyboardRef.current && keyboardRef.current.contains(t)) return;
+      if (isSupportedTarget(t)) {
+        targetRef.current = t;
+        setVisible(true);
+        requestAnimationFrame(() => setKeyboardStyle(computeKeyboardStyle(t)));
+        return;
+      }
+      setVisible(false);
     };
 
-    window.addEventListener('focusin', onFocusIn);
-    window.addEventListener('focusout', onFocusOut);
+    window.addEventListener('pointerdown', onPointerDownCapture, true);
+
     return () => {
       window.removeEventListener('focusin', onFocusIn);
-      window.removeEventListener('focusout', onFocusOut);
+      window.removeEventListener('pointerdown', onPointerDownCapture, true);
     };
-  }, []);
+  }, [docked, dockSide, manualPos]);
 
   const setNativeValue = (el, value) => {
     const valueSetter = Object.getOwnPropertyDescriptor(el.__proto__, 'value')?.set ||
@@ -80,7 +133,7 @@ export default function VirtualKeyboardGlobal() {
   };
 
   const insertAtTarget = (ch) => {
-    const el = document.activeElement || targetRef.current;
+    const el = getTargetElement();
     if (!el) return;
     const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? start;
@@ -92,178 +145,125 @@ export default function VirtualKeyboardGlobal() {
   };
 
   const backspaceAtTarget = () => {
-    const el = document.activeElement || targetRef.current;
+    const el = getTargetElement();
     if (!el) return;
     const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? start;
     if (start === 0 && end === 0) return;
     const val = el.value || '';
     if (start === end) {
-      el.value = val.slice(0, start - 1) + val.slice(end);
+      const next = val.slice(0, start - 1) + val.slice(end);
+      setNativeValue(el, next);
       el.selectionStart = el.selectionEnd = Math.max(0, start - 1);
     } else {
-      el.value = val.slice(0, start) + val.slice(end);
+      const next = val.slice(0, start) + val.slice(end);
+      setNativeValue(el, next);
       el.selectionStart = el.selectionEnd = start;
     }
-    el.dispatchEvent(new Event('input', { bubbles: true }));
     el.focus();
   };
 
   const onKeyPress = (button) => {
     if (button === '{bksp}') return backspaceAtTarget();
-    if (button === '{enter}') return insertAtTarget('\n');
     if (button === '{space}') return insertAtTarget(' ');
-    if (button === '{shift}') return setLayoutName(layoutName === 'default' ? 'shift' : 'default');
     insertAtTarget(button);
   };
   useEffect(() => {
-    if (!visible || !targetRef.current) return setKeyboardStyle({});
-    const el = targetRef.current;
-    const rect = el.getBoundingClientRect();
+    if (!visible) return;
+    const onResize = () => setKeyboardStyle(computeKeyboardStyle(targetRef.current));
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+    };
+  }, [visible, docked, dockSide, manualPos]);
+
+  const snapDock = (side) => {
+    setDocked(true);
+    setDockSide(side);
+    try { localStorage.setItem('vk_dockSide', side); } catch (e) {}
+    requestAnimationFrame(() => setKeyboardStyle(computeKeyboardStyle(targetRef.current)));
+  };
+
+  const onHeaderPointerDown = (e) => {
+    if (e.target && e.target.closest && e.target.closest('button')) return;
+    const node = keyboardRef.current;
+    if (!node) return;
+
+    // Dragging switches to free move mode.
+    setDocked(false);
+
+    const rect = node.getBoundingClientRect();
+    const pointerId = e.pointerId;
+    dragRef.current = {
+      dragging: true,
+      pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: rect.left,
+      startTop: rect.top,
+    };
+    try { e.currentTarget.setPointerCapture(pointerId); } catch (err) {}
+    e.preventDefault();
+  };
+
+  const onHeaderPointerMove = (e) => {
+    const st = dragRef.current;
+    if (!st.dragging || st.pointerId !== e.pointerId) return;
     const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
     const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-    const kbWidth = Math.min(760, vw - 40);
-    let left = rect.left + rect.width / 2 - kbWidth / 2;
-    left = Math.max(10, Math.min(left, vw - kbWidth - 10));
-    // prefer placing above the input if there's space
-    const kbHeight = 220; // approximate
-    let top = rect.top - kbHeight - 12;
-    if (top < 8) top = rect.bottom + 12; // place below if not enough space above
-    // if docked, override positioning
-    if (docked) {
-      const w = compact ? Math.min(360, vw - 40) : Math.min(480, vw - 40);
-      const style = { position: 'fixed', bottom: '12px', width: `${w}px` };
-      if (dockSide === 'right') style.right = '12px'; else style.left = '12px';
-      setKeyboardStyle(style);
-    } else {
-      setKeyboardStyle({ position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${kbWidth}px` });
+    const kbWidth = Math.min(44 * 16, vw - 16);
+
+    const dx = e.clientX - st.startX;
+    const dy = e.clientY - st.startY;
+    const left = Math.max(10, Math.min(st.startLeft + dx, vw - kbWidth - 10));
+    const top = Math.max(10, Math.min(st.startTop + dy, vh - 10));
+    setKeyboardStyle((prev) => ({
+      ...prev,
+      position: 'fixed',
+      left: `${left}px`,
+      top: `${top}px`,
+      bottom: 'auto',
+      right: 'auto',
+      width: `${kbWidth}px`,
+    }));
+  };
+
+  const onHeaderPointerUp = (e) => {
+    const st = dragRef.current;
+    if (!st.dragging || st.pointerId !== e.pointerId) return;
+    dragRef.current.dragging = false;
+
+    const node = keyboardRef.current;
+    if (node) {
+      const rect = node.getBoundingClientRect();
+      const next = { left: rect.left, top: rect.top };
+      setManualPos(next);
+      try { localStorage.setItem('vk_manualPos', JSON.stringify(next)); } catch (err) {}
     }
-  }, [visible, targetRef.current, docked, dockSide, compact]);
 
-  // Keep keyboard visible while typing and reposition on input or resize
-  useEffect(() => {
-    if (!visible) return;
-    const inputs = Array.from(document.querySelectorAll(selectors.join(',')));
-    const onInput = (e) => {
-      const el = e.target;
-      targetRef.current = el;
-      setVisible(true);
-      // recompute position quickly
-      requestAnimationFrame(() => {
-        const rect = el.getBoundingClientRect();
-        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-        const kbWidth = Math.min(760, vw - 40);
-        // detect suggestion boxes near this input
-        const suggestions = Array.from(document.querySelectorAll('[class*=suggest], [class*=candidate], .hg-candidate-box'));
-        const suggestNear = suggestions.find(s => {
-          try {
-            const r = s.getBoundingClientRect();
-            return Math.abs(r.top - rect.bottom) < 200 && Math.abs(r.left - rect.left) < 300;
-          } catch (err) { return false; }
-        });
-        let left;
-        if (suggestNear) {
-          const sRect = suggestNear.getBoundingClientRect();
-          // if suggestion is left of input, place keyboard to the right, else left/center
-          if (sRect.left < rect.left) left = Math.min(vw - kbWidth - 10, rect.right + 10);
-          else left = Math.max(10, rect.left + rect.width / 2 - kbWidth / 2);
-        } else {
-          left = Math.max(10, rect.left + rect.width / 2 - kbWidth / 2);
-        }
-        let top = rect.top - 220 - 12;
-        if (top < 8) top = rect.bottom + 12;
-        setKeyboardStyle({ position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${kbWidth}px` });
-      });
-    };
-
-    inputs.forEach(i => i.addEventListener('input', onInput));
-    window.addEventListener('resize', onInput);
-    return () => {
-      inputs.forEach(i => i.removeEventListener('input', onInput));
-      window.removeEventListener('resize', onInput);
-    };
-  }, [visible]);
-
-  // listen for header toggle events
-  useEffect(() => {
-    const onToggle = (e) => {
-      if (e && e.detail && typeof e.detail.enabled === 'boolean') {
-        setEnabled(e.detail.enabled);
-      }
-    };
-    window.addEventListener('vk:toggle', onToggle);
-    const onState = (e) => {
-      if (!e || !e.detail) return;
-      const s = e.detail;
-      if (typeof s.docked === 'boolean') setDocked(s.docked);
-      if (typeof s.dockSide === 'string') setDockSide(s.dockSide);
-      if (typeof s.compact === 'boolean') setCompact(s.compact);
-      if (typeof s.enabled === 'boolean') setEnabled(s.enabled);
-    };
-    window.addEventListener('vk:state', onState);
-    return () => {
-      window.removeEventListener('vk:toggle', onToggle);
-      window.removeEventListener('vk:state', onState);
-    };
-  }, []);
-
-
-  if (!visible || !enabled) return null;
-
-  const toggleLocal = () => {
-    const next = !enabled;
-    setEnabled(next);
-    try { localStorage.setItem('vk_enabled', next ? 'true' : 'false'); } catch (e) {}
-    window.dispatchEvent(new CustomEvent('vk:state', { detail: { enabled: next } }));
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {}
   };
 
-  const toggleDock = () => {
-    const next = !docked;
-    setDocked(next);
-    try { localStorage.setItem('vk_docked', next ? 'true' : 'false'); } catch (e) {}
-  };
-
-  const toggleDockSide = () => {
-    const next = dockSide === 'right' ? 'left' : 'right';
-    setDockSide(next);
-    try { localStorage.setItem('vk_dockSide', next); } catch (e) {}
-  };
-
-  const toggleCompact = () => {
-    const next = !compact;
-    setCompact(next);
-    try { localStorage.setItem('vk_compact', next ? 'true' : 'false'); } catch (e) {}
-  };
+  if (!visible) return null;
 
   return (
-    <div className={`vk-global${compact ? ' vk-compact' : ''}`} role="application" aria-hidden="false" style={keyboardStyle}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 6 }}>
-        <button
-          title={enabled ? 'Disable virtual keyboard' : 'Enable virtual keyboard'}
-          onClick={toggleLocal}
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 14 }}
-        >
-          {enabled ? '🔌 On' : '🔌 Off'}
-        </button>
-        <button title={docked ? 'Undock keyboard' : 'Dock keyboard'} onClick={toggleDock} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 14 }}>{docked ? '📌 Docked' : '📌 Dock'}</button>
-        {docked && <button title="Switch dock side" onClick={toggleDockSide} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 14 }}>{dockSide === 'right' ? '→' : '←'}</button>}
-        <button title={compact ? 'Exit compact mode' : 'Compact mode'} onClick={toggleCompact} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 14 }}>{compact ? '🔎 Compact' : '🔎 Normal'}</button>
-        <button title="Keyboard help" onClick={() => setHelpOpen(h => !h)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 14 }}>❔</button>
-      </div>
-      {helpOpen && (
-        <div className="vk-help">
-          <strong>Virtual keyboard</strong>
-          <div>Use the on-screen keys to type into focused inputs. Dock to pin the keyboard. Compact mode reduces width.</div>
-          <div style={{ marginTop: 8, fontSize: 13 }}>- Toggle enable/disable in Settings
-          </div>
+    <div ref={keyboardRef} className="vk-global" role="application" aria-hidden="false" style={keyboardStyle}>
+      <div
+        className="vk-header"
+        onPointerDown={onHeaderPointerDown}
+        onPointerMove={onHeaderPointerMove}
+        onPointerUp={onHeaderPointerUp}
+        title="Drag to move"
+      >
+        <div className="vk-header-buttons">
+          <button type="button" className="vk-dockbtn" onClick={() => snapDock('left')} title="Dock bottom-left">Left</button>
+          <button type="button" className="vk-dockbtn" onClick={() => snapDock('right')} title="Dock bottom-right">Right</button>
         </div>
-      )}
+      </div>
       <Keyboard
         onKeyPress={onKeyPress}
-        layoutName={layoutName}
         layout={{
-          default: ['q w e r t y u i o p', 'a s d f g h j k l', '{shift} z x c v b n m {bksp}', '{space} {enter}'],
-          shift: ['Q W E R T Y U I O P', 'A S D F G H J K L', '{shift} Z X C V B N M {bksp}', '{space} {enter}'],
+          default: ['Q W E R T Y U I O P', 'A S D F G H J K L', 'Z X C V B N M {bksp}', '{space}'],
         }}
       />
     </div>

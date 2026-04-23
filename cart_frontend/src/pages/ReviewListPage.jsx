@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./ReviewListPage.css";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +14,13 @@ const ReviewListPage = () => {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [allProducts, setAllProducts] = useState([]);
   const navigate = useNavigate();
+
+  const visibleCategories = useMemo(() => {
+    return (categories || []).filter((cat) => {
+      const name = String(cat?.category_name || "").trim().toLowerCase();
+      return name !== "billing";
+    });
+  }, [categories]);
 
   const fetchJson = async (url, options) => {
     const res = await fetch(url, options);
@@ -223,6 +230,20 @@ const ReviewListPage = () => {
     await fetchListByCategory(categoryId);
   };
 
+  // If Billing was previously selected (e.g., stale state), fall back to All.
+  useEffect(() => {
+    if (selectedCategory === null) return;
+    const selected = (categories || []).find(
+      (c) => Number(c?.category_id) === Number(selectedCategory)
+    );
+    if (!selected) return;
+    const name = String(selected?.category_name || "").trim().toLowerCase();
+    if (name === "billing") {
+      handleCategorySelect(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories]);
+
   return (
     <div className="review-container">
 
@@ -265,7 +286,7 @@ const ReviewListPage = () => {
           >
             All
           </button>
-          {categories.map((cat) => (
+          {visibleCategories.map((cat) => (
             <button
               key={cat.category_id}
               type="button"

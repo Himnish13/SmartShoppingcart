@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { routingService } from "../services/routing.service";
 
 const ROUTE_CACHE_KEY = "smartcart:lastRoute";
+const ROUTE_PRODUCTS_KEY = "smartcart:lastRouteProductIds";
 
 const RoutingPage = () => {
   const [items, setItems] = useState([]);
@@ -102,11 +103,15 @@ const RoutingPage = () => {
 
       try {
         sessionStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(routeData));
+        sessionStorage.setItem(
+          ROUTE_PRODUCTS_KEY,
+          JSON.stringify(Array.from(selectedItems))
+        );
       } catch {
         // ignore
       }
 
-      navigate("/map", { state: { routeData } });
+      navigate("/home", { state: { routeData } });
     } catch (err) {
       console.error("❌ Full error:", err);
       setError(err.message || "Failed to generate route. Please try again.");
