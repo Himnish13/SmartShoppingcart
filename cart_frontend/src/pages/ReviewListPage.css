@@ -1,7 +1,7 @@
 .review-container {
   display: flex;
-  gap: 32px;
-  padding: 28px;
+  gap: 2rem;
+  padding: 1.75rem;
   background: #f5f5f5;
   min-height: 100vh;
   align-items: flex-start;
@@ -10,23 +10,23 @@
 .review-container .left {
   flex: 2;
   background: #ffffff;
-  border-radius: 20px;
-  padding: 26px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+  border-radius: 1.25rem;
+  padding: 1.625rem;
+  box-shadow: 0 0.5rem 1.375rem rgba(0, 0, 0, 0.06);
 }
 
 .review-container .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   border: none;
   background: #f3f1ff;
   color: #2b2b2b;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
   cursor: pointer;
   font-weight: 650;
-  margin-bottom: 14px;
+  margin-bottom: 0.875rem;
 }
 
 .review-container .back-btn:hover {
@@ -37,19 +37,19 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
 }
 
 .review-container .left h2 {
-  font-size: 34px;
+  font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.0125em;
 }
 
 .review-container .total-items {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #2b2b2b;
   opacity: 0.85;
   white-space: nowrap;
@@ -57,25 +57,25 @@
 
 .review-container .search-row {
   position: relative;
-  margin: 10px 0 14px;
+  margin: 0.625rem 0 0.875rem;
 }
 
 .review-container .search-icon {
   position: absolute;
-  left: 14px;
+  left: 0.875rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   opacity: 0.75;
   pointer-events: none;
 }
 
 .review-container .search {
   width: 100%;
-  height: 44px;
-  padding: 0 14px 0 42px;
-  border-radius: 14px;
+  height: 2.75rem;
+  padding: 0 0.875rem 0 2.625rem;
+  border-radius: 0.875rem;
   border: none;
   outline: none;
   background: #c8c6f3;
@@ -89,26 +89,26 @@
 .review-container .category-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin: 6px 0 18px;
+  gap: 0.875rem;
+  margin: 0.375rem 0 1.125rem;
   flex-wrap: wrap;
 }
 
 .review-container .category-label {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #2b2b2b;
   opacity: 0.85;
-  margin-right: 2px;
+  margin-right: 0.125rem;
 }
 
 .review-container .category-pill {
   border: none;
   background: transparent;
   color: #2b2b2b;
-  padding: 6px 10px;
-  border-radius: 10px;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.625rem;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .review-container .category-pill.active {
@@ -118,16 +118,16 @@
 .review-container .items {
   max-height: 70vh;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 0.5rem;
 }
 
 .review-container .items::-webkit-scrollbar {
-  width: 10px;
+  width: 0.625rem;
 }
 
 .review-container .items::-webkit-scrollbar-thumb {
   background: #cfcfcf;
-  border-radius: 999px;
+  border-radius: 62.4375rem;
 }
 
 .review-container .items::-webkit-scrollbar-track {
@@ -137,15 +137,15 @@
 .review-container .item-card {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 0;
-  border-bottom: 1px solid #e7e7e7;
+  gap: 1rem;
+  padding: 1.125rem 0;
+  border-bottom: 0.0625rem solid #e7e7e7;
 }
 
 .review-container .item-image {
-  width: 78px;
-  height: 78px;
-  border-radius: 16px;
+  width: 4.875rem;
+  height: 4.875rem;
+  border-radius: 1rem;
   background: #f6e7cf;
   display: flex;
   align-items: center;
@@ -154,8 +154,8 @@
 }
 
 .review-container .item-image img {
-  width: 56px;
-  height: 56px;
+  width: 3.5rem;
+  height: 3.5rem;
   object-fit: contain;
 }
 
@@ -165,34 +165,34 @@
 }
 
 .review-container .info h4 {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 650;
-  margin: 0 0 6px 0;
+  margin: 0 0 0.375rem 0;
   color: #1f1f1f;
 }
 
 .review-container .info p {
-  font-size: 14px;
+  font-size: 0.875rem;
   margin: 0;
   color: #6b6b6b;
 }
 
 .review-container .qty-controls {
-  margin-top: 10px;
+  margin-top: 0.625rem;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
 }
 
 .review-container .qty-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.625rem;
   border: none;
   cursor: pointer;
   background: #f3f1ff;
   color: #2b2b2b;
-  font-size: 18px;
+  font-size: 1.125rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -204,24 +204,24 @@
 }
 
 .review-container .qty-value {
-  min-width: 24px;
+  min-width: 1.5rem;
   text-align: center;
   font-weight: 650;
   color: #1f1f1f;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .review-container .remove {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.625rem;
   border: none;
   cursor: pointer;
   background: #f6d38b;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 1.125rem;
   line-height: 1;
 }
 
@@ -232,36 +232,36 @@
 .review-container .right {
   flex: 1;
   background: #f6e7cf;
-  border-radius: 22px;
-  padding: 42px 34px;
-  min-height: calc(100vh - 56px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+  border-radius: 1.375rem;
+  padding: 2.625rem 2.125rem;
+  min-height: calc(100vh - 3.5rem);
+  box-shadow: 0 0.5rem 1.375rem rgba(0, 0, 0, 0.04);
   position: relative;
 }
 
 .review-container .right-indicator {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  margin-top: -10px;
-  margin-bottom: 14px;
+  gap: 0.375rem;
+  margin-top: -0.625rem;
+  margin-bottom: 0.875rem;
 }
 
 .review-container .right-indicator span {
-  width: 10px;
-  height: 6px;
-  border-radius: 6px;
+  width: 0.625rem;
+  height: 0.375rem;
+  border-radius: 0.375rem;
   background: #f3d39a;
 }
 
 .review-container .right-top {
   text-align: center;
-  margin-bottom: 26px;
+  margin-bottom: 1.625rem;
 }
 
 .review-container .right h2 {
-  font-size: 36px;
-  margin: 0 0 10px 0;
+  font-size: 2.25rem;
+  margin: 0 0 0.625rem 0;
   font-weight: 750;
   color: #1f1f1f;
 }
@@ -269,12 +269,12 @@
 .review-container .right p {
   margin: 0;
   color: rgba(0, 0, 0, 0.6);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .review-container .smart-title {
-  margin-top: 26px;
-  margin-bottom: 12px;
+  margin-top: 1.625rem;
+  margin-bottom: 0.75rem;
   font-weight: 650;
   color: #2b2b2b;
 }
@@ -282,30 +282,30 @@
 .review-container .suggestions {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 .review-container .suggestion-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 0.875rem;
   background: #ffffff;
-  border-radius: 14px;
-  padding: 12px 14px;
+  border-radius: 0.875rem;
+  padding: 0.75rem 0.875rem;
 }
 
 .review-container .suggestion-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   min-width: 0;
 }
 
 .review-container .suggestion-img {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 2.875rem;
+  height: 2.875rem;
+  border-radius: 0.75rem;
   background: #f6e7cf;
   display: flex;
   align-items: center;
@@ -314,13 +314,13 @@
 }
 
 .review-container .suggestion-img img {
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
   object-fit: contain;
 }
 
 .review-container .suggestion-name {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #2b2b2b;
   white-space: nowrap;
@@ -331,24 +331,24 @@
 .review-container .suggestion-card button {
   background: #f6d38b;
   border: none;
-  padding: 7px 12px;
-  border-radius: 10px;
+  padding: 0.4375rem 0.75rem;
+  border-radius: 0.625rem;
   cursor: pointer;
   font-weight: 600;
 }
 
 .review-container .route-btn {
-  margin: 52px auto 0;
+  margin: 3.25rem auto 0;
   display: block;
-  width: min(360px, 100%);
-  height: 52px;
+  width: min(22.5rem, 100%);
+  height: 3.25rem;
   background: #6159c9;
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   cursor: pointer;
-  font-size: 16px;
-  box-shadow: 0 10px 18px rgba(97, 89, 201, 0.25);
+  font-size: 1rem;
+  box-shadow: 0 0.625rem 1.125rem rgba(97, 89, 201, 0.25);
 }
 
 .review-container .route-btn:hover {
@@ -356,7 +356,7 @@
 }
 
 .review-container .search-product-section {
-  margin-bottom: 28px;
+  margin-bottom: 1.75rem;
 }
 
 .review-container .search-product-container {
@@ -365,11 +365,11 @@
 
 .review-container .search-product-icon {
   position: absolute;
-  left: 14px;
+  left: 0.875rem;
   top: 50%;
   transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   opacity: 0.8;
   pointer-events: none;
   color: #6159c9;
@@ -377,23 +377,23 @@
 
 .review-container .search-product-input {
   width: 100%;
-  height: 44px;
-  padding: 0 14px 0 42px;
-  border-radius: 14px;
+  height: 2.75rem;
+  padding: 0 0.875rem 0 2.625rem;
+  border-radius: 0.875rem;
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: 0.875rem;
   background: linear-gradient(90deg, #b8b5e6, #a9a6e0);
   color: #1f1f1f;
   transition: all 0.3s ease;
   font-weight: 500;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.01875em;
 }
 
 .review-container .search-product-input:focus {
   filter: brightness(0.95);
-  box-shadow: 0 8px 20px rgba(97, 89, 201, 0.2);
-  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1.25rem rgba(97, 89, 201, 0.2);
+  transform: translateY(-0.125rem);
 }
 
 .review-container .search-product-input::placeholder {
@@ -403,35 +403,35 @@
 
 .review-container .autocomplete-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 0.25rem);
   left: 0;
   right: 0;
   background: #ffffff;
   border: none;
-  border-radius: 12px;
-  max-height: 320px;
+  border-radius: 0.75rem;
+  max-height: 20rem;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 10px 28px rgba(97, 89, 201, 0.15);
+  box-shadow: 0 0.625rem 1.75rem rgba(97, 89, 201, 0.15);
 }
 
 .review-container .autocomplete-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 0.875rem 0.75rem;
+  border-bottom: 0.0625rem solid #f0f0f0;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .review-container .autocomplete-item:first-child {
-  border-radius: 12px 12px 0 0;
+  border-radius: 0.75rem 0.75rem 0 0;
 }
 
 .review-container .autocomplete-item:last-child {
   border-bottom: none;
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 0.75rem 0.75rem;
 }
 
 .review-container .autocomplete-item:hover {
@@ -441,20 +441,20 @@
 .review-container .autocomplete-item-content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   flex: 1;
   min-width: 0;
 }
 
 .review-container .autocomplete-img {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 0.625rem;
   object-fit: contain;
   background: linear-gradient(135deg, #f6e7cf, #fae6d4);
-  padding: 6px;
+  padding: 0.375rem;
   flex: 0 0 auto;
-  border: 1px solid rgba(97, 89, 201, 0.1);
+  border: 0.0625rem solid rgba(97, 89, 201, 0.1);
 }
 
 .review-container .autocomplete-text {
@@ -463,18 +463,18 @@
 }
 
 .review-container .autocomplete-name {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 650;
   color: #1f1f1f;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 3px;
-  letter-spacing: 0.2px;
+  margin-bottom: 0.1875rem;
+  letter-spacing: 0.0125em;
 }
 
 .review-container .autocomplete-price {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: rgba(0, 0, 0, 0.65);
   font-weight: 500;
 }
@@ -482,12 +482,12 @@
 .review-container .autocomplete-add-btn {
   background: linear-gradient(135deg, #f6d38b, #f0c770);
   border: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.5rem;
   cursor: pointer;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -499,16 +499,16 @@
 .review-container .autocomplete-add-btn:hover {
   filter: brightness(0.95);
   transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(246, 211, 139, 0.3);
+  box-shadow: 0 0.25rem 0.75rem rgba(246, 211, 139, 0.3);
 }
 
 .review-container .autocomplete-dropdown::-webkit-scrollbar {
-  width: 6px;
+  width: 0.375rem;
 }
 
 .review-container .autocomplete-dropdown::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #b8b5e6, #a9a6e0);
-  border-radius: 3px;
+  border-radius: 0.1875rem;
   opacity: 0.7;
 }
 
@@ -516,7 +516,7 @@
   background: transparent;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 61.25em) {
   .review-container {
     flex-direction: column;
   }

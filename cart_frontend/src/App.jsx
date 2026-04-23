@@ -4,6 +4,7 @@ import ListChoicePage from "./pages/ListChoicePage";
 import CreateListPage from "./pages/CreateListPage";
 import ReviewListPage from "./pages/ReviewListPage";
 import RoutingPage from "./pages/RoutingPage";
+import MapPage from "./pages/MapPage";
 import HomePage from "./pages/HomePage";
 import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
 import GlobalHeader from "./components/GlobalHeader";
@@ -21,6 +22,7 @@ function App() {
         <Route path="/create-list" element={<CreateListPage />} />
         <Route path="/review-list" element={<ReviewListPage />} />
         <Route path="/routing" element={<RoutingPage />} />
+        <Route path="/map" element={<MapPage />} />
         <Route path="/home" element={<HomePage />} />
       </Routes>
     </BrowserRouter>

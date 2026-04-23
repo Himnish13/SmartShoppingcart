@@ -1,77 +1,77 @@
 .route-visualization {
   width: 100%;
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 1.125rem;
+  padding: 1rem;
 
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(0.625rem);
 
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.06);
 }
 
 /* Header */
 .route-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .route-header h3 {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
 .route-length {
-  font-size: 12px;
+  font-size: 0.75rem;
   background: #dcfce7;
-  padding: 4px 10px;
-  border-radius: 10px;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.625rem;
 }
 
 /* List */
 .route-simple-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .route-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   background: #f9fafb;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
 }
 
 .route-dot {
-  width: 10px;
-  height: 10px;
+  width: 0.625rem;
+  height: 0.625rem;
   background: #6366f1;
   border-radius: 50%;
 }
 
 /* Aisles */
 .aisles-summary {
-  margin-top: 12px;
+  margin-top: 0.75rem;
 }
 
 .aisles-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0.375rem;
 }
 
 .aisle-card {
   background: #eef2ff;
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 0.3125rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
 }
 
 /* 📱 Responsive */
-@media (max-width: 600px) {
+@media (max-width: 37.5em) {
   .route-row {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 }
