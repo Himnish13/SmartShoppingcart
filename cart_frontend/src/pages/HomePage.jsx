@@ -2,8 +2,23 @@ import React, { useMemo, useEffect, useRef, useState } from "react";
 import "./HomePage.css";
 import MapDisplay from "../components/MapDisplay";
 import { routingService } from "../services/routing.service";
+import { useLocation, useNavigate } from "react-router-dom";
+
+const ROUTE_CACHE_KEY = "smartcart:lastRoute";
+
+const safeParseJson = (value) => {
+  try {
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+};
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const manualRouteRef = useRef(false);
 
   const [popup, setPopup] = useState(null);
   const [barcode, setBarcode] = useState(null);
@@ -13,7 +28,11 @@ const HomePage = () => {
 
   const [mapNodes, setMapNodes] = useState({});
   const [storeLayout, setStoreLayout] = useState(null);
-  const [route, setRoute] = useState(null);
+  const [route, setRoute] = useState(() => {
+    const fromNav = location.state?.routeData;
+    if (fromNav) return fromNav;
+    return safeParseJson(sessionStorage.getItem(ROUTE_CACHE_KEY));
+  });
   const [fullscreen, setFullscreen] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(null);
   const [hasBackendPosition, setHasBackendPosition] = useState(false);
@@ -76,12 +95,29 @@ const HomePage = () => {
     fetchShoppingList();
   }, []);
 
+  // If we arrived from the route planner, prefer that route and persist it.
+  useEffect(() => {
+    const incoming = location.state?.routeData;
+    if (!incoming) return;
+
+    setRoute(incoming);
+    manualRouteRef.current = true;
+    try {
+      sessionStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(incoming));
+    } catch {
+      // ignore
+    }
+  }, [location.state]);
+
   // ✅ GENERATE STORE ROUTE FOR SHOPPING LIST
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
       try {
+        // If we arrived from the route planner with a generated route, don't override it.
+        if (manualRouteRef.current) return;
+
         if (!shoppingItems || shoppingItems.length === 0) {
           setRoute(null);
           return;
@@ -97,7 +133,14 @@ const HomePage = () => {
         }
 
         const data = await routingService.generateRoute(1, productIds);
-        if (!cancelled) setRoute(data);
+        if (!cancelled) {
+          setRoute(data);
+          try {
+            sessionStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(data));
+          } catch {
+            // ignore
+          }
+        }
       } catch (err) {
         console.log("❌ Route generation error", err);
         if (!cancelled) setRoute(null);
@@ -341,7 +384,19 @@ const HomePage = () => {
             <span className="menu-icon">🏠</span>
             <span>Home</span>
           </button>
-          <button type="button" className="menu-item">
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => navigate("/routing")}
+          >
+            <span className="menu-icon">🗺️</span>
+            <span>Routes</span>
+          </button>
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => navigate("/create-list")}
+          >
             <span className="menu-icon">🧭</span>
             <span>Explore</span>
           </button>
@@ -349,7 +404,11 @@ const HomePage = () => {
             <span className="menu-icon">🧺</span>
             <span>ItemsAdded</span>
           </button>
-          <button type="button" className="menu-item">
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => navigate("/review-list")}
+          >
             <span className="menu-icon">📋</span>
             <span>List</span>
           </button>
@@ -407,8 +466,8 @@ const HomePage = () => {
           </div>
 
           <div className="suggestion-box">
-            <h3>Smart suggestions</h3>
-            <p className="offer">10% offer on items</p>
+            <h3>Offers</h3>
+            <p className="offer">Check out our latest deals!</p>
 
             {smartSuggestions.length === 0 ? (
               <p className="empty">No suggestions</p>

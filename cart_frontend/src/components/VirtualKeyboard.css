@@ -1,57 +1,169 @@
 .vk-global {
-  --vk-bg: #ffffff;
-  --vk-key-bg: #f7f8ff;
-  --vk-key-border: rgba(99,102,241,0.08);
-  --vk-text: #0f172a;
+  --vk-bg-top: #ffffff;
+  --vk-bg-bottom: #fbfbff;
+  --vk-border: rgba(0, 0, 0, 0.08);
+  --vk-text: #1f1f1f;
+  --vk-accent: #6159c9;
+  --vk-warm: #f3ae48;
+  --vk-warm-soft: #f6e7cf;
+  --vk-accent-soft: #f3f1ff;
+  --vk-accent-soft-2: #f8f6ff;
+  --vk-accent-border: #c8c6f3;
+  --vk-key-bg: #ffffff;
+  --vk-key-border: rgba(0, 0, 0, 0.10);
+  --vk-key-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.08);
+  --vk-key-shadow-pressed: 0 0.18rem 0.55rem rgba(0,0,0,0.08);
   position: fixed;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg,var(--vk-bg), #fbfbff);
-  padding: 10px 12px;
-  border-radius: 12px;
-  box-shadow: 0 12px 36px rgba(16,24,40,0.08);
+  bottom: 0.5rem;
+  right: 0.5rem;
+  left: auto;
+  top: auto;
+  transform: none;
+  background: linear-gradient(180deg, var(--vk-bg-top), var(--vk-bg-bottom));
+  padding: 0.4rem;
+  border-radius: 0.9rem;
+  border: 0.0625rem solid var(--vk-border);
+  box-shadow: 0 0.75rem 2rem rgba(0,0,0,0.12);
   z-index: 9999;
-  max-width: 760px;
-  width: calc(100% - 40px);
+  width: 200rem;
   color: var(--vk-text);
+  font-family: inherit;
+  user-select: none;
 }
-.vk-global[style] { transform: none; }
-.vk-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px }
-.vk-key { padding:8px 10px; border-radius:8px; border:1px solid var(--vk-key-border); background:var(--vk-key-bg); cursor:pointer; font-size:14px }
-.vk-bottom { display:flex; gap:8px; justify-content:center; align-items:center }
-.vk-space { padding:8px 36px }
-.vk-global button[title] { background: rgba(0,0,0,0.04); padding:6px 8px; border-radius:8px }
+
+/* Drag header + dock buttons */
+.vk-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  margin: -0.1rem -0.1rem 0.75rem;
+  border-radius: 0.7rem;
+  background: var(--vk-warm-soft);
+  border: 0.0625rem solid rgba(243, 174, 72, 0.45);
+  margin-top: 0.1rem;
+  margin-bottom: 0.5rem;
+  cursor: grab;
+}
+
+.vk-header:active {
+  cursor: grabbing;
+}
+
+.vk-header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.vk-dockbtn {
+  appearance: none;
+  border: 0.0625rem solid rgba(243, 174, 72, 0.55);
+  background: #ffffff;
+  color: #2b2b2b;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.vk-dockbtn:hover {
+  background: rgba(243, 174, 72, 0.12);
+}
+
+.vk-dockbtn:active {
+  transform: translateY(0.03125rem);
+}
 
 /* style simple-keyboard generated keys */
+.vk-global .hg-rows {
+  background: var(--vk-accent);
+  border-radius: 0.75rem;
+  padding: 0.6rem;
+}
+
+.vk-global .hg-row {
+  margin-bottom: 0.35rem;
+  margin-top: 0.1rem;
+}
+
+.vk-global .hg-row:last-child {
+  margin-bottom: 0;
+}
+
 .vk-global .hg-theme-default .hg-button,
 .vk-global .hg-button {
   background: var(--vk-key-bg) !important;
-  border: 1px solid var(--vk-key-border) !important;
+  border: 0.0625rem solid var(--vk-key-border) !important;
   color: var(--vk-text) !important;
-  border-radius: 8px !important;
-  box-shadow: none !important;
+  border-radius: 0.5rem !important;
+  box-shadow: var(--vk-key-shadow) !important;
+  padding: 0rem 0rem;
+  font-size: 1.1rem;
+  line-height: 1 !important;
+  height: 2rem ;
+  /* min-height: 2.4rem !important; */
+  font-weight: 500 !important;
+  text-transform: uppercase;
 }
-.vk-global .hg-button.hg-action { background:#eef2ff !important }
 
-/* help tooltip */
-.vk-help{
-  background: rgba(15,23,42,0.95);
-  color: #fff;
-  padding:10px 12px;
-  border-radius:8px;
-  box-shadow: 0 6px 18px rgba(2,6,23,0.4);
-  margin-top:8px;
-  font-size:13px;
+.vk-global .hg-button span {
+  font-size: inherit !important;
+  line-height: 1 !important;
 }
+
+.vk-global .hg-button:active {
+  transform: translateY(0.05rem);
+  box-shadow: var(--vk-key-shadow-pressed) !important;
+  border-color: var(--vk-accent) !important;
+}
+
+.vk-global .hg-button.hg-action {
+  background: var(--vk-accent-soft) !important;
+  border-color: var(--vk-accent-border) !important;
+}
+
+/* Use orange on a few key UI spots */
+.vk-global .hg-button-bksp {
+  background: var(--vk-warm-soft) !important;
+  border-color: rgba(243, 174, 72, 0.6) !important;
+}
+
+.vk-global .hg-button-space {
+  background: var(--vk-accent-soft) !important;
+  border-color: var(--vk-accent-border) !important;
+}
+
+.vk-global .hg-button span {
+  font-size: inherit !important;
+}
+
+/* Make space bar wide like the reference */
+.vk-global .hg-button-space {
+  flex: 1 1 auto;
+}
+
+.vk-global .hg-button-bksp {
+  min-width: 4.75rem;
+}
+
 /* responsive transitions */
-.vk-global { transition: left 160ms ease, top 160ms ease, width 160ms ease; }
+.vk-global { transition: left 160ms ease, top 160ms ease, width 160ms ease, right 160ms ease, bottom 160ms ease; }
 .hg-candidate-box { z-index: 10000; }
-@media (min-width:900px) {
-  .vk-global { width: 700px; }
-}
 
-/* Compact mode styles: smaller keys and tighter spacing */
-.vk-global.vk-compact .hg-button { padding: 6px 8px !important; border-radius: 6px !important }
-.vk-global.vk-compact .hg-button span { font-size: 13px !important }
-.vk-global.vk-compact { padding: 6px 8px }
+@media (max-width: 48em) {
+  .vk-global {
+    padding: 0.65rem;
+  }
+  .vk-global .hg-button {
+    padding: 0.28rem 0.36rem !important;
+    font-size: 0.66rem !important;
+    height: 2.2rem !important;
+    min-height: 2.2rem !important;
+  }
+  .vk-header {
+    margin-bottom: 0.6rem;
+  }
+}
