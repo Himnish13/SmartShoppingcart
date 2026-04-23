@@ -1,0 +1,57 @@
+.vk-global {
+  --vk-bg: #ffffff;
+  --vk-key-bg: #f7f8ff;
+  --vk-key-border: rgba(99,102,241,0.08);
+  --vk-text: #0f172a;
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg,var(--vk-bg), #fbfbff);
+  padding: 10px 12px;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(16,24,40,0.08);
+  z-index: 9999;
+  max-width: 760px;
+  width: calc(100% - 40px);
+  color: var(--vk-text);
+}
+.vk-global[style] { transform: none; }
+.vk-row { display:flex; gap:6px; justify-content:center; margin-bottom:6px }
+.vk-key { padding:8px 10px; border-radius:8px; border:1px solid var(--vk-key-border); background:var(--vk-key-bg); cursor:pointer; font-size:14px }
+.vk-bottom { display:flex; gap:8px; justify-content:center; align-items:center }
+.vk-space { padding:8px 36px }
+.vk-global button[title] { background: rgba(0,0,0,0.04); padding:6px 8px; border-radius:8px }
+
+/* style simple-keyboard generated keys */
+.vk-global .hg-theme-default .hg-button,
+.vk-global .hg-button {
+  background: var(--vk-key-bg) !important;
+  border: 1px solid var(--vk-key-border) !important;
+  color: var(--vk-text) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+.vk-global .hg-button.hg-action { background:#eef2ff !important }
+
+/* help tooltip */
+.vk-help{
+  background: rgba(15,23,42,0.95);
+  color: #fff;
+  padding:10px 12px;
+  border-radius:8px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.4);
+  margin-top:8px;
+  font-size:13px;
+}
+/* responsive transitions */
+.vk-global { transition: left 160ms ease, top 160ms ease, width 160ms ease; }
+.hg-candidate-box { z-index: 10000; }
+@media (min-width:900px) {
+  .vk-global { width: 700px; }
+}
+
+/* Compact mode styles: smaller keys and tighter spacing */
+.vk-global.vk-compact .hg-button { padding: 6px 8px !important; border-radius: 6px !important }
+.vk-global.vk-compact .hg-button span { font-size: 13px !important }
+.vk-global.vk-compact { padding: 6px 8px }
