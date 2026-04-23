@@ -12,6 +12,7 @@ const routingRoutes = require("./routes/routing.routes");
 const syncRoutes = require("./routes/sync.routes");
 const recRoutes = require("./routes/recommendations.routes");
 const positionRoutes = require("./routes/position.routes");
+const offersRoutes = require("./routes/offers.routes");
 // const { initPositionSystem } = require("./services/position.system");
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
@@ -20,6 +21,7 @@ app.use("/routing", routingRoutes);
 app.use("/sync", syncRoutes);
 app.use("/recommend", recRoutes);
 app.use("/position", positionRoutes);
+app.use("/offers", offersRoutes);
 
 
 // initPositionSystem();

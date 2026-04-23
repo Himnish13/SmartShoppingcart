@@ -2,8 +2,7 @@ const db = require("../config/sqlite");
 
 exports.getAllOffers = (req, res) => {
     db.all(
-        `SELECT o.product_id, o.discount, p.name, p.price, p.image_url, p.barcode,
-                c.category_name
+        `SELECT o.product_id, o.discount, p.name, p.barcode, p.image_url, p.price, p.category_id, c.category_name
          FROM offers o
          JOIN products p ON o.product_id = p.product_id
          LEFT JOIN category c ON p.category_id = c.category_id`,

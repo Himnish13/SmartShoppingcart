@@ -3,6 +3,7 @@ const router = express.Router();
 const controller = require("../controllers/shoppinglist.controller");
 
 router.post("/sync", controller.syncList);
+router.post("/paste", controller.pasteList);
 router.post("/update", controller.updateQuantity);
 router.post("/remove", controller.removeFromList);
 router.post("/add", controller.addToList);
