@@ -414,7 +414,7 @@ const HomePage = () => {
           </button>
           <button type="button" className="menu-item">
             <span className="menu-icon">🏷️</span>
-            <span>Offers</span>
+            <span onClick={() => navigate("/offers")}>Offers</span>
           </button>
         </div>
       </div>

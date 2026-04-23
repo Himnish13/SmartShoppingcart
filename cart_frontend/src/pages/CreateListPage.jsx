@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./CreateListPage.css";
 import { useNavigate } from "react-router-dom";
+import BarcodeScanner from "../components/BarcodeScanner";
+import ScanPopup from "../components/ScanPopup";
 
 const CreateListPage = () => {
   const [products, setProducts] = useState([]);
@@ -13,6 +15,11 @@ const CreateListPage = () => {
   const pasteSelection = useRef({ start: 0, end: 0 });
   const [showVK, setShowVK] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [scanPopupVisible, setScanPopupVisible] = useState(false);
+  const [scannedItem, setScannedItem] = useState(null);
+  const [scannedPrice, setScannedPrice] = useState(0);
+  const [scannedQty, setScannedQty] = useState(0);
+  const [cartTotal, setCartTotal] = useState(0);
   const navigate = useNavigate();
 
   const billingCategoryIds = useMemo(() => {
@@ -35,6 +42,21 @@ const CreateListPage = () => {
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.log(err));
+  };
+
+  // fetch cart items to compute totals
+  const fetchCartItems = async () => {
+    try {
+      const res = await fetch("http://localhost:3500/cart/items");
+      const data = await res.json();
+      const total = data.reduce((acc, it) => acc + (it.price_at_scan || 0) * (it.quantity || 0), 0);
+      setCartTotal(total);
+      return data;
+    } catch (e) {
+      console.log("Cart fetch error", e);
+      setCartTotal(0);
+      return [];
+    }
   };
 
   // ✅ FETCH CATEGORIES
@@ -211,6 +233,82 @@ const CreateListPage = () => {
     }
   }, [pasteText]);
 
+  // =====================
+  // Barcode scanning flow
+  // =====================
+  const handleBarcodeDetected = async (code) => {
+    if (!code) return;
+
+    // find product locally
+    const product = products.find((p) => String(p.barcode) === String(code));
+    if (!product) {
+      // if not found, try trimming leading zeros
+      const trimmed = String(code).replace(/^0+/, "");
+      const alt = products.find((p) => String(p.barcode) === trimmed);
+      if (alt) product = alt;
+    }
+
+    try {
+      // add one unit to cart via backend
+      await fetch("http://localhost:3500/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode: code, quantity: 1 }),
+      });
+
+      // refresh cart items
+      const cartItems = await fetchCartItems();
+
+      // find added item in cart
+      const added = cartItems.find((c) => String(c.barcode) === String(code));
+
+      setScannedItem(product || { name: added?.name || "Unknown", image_url: (product && product.image_url) || (added && added.image_url) || "", barcode: code });
+      setScannedPrice(added?.price_at_scan || (product && product.price) || 0);
+      setScannedQty(added?.quantity || 1);
+      setScanPopupVisible(true);
+    } catch (err) {
+      console.log("Scan add error:", err);
+    }
+  };
+
+  const popupIncrease = async () => {
+    if (!scannedItem) return;
+    try {
+      await fetch("http://localhost:3500/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode: scannedItem.barcode, quantity: 1 }),
+      });
+      const cartItems = await fetchCartItems();
+      const it = cartItems.find((c) => String(c.barcode) === String(scannedItem.barcode));
+      setScannedQty(it?.quantity || Math.max(1, scannedQty + 1));
+      setScannedPrice(it?.price_at_scan || scannedPrice);
+    } catch (e) { console.log(e); }
+  };
+
+  const popupDecrease = async () => {
+    if (!scannedItem) return;
+    try {
+      await fetch("http://localhost:3500/cart/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode: scannedItem.barcode, quantity: 1 }),
+      });
+      const cartItems = await fetchCartItems();
+      const it = cartItems.find((c) => String(c.barcode) === String(scannedItem.barcode));
+      if (!it) {
+        // closed or removed completely
+        setScanPopupVisible(false);
+        setScannedItem(null);
+        setScannedQty(0);
+        setScannedPrice(0);
+      } else {
+        setScannedQty(it.quantity || 0);
+        setScannedPrice(it.price_at_scan || scannedPrice);
+      }
+    } catch (e) { console.log(e); }
+  };
+
   const applyPasteSuggestion = (product) => {
     const lines = pasteText.split(/\r?\n/);
     lines[lines.length - 1] = product.name + ' 1';
@@ -311,7 +409,9 @@ const CreateListPage = () => {
       {/* NAVBAR */}
       <div className="navbar">
         <h2>Make List</h2>
-
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <BarcodeScanner onDetected={handleBarcodeDetected} />
+        </div>
         <div className="search-box">
           <span>🔍</span>
           <input
@@ -360,6 +460,17 @@ const CreateListPage = () => {
         </div>
         {showVK && <VirtualKeyboard />}
       </div>
+      {/* Scan popup for barcode adds */}
+      <ScanPopup
+        visible={scanPopupVisible}
+        item={scannedItem}
+        price={scannedPrice}
+        qty={scannedQty}
+        totalCart={cartTotal}
+        onClose={() => setScanPopupVisible(false)}
+        onIncrease={popupIncrease}
+        onDecrease={popupDecrease}
+      />
       <div className="categories">
 
         <div

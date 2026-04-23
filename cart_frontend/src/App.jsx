@@ -6,6 +6,7 @@ import ReviewListPage from "./pages/ReviewListPage";
 import RoutingPage from "./pages/RoutingPage";
 import HomePage from "./pages/HomePage";
 import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
+import OffersPage from "./pages/OffersPage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/review-list" element={<ReviewListPage />} />
         <Route path="/routing" element={<RoutingPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/offers" element={<OffersPage />} />
       </Routes>
     </BrowserRouter>
   )
