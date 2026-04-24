@@ -181,6 +181,7 @@ const MapDisplay = ({
     <div
       className={`map-display-container ${fullscreen ? "fullscreen" : ""}`}
       ref={containerRef}
+      onDoubleClick={() => onFullscreenToggle && onFullscreenToggle()}
     >
       <div className="map-top-bar">
         <h3>Store Map</h3>

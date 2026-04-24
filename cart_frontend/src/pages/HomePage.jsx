@@ -266,6 +266,12 @@ const HomePage = () => {
       const heading = Math.atan2(seg.b.y - seg.a.y, seg.b.x - seg.a.x);
       setCurrentPosition({ x, y, heading, nodeId: seg.nodeId });
 
+      // When user is halfway (50%) between aisles, fetch offers for the upcoming aisle
+      const nextNodeId = seg.b?.nodeId;
+      if (t >= 0.5 && nextNodeId && lastFetchedNodeRef.current !== nextNodeId) {
+        fetchOffers(nextNodeId);
+      }
+
       raf = requestAnimationFrame(tick);
     };
 
@@ -433,6 +439,48 @@ const HomePage = () => {
             showLegend={false}
           />
         </div>
+
+        {fullscreen && (
+          <div className="map-fullscreen-overlay" role="dialog">
+            <div className="overlay-left">
+              <MapDisplay
+                storeLayout={storeLayout}
+                nodes={mapNodes}
+                path={route?.path}
+                currentPosition={currentPosition}
+                fullscreen={true}
+                onFullscreenToggle={() => setFullscreen(false)}
+                showLegend={true}
+              />
+            </div>
+
+            <div className="overlay-right">
+              <div className="offers-panel">
+                <div className="offers-header">
+                  <h3>Offers Near You</h3>
+                  <button className="close-overlay" onClick={() => setFullscreen(false)}>✕</button>
+                </div>
+
+                <div className="offers-list">
+                  {offers.length === 0 ? (
+                    <p className="empty">No offers available</p>
+                  ) : (
+                    offers.map((o) => (
+                      <div key={o.product_id} className="offer-row">
+                        <img src={o.image_url} alt={o.name} />
+                        <div className="offer-info">
+                          <div className="offer-name">{o.name}</div>
+                          <div className="offer-price">₹{Number(o.price || 0).toFixed(2)}</div>
+                          <div className="offer-discount">{o.discount}% OFF</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bottom-section">
 
