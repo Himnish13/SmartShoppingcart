@@ -143,7 +143,20 @@ const ListChoicePage = () => {
             Don't have a list ready? Lets make it together
           </p>
 
-          <button className="primary-btn" onClick={() => navigate("/create-list")}>
+          <button 
+            className="primary-btn" 
+            onClick={async () => {
+              try {
+                await Promise.all([
+                  fetch(`${API}/shopping-list/clear`, { method: "POST" }),
+                  fetch(`${API}/cart/clear`, { method: "POST" })
+                ]);
+              } catch (e) {
+                console.error("Failed to clear previous session data", e);
+              }
+              navigate("/create-list");
+            }}
+          >
             Make List
           </button>
         </div>
