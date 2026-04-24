@@ -88,10 +88,10 @@
 
 /* QR BOX */
 .qr-box {
-  width: 11.25rem;
-  height: 11.25rem;
+  width: 16.5rem;
+  height: 16.5rem;
   background: #e5e5e5;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;

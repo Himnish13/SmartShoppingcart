@@ -341,44 +341,23 @@ const CreateListPage = () => {
         </div>
       </div>
 
-      {/* CATEGORIES */}
-      <h3>Categories</h3>
-
-      {/* Paste-based import (reuse existing classes) */}
+      {/* Display imported/added list */}
       <div className="paste-box">
-        <h4 className="paste-title">Import Items</h4>
+        <h4 className="paste-title">Your Shopping List</h4>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <textarea
-            ref={textareaRef}
             className="paste-textarea"
-            placeholder={"Example: Milk 500ml"}
-            value={pasteText}
-            onChange={handlePasteChange}
+            readOnly
+            value={Object.values(cart)
+              .map(item => `${item.name} ${item.qty > 1 ? `x${item.qty}` : ''}`)
+              .join('\n')}
+            placeholder="Your list is empty. Add items or import via mobile."
+            style={{ backgroundColor: '#f9f9f9', cursor: 'default' }}
           />
-          <button
-            type="button"
-            className="vk-toggle"
-            onClick={() => setShowVK((s) => !s)}
-            title="Toggle virtual keyboard"
-          >⌨</button>
         </div>
-
-        {pasteSuggestions.length > 0 && (
-          <div className="paste-suggestions">
-            {pasteSuggestions.map((p) => (
-              <div key={p.product_id} className="paste-suggestion" onClick={() => applyPasteSuggestion(p)}>
-                <img src={p.image_url} alt={p.name} />
-                <span>{p.name}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="paste-actions">
-          <button className="import-btn" onClick={importPaste}>Import Pasted List</button>
-        </div>
-        {showVK && <VirtualKeyboard />}
       </div>
+      {/* CATEGORIES */}
+      <h3>Categories</h3>
       <div className="categories">
 
         <div
