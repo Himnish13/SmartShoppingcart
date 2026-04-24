@@ -49,6 +49,10 @@ exports.submitList = (req, res) => {
 
   // Use db.serialize() so every operation runs one-after-another (no race conditions)
   db.serialize(() => {
+    // Clear the current list first to start a new session
+    db.run(`DELETE FROM shopping_list`);
+    db.run(`DELETE FROM cart_items`);
+
     let completed = 0;
     const total = parsed.length;
 
