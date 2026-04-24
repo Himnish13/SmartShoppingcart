@@ -8,22 +8,27 @@ import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
 import OffersPage from "./pages/OffersPage";
+import { ScanProvider } from "./context/ScanContext";
+import ScanPopup from "./components/ScanPopup";
 
 function App() {
   return (
-    <BrowserRouter>
-      <VirtualKeyboardGlobal />
-      <Routes>
-        <Route path="/" element={<StartPage />} />
-        <Route path="/list-choice" element={<ListChoicePage />} />
-        <Route path="/create-list" element={<CreateListPage />} />
-        <Route path="/review-list" element={<ReviewListPage />} />
-        <Route path="/routing" element={<RoutingPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/offers" element={<OffersPage />} />
-      </Routes>
-    </BrowserRouter>
+    <ScanProvider>
+      <BrowserRouter>
+        <VirtualKeyboardGlobal />
+        <ScanPopup />
+        <Routes>
+          <Route path="/" element={<StartPage />} />
+          <Route path="/list-choice" element={<ListChoicePage />} />
+          <Route path="/create-list" element={<CreateListPage />} />
+          <Route path="/review-list" element={<ReviewListPage />} />
+          <Route path="/routing" element={<RoutingPage />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/offers" element={<OffersPage />} />
+        </Routes>
+      </BrowserRouter>
+    </ScanProvider>
   )
 }
 

@@ -20,11 +20,9 @@ const HomePage = () => {
 
   const manualRouteRef = useRef(false);
 
-  const [popup, setPopup] = useState(null);
-  const [barcode, setBarcode] = useState(null);
   const [cartItems, setCartItems] = useState([]);
 
-  const lastScannedRef = useRef(null);
+  const lastFetchedNodeRef = useRef(null);
 
   const [mapNodes, setMapNodes] = useState({});
   const [storeLayout, setStoreLayout] = useState(null);
@@ -39,6 +37,8 @@ const HomePage = () => {
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [shoppingItems, setShoppingItems] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [offers, setOffers] = useState([]);
 
   // ✅ FETCH CART ITEMS
   const fetchCartItems = async () => {
@@ -88,11 +88,38 @@ const HomePage = () => {
     }
   };
 
+  // ✅ FETCH OFFERS FROM DB (based on current node)
+  const fetchOffers = async (nodeId = 1) => {
+    if (lastFetchedNodeRef.current === nodeId) return;
+
+    try {
+      const res = await fetch("http://localhost:3500/recommend/near", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentNode: nodeId })
+      });
+      const data = await res.json();
+      setOffers(Array.isArray(data.recommendations) ? data.recommendations : []);
+      lastFetchedNodeRef.current = nodeId;
+    } catch (err) {
+      console.log("❌ Offers fetch error", err);
+      setOffers([]);
+    }
+  };
+
+  // ✅ React to movement and fetch nearby offers
+  useEffect(() => {
+    if (currentPosition?.nodeId) {
+      fetchOffers(currentPosition.nodeId);
+    }
+  }, [currentPosition?.nodeId]);
+
   useEffect(() => {
     fetchCartItems();
     fetchMapData();
     fetchSuggestions();
     fetchShoppingList();
+    fetchOffers();
   }, []);
 
   // If we arrived from the route planner, prefer that route and persist it.
@@ -197,9 +224,11 @@ const HomePage = () => {
       .filter(Boolean);
 
     const points = ids
-      .map((id) => mapNodes[id])
-      .filter(Boolean)
-      .map((n) => ({ x: n.x, y: n.y }));
+      .map((id) => {
+        const n = mapNodes[id];
+        return n ? { x: n.x, y: n.y, nodeId: parseInt(id, 10) } : null;
+      })
+      .filter(Boolean);
 
     if (points.length < 2) {
       setCurrentPosition(null);
@@ -212,7 +241,7 @@ const HomePage = () => {
       const a = points[i];
       const b = points[i + 1];
       const len = Math.hypot(b.x - a.x, b.y - a.y);
-      segments.push({ a, b, len, start: total, end: total + len });
+      segments.push({ a, b, len, start: total, end: total + len, nodeId: a.nodeId });
       total += len;
     }
 
@@ -235,7 +264,7 @@ const HomePage = () => {
       const x = seg.a.x + (seg.b.x - seg.a.x) * t;
       const y = seg.a.y + (seg.b.y - seg.a.y) * t;
       const heading = Math.atan2(seg.b.y - seg.a.y, seg.b.x - seg.a.x);
-      setCurrentPosition({ x, y, heading });
+      setCurrentPosition({ x, y, heading, nodeId: seg.nodeId });
 
       raf = requestAnimationFrame(tick);
     };
@@ -255,7 +284,7 @@ const HomePage = () => {
 
       if (snapshot && snapshot.x !== null && snapshot.x !== undefined && snapshot.y !== null && snapshot.y !== undefined) {
         setHasBackendPosition(true);
-        setCurrentPosition({ x: snapshot.x, y: snapshot.y, heading: snapshot.heading });
+        setCurrentPosition({ x: snapshot.x, y: snapshot.y, heading: snapshot.heading, nodeId: snapshot.nodeId });
       } else {
         setHasBackendPosition(false);
       }
@@ -270,91 +299,6 @@ const HomePage = () => {
     };
   }, []);
 
-  // ✅ SCANNER LISTENER
-  useEffect(() => {
-
-    const interval = setInterval(async () => {
-
-      try {
-        const res = await fetch("http://127.0.0.1:5200/event");
-        const data = await res.json();
-
-        // 🚫 ignore duplicate scans
-        if (data.barcode && data.barcode === lastScannedRef.current) {
-          return;
-        }
-
-        if (data.type === "add") {
-
-          if (data.status === "scanning") {
-            setPopup("scan");
-          }
-
-          else if (data.status === "failed") {
-            setPopup("retry");
-          }
-
-          else if (data.status === "success") {
-
-            const scannedBarcode = String(data.barcode).trim();
-
-            console.log("📦 SCANNED:", scannedBarcode);
-
-            setPopup("success");
-            setBarcode(scannedBarcode);
-            lastScannedRef.current = scannedBarcode;
-
-            // 🔥 CALL BACKEND
-            try {
-              const resAdd = await fetch("http://localhost:3500/cart/add", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  barcode: scannedBarcode,
-                  quantity: 1
-                }),
-              });
-
-              const result = await resAdd.json();
-
-              console.log("🟢 ADD API RESPONSE:", result);
-
-              if (!resAdd.ok) {
-                console.log("❌ Add failed:", result);
-                setPopup("retry");
-                return;
-              }
-
-              // ✅ ONLY REFRESH AFTER SUCCESS
-              await fetchCartItems();
-
-            } catch (err) {
-              console.log("❌ API ERROR:", err);
-            }
-
-            // 🔁 reset scan after 2 sec (IMPORTANT)
-            setTimeout(() => {
-              lastScannedRef.current = null;
-            }, 2000);
-          }
-        }
-
-        // REMOVE FLOW (optional for now)
-        if (data.type === "remove") {
-          setPopup("remove");
-        }
-
-      } catch (err) {
-        console.log("⚠️ Event server not running");
-      }
-
-    }, 1500);
-
-    return () => clearInterval(interval);
-
-  }, []);
 
   // ✅ REMOVE ITEM
   const removeItem = async (product_id) => {
@@ -374,11 +318,37 @@ const HomePage = () => {
   };
 
   return (
-    <div className={`home ${fullscreen ? "fullscreen-active" : ""}`}>
+    <div className={`home ${fullscreen ? "fullscreen-active" : ""} ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+
+      {/* SIDEBAR OPEN BUTTON (only visible when sidebar is closed) */}
+      {!sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-toggle"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
+        >
+          <span className="hamburger">
+            <span />
+            <span />
+            <span />
+          </span>
+        </button>
+      )}
 
       {/* SIDEBAR */}
-      <div className="sidebar">
-        <h2 className="logo"><span className="logo-icon">🛒</span> Smart Cart</h2>
+      <div className={`sidebar ${sidebarOpen ? "visible" : ""}`}>
+        <div className="sidebar-header">
+          <h2 className="logo"><span className="logo-icon">🛒</span> Smart Cart</h2>
+          <button
+            type="button"
+            className="sidebar-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close sidebar"
+          >
+            ✕
+          </button>
+        </div>
         <div className="menu">
           <button type="button" className="menu-item active">
             <span className="menu-icon">🏠</span>
@@ -497,18 +467,27 @@ const HomePage = () => {
             <h3>Offers</h3>
             <p className="offer">Check out our latest deals!</p>
 
-            {smartSuggestions.length === 0 ? (
-              <p className="empty">No suggestions</p>
+            {offers.length === 0 ? (
+              <p className="empty">No offers available</p>
             ) : (
-              smartSuggestions.map((p) => (
-                <div className="suggestion-item" key={p.product_id}>
-                  <div className="suggestion-left">
-                    <img className="suggestion-img" src={p.image_url} alt={p.name} />
-                    <span className="suggestion-name">{p.name}</span>
+              offers.map((o) => {
+                const discountedPrice = (o.price * (1 - o.discount / 100)).toFixed(2);
+                return (
+                  <div className="suggestion-item" key={o.product_id}>
+                    <div className="suggestion-left">
+                      <img className="suggestion-img" src={o.image_url} alt={o.name} />
+                      <div className="offer-details">
+                        <span className="suggestion-name">{o.name}</span>
+                        <span className="offer-prices">
+                          <span className="offer-original">₹{o.price}</span>
+                          <span className="offer-discounted">₹{discountedPrice}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <span className="offer-badge">{o.discount}% OFF</span>
                   </div>
-                  <button type="button">+ Add</button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -601,12 +580,6 @@ const HomePage = () => {
           })
         )}
       </div>
-
-      {/* POPUPS */}
-      {popup === "scan" && <div className="popup">📷 Scan product</div>}
-      {popup === "retry" && <div className="popup error">❌ Try again</div>}
-      {popup === "success" && <div className="popup success">✅ Added ({barcode})</div>}
-      {popup === "remove" && <div className="popup">⚠️ Remove detected</div>}
 
     </div>
   );

@@ -1,66 +1,72 @@
-import React from "react";
-import "../pages/CreateListPage.css";
+import React, { useEffect } from "react";
+import { useScan } from "../context/ScanContext";
+import "./ScanPopup.css";
 
-export default function ScanPopup({
-  visible,
-  item,
-  price,
-  qty,
-  totalCart,
-  onClose
-}) {
-  if (!visible || !item) return null;
+export default function ScanPopup() {
+  const {
+    scanPopupVisible,
+    scannedItem,
+    scannedPrice,
+    scannedQty,
+    totalItems,
+    cartTotal,
+    closePopup,
+  } = useScan();
+
+  // Auto-close after 3 seconds of inactivity
+  useEffect(() => {
+    if (!scanPopupVisible || !scannedItem) return;
+    const t = setTimeout(() => {
+      closePopup();
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [scanPopupVisible, scannedItem, scannedQty, closePopup]);
+
+  if (!scanPopupVisible || !scannedItem) return null;
 
   return (
-    <div className="scan-modal-backdrop" onClick={onClose}>
+    <div className="scan-modal-backdrop" onClick={closePopup}>
       <div className="scan-modal" onClick={(e) => e.stopPropagation()}>
-
-        {/* CLOSE ICON */}
-        <button className="scan-close" onClick={onClose}>✕</button>
+        <button className="scan-close" onClick={closePopup}>
+          ✕
+        </button>
 
         <div className="scan-body">
-
           <div className="scan-image">
-            <img src={item.image_url} alt={item.name} />
+            <img src={scannedItem.image_url} alt={scannedItem.name} />
           </div>
 
           <div className="scan-info">
-            <h3>{item.name}</h3>
-
-            <div className="scan-meta">
-              Barcode: {item.barcode}
+            <div className="scan-header-row">
+              <h3>{scannedItem.name}</h3>
+              <span className="scan-badge">Category</span>
             </div>
 
-            <div className="scan-price">
-              Price/unit: <strong>Rs. {Number(price).toFixed(2)}</strong>
+            <div className="scan-quantity-row">
+              <span>Quantity:</span>
+              <span className="scan-qty-value">{scannedQty}</span>
             </div>
 
-            {/* READ-ONLY QUANTITY */}
-            <div className="scan-qty-display">
-              Quantity: <strong>{qty}</strong>
+            <div className="scan-cost">
+              Cost : Rs. {Number(scannedPrice * scannedQty).toFixed(2)}
             </div>
 
-            <div className="scan-line">
-              <div>Estimated Total:</div>
-              <div>
-                <strong>Rs. {(qty * price).toFixed(2)}</strong>
-              </div>
+            <div className="scan-success-msg">
+              <span style={{ fontSize: "16px" }}>✓</span> Scanned and added Successfully
             </div>
           </div>
         </div>
 
-        {/* FOOTER */}
         <div className="scan-footer">
-          <div className="scan-cart-total">
-            Cart Total: <strong>Rs. {Number(totalCart).toFixed(2)}</strong>
+          <div className="scan-footer-item">
+            <span className="scan-footer-icon">📦</span> Total Items:{" "}
+            <span>{totalItems}</span>
           </div>
-
-          {/* 🔥 OK BUTTON */}
-          <button className="scan-ok-btn" onClick={onClose}>
-            OK
-          </button>
+          <div className="scan-footer-item">
+            <span className="scan-footer-icon">💳</span> Estimated Total:{" "}
+            <span>Rs. {Number(cartTotal).toFixed(2)}</span>
+          </div>
         </div>
-
       </div>
     </div>
   );

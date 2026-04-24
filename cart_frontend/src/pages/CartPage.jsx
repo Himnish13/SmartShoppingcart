@@ -49,7 +49,7 @@ const CartPage = () => {
 
   // ─── totals ───────────────────────────────────────────────────────────────────
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + parseFloat(item.price || 0) * (item.quantity || 1),
+    (sum, item) => sum + parseFloat(item.price_at_scan || 0) * (item.quantity || 1),
     0
   );
   const tax = subtotal * TAX_RATE;
@@ -132,7 +132,7 @@ const CartPage = () => {
                       {item.name} {item.variant ? `— ${item.variant}` : ""}
                     </p>
                     <p className="cart-row-unit">
-                      {fmt(parseFloat(item.price || 0))}
+                      {fmt(parseFloat(item.price_at_scan || 0))} / unit
                     </p>
                   </div>
 
@@ -146,7 +146,7 @@ const CartPage = () => {
                   {/* price */}
                   <p className="cart-row-price">
                     {fmt(
-                      parseFloat(item.price || 0) * (item.quantity || 1)
+                      parseFloat(item.price_at_scan || 0) * (item.quantity || 1)
                     )}
                   </p>
 
