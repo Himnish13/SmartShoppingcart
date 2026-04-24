@@ -399,6 +399,90 @@
   filter: brightness(0.98);
 }
 
+/* Fullscreen map overlay (70% map | 30% offers) */
+.map-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(0,0,0,0.35);
+  z-index: 120;
+  padding: 1.25rem;
+}
+
+.overlay-left {
+  width: 70%;
+  background: transparent;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.overlay-left .map-display-container {
+  height: 100%;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.625rem 1.875rem rgba(0,0,0,0.2);
+}
+
+.overlay-right {
+  width: 30%;
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-y: auto;
+  box-shadow: 0 0.5rem 1.25rem rgba(0,0,0,0.08);
+}
+
+.offers-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.offers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.offers-header h3 {
+  margin: 0;
+}
+
+.close-overlay {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.offers-list .offer-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.offers-list img {
+  width: 3.25rem;
+  height: 3.25rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.offer-info .offer-name {
+  font-weight: 700;
+}
+
+.offer-info .offer-price {
+  color: #111827;
+}
+
+.offer-info .offer-discount {
+  color: #16a34a;
+  font-weight: 700;
+}
+
 /* OFFER DETAILS */
 .offer-details {
   display: flex;
