@@ -32,15 +32,16 @@ const ListChoicePage = () => {
     pollingRef.current = setInterval(async () => {
       try {
         const res = await fetch(`${API}/mobile/status`);
-        const { status } = await res.json();
+        const data = await res.json();
+        const { status, missingItems: missing } = data;
 
         if (status === "importing") {
           setImportStatus("importing");
         } else if (status === "success") {
           setImportStatus("success");
           clearInterval(pollingRef.current);
-          // After 2 seconds on the success screen navigate to create-list
-          setTimeout(() => navigate("/review-list"), 2000);
+          
+          setTimeout(() => navigate("/review-list", { state: { missingItems: missing } }), 2000);
         }
       } catch (_) {}
     }, 1200);

@@ -278,6 +278,14 @@ const ExplorePage = () => {
           <button
             type="button"
             className="menu-item"
+            onClick={() => navigate("/remaining")}
+          >
+            <span className="menu-icon">📋</span>
+            <span>Remaining</span>
+          </button>
+          <button
+            type="button"
+            className="menu-item"
             onClick={() => navigate("/list")}
           >
             <span className="menu-icon">📋</span>

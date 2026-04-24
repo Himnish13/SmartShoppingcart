@@ -37,6 +37,7 @@ const HomePage = () => {
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [shoppingItems, setShoppingItems] = useState([]);
+  const [laterProductIds, setLaterProductIds] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [offers, setOffers] = useState([]);
   const [selectedOffer, setSelectedOffer] = useState(null);
@@ -46,6 +47,7 @@ const HomePage = () => {
   };
 
   const addOfferToList = async (offer) => {
+    manualRouteRef.current = false;
     try {
       await fetch("http://localhost:3500/shopping-list/add", {
         method: "POST",
@@ -62,6 +64,7 @@ const HomePage = () => {
   };
 
   const removeOfferFromList = async (offer) => {
+    manualRouteRef.current = false;
     try {
       await fetch("http://localhost:3500/shopping-list/remove", {
         method: "POST",
@@ -195,14 +198,45 @@ const HomePage = () => {
           return;
         }
 
-        const data = await routingService.generateRoute(1, productIds);
-        if (!cancelled) {
-          setRoute(data);
+        const normalIds = productIds.filter(id => !laterProductIds.includes(id));
+        const laterIds = [...laterProductIds].filter(id => productIds.includes(id)); // respects order of laterProductIds
+
+        let finalRouteData = null;
+
+        if (normalIds.length > 0) {
+          finalRouteData = await routingService.generateRoute(1, normalIds);
+        }
+
+        for (const lId of laterIds) {
+          if (cancelled) break;
+          const startNodeForLater = finalRouteData?.path?.length > 0
+            ? finalRouteData.path[finalRouteData.path.length - 1]
+            : 1;
+
+          const laterRouteData = await routingService.generateRoute(startNodeForLater, [lId]);
+
+          if (!finalRouteData) {
+            finalRouteData = laterRouteData;
+          } else if (!cancelled && finalRouteData && laterRouteData) {
+            let p2 = laterRouteData.path || [];
+            if (p2.length > 0 && finalRouteData.path?.length > 0 && p2[0] === finalRouteData.path[finalRouteData.path.length - 1]) {
+              p2 = p2.slice(1);
+            }
+            finalRouteData.path = (finalRouteData.path || []).concat(p2);
+            if (laterRouteData.targets) finalRouteData.targets = (finalRouteData.targets || []).concat(laterRouteData.targets);
+            if (laterRouteData.selectedProducts) finalRouteData.selectedProducts = (finalRouteData.selectedProducts || []).concat(laterRouteData.selectedProducts);
+          }
+        }
+
+        if (!cancelled && finalRouteData) {
+          setRoute(finalRouteData);
           try {
-            sessionStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(data));
+            sessionStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(finalRouteData));
           } catch {
             // ignore
           }
+        } else if (!cancelled && !finalRouteData) {
+          setRoute(null);
         }
       } catch (err) {
         console.log("❌ Route generation error", err);
@@ -214,16 +248,23 @@ const HomePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [shoppingItems]);
+  }, [shoppingItems, laterProductIds]);
 
   const upNextItems = useMemo(() => {
     const raw = shoppingItems;
     if (!Array.isArray(raw)) return [];
 
+    let filtered = raw;
     const q = search.trim().toLowerCase();
-    if (!q) return raw;
-    return raw.filter((i) => String(i?.name || "").toLowerCase().includes(q));
-  }, [shoppingItems, search]);
+    if (q) {
+      filtered = raw.filter((i) => String(i?.name || "").toLowerCase().includes(q));
+    }
+    
+    const normal = filtered.filter(i => !laterProductIds.includes(i.product_id));
+    const later = filtered.filter(i => laterProductIds.includes(i.product_id))
+                          .sort((a, b) => laterProductIds.indexOf(a.product_id) - laterProductIds.indexOf(b.product_id));
+    return [...normal, ...later];
+  }, [shoppingItems, search, laterProductIds]);
 
   const smartSuggestions = useMemo(() => {
     const inList = new Set((shoppingItems || []).map((i) => i.product_id));
@@ -344,8 +385,9 @@ const HomePage = () => {
 
   // ✅ REMOVE ITEM
   const removeItem = async (product_id) => {
+    manualRouteRef.current = false;
     try {
-      await fetch("http://localhost:3500/cart/remove", {
+      await fetch("http://localhost:3500/shopping-list/remove", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -353,10 +395,19 @@ const HomePage = () => {
         body: JSON.stringify({ product_id }),
       });
 
-      fetchCartItems();
+      fetchShoppingList();
     } catch (err) {
       console.log("❌ Remove error", err);
     }
+  };
+
+  // ✅ LATER ITEM
+  const handleLater = (product_id) => {
+    manualRouteRef.current = false;
+    setLaterProductIds((prev) => {
+      const filtered = prev.filter(id => id !== product_id);
+      return [...filtered, product_id];
+    });
   };
 
   return (
@@ -427,7 +478,7 @@ const HomePage = () => {
           <button
             type="button"
             className="menu-item"
-            onClick={() => navigate("/create-list")}
+            onClick={() => navigate("/explore")}
           >
             <span className="menu-icon">🧭</span>
             <span>Explore</span>
@@ -475,7 +526,7 @@ const HomePage = () => {
           <button
             type="button"
             className="menu-item"
-            onClick={() => navigate("/review-list")}
+            onClick={() => navigate("/list")}
           >
             <span className="menu-icon">📋</span>
             <span>List</span>
@@ -667,7 +718,7 @@ const HomePage = () => {
                     </div>
                     <p className="qty">Quantity: {qtyLabel}</p>
                     <div className="upnext-actions">
-                      <button type="button" className="upnext-later">Later</button>
+                      <button type="button" className="upnext-later" onClick={() => item.product_id && handleLater(item.product_id)}>Later</button>
                       <button
                         type="button"
                         className="upnext-remove"
@@ -696,7 +747,7 @@ const HomePage = () => {
                   <strong className="upnext-name">{item.name}</strong>
                   <p className="qty">Quantity: {qtyLabel}</p>
                 </div>
-                <button type="button" className="upnext-compact-later">Later</button>
+                <button type="button" className="upnext-compact-later" onClick={() => item.product_id && handleLater(item.product_id)}>Later</button>
                 <button
                   type="button"
                   className="upnext-compact-x"

@@ -43,22 +43,37 @@ const RemainingPage = () => {
   }, []);
 
   useEffect(() => {
-    const cartSet = new Set((cartItems || []).map((c) => c.product_id));
-    const rem = (shoppingItems || []).filter((s) => !cartSet.has(s.product_id));
+    const cartMap = {};
+    (cartItems || []).forEach((c) => {
+      cartMap[c.product_id] = (cartMap[c.product_id] || 0) + c.quantity;
+    });
+
+    const rem = [];
+    (shoppingItems || []).forEach((s) => {
+      const cartQty = cartMap[s.product_id] || 0;
+      const remainingQty = s.quantity - cartQty;
+      if (remainingQty > 0) {
+        rem.push({
+          ...s,
+          remaining_quantity: remainingQty,
+          shopping_quantity: s.quantity,
+        });
+      }
+    });
     setRemaining(rem);
   }, [shoppingItems, cartItems]);
 
-  const addToCart = async (item) => {
-    const barcode = item.barcode;
-    if (!barcode) return;
+  const updateShoppingQty = async (product_id, currentShoppingQty, delta) => {
+    const newQty = currentShoppingQty + delta;
+    if (newQty <= 0) {
+      return removeFromShoppingList(product_id);
+    }
     try {
-      await fetch("http://localhost:3500/cart/add", {
+      await fetch("http://localhost:3500/shopping-list/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ barcode, quantity: 1 }),
+        body: JSON.stringify({ product_id, quantity: newQty }),
       });
-      // refresh lists
-      await fetchCart();
       await fetchShopping();
     } catch (e) {
       console.error(e);
@@ -109,19 +124,32 @@ const RemainingPage = () => {
                     <p className="cart-row-sub">Aisle: {item.aisle || item.category_name || "?"}</p>
                   </div>
 
-                  <div className="cart-row-qty-wrap">
-                    <button className="cart-qty-btn action-decrease" type="button" onClick={() => removeFromShoppingList(item.product_id)}>-</button>
-                    <span className="cart-row-qty-label">{item.quantity || 1}</span>
-                    <button className="cart-qty-btn action-add" type="button" onClick={() => addToCart(item)}>+</button>
+                  <div className="cart-row-qty-wrap" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <button 
+                      type="button" 
+                      style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', border: 'none', background: '#f3f1ff', color: '#2b2b2b', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                      onClick={() => updateShoppingQty(item.product_id, item.shopping_quantity, -1)}
+                    >
+                      −
+                    </button>
+                    <span style={{ minWidth: '1.5rem', textAlign: 'center', fontWeight: '650', fontSize: '1rem', color: '#1f1f1f' }}>
+                      {item.shopping_quantity}
+                    </span>
+                    <button 
+                      type="button" 
+                      style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', border: 'none', background: '#f3f1ff', color: '#2b2b2b', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                      onClick={() => updateShoppingQty(item.product_id, item.shopping_quantity, 1)}
+                    >
+                      +
+                    </button>
                   </div>
                   <button
-                    className="cart-row-remove action-remove"
+                    style={{ width: '2.125rem', height: '2.125rem', borderRadius: '0.625rem', border: 'none', background: '#f6d38b', color: '#1f1f1f', fontSize: '1.25rem', cursor: 'pointer', marginLeft: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
                     onClick={() => removeFromShoppingList(item.product_id)}
                     type="button"
                     aria-label={`Remove ${item.name}`}
-                    style={{ marginLeft: '0.5rem' }}
                   >
-                    🗑
+                    ×
                   </button>
                 </div>
               ))}
