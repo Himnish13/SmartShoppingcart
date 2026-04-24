@@ -8,6 +8,7 @@ import ReviewListPage from "./pages/ReviewListPage";
 import RoutingPage from "./pages/RoutingPage";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
+import RemainingPage from "./pages/RemainingPage";
 import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
 import OffersPage from "./pages/OffersPage";
 import { ScanProvider } from "./context/ScanContext";
@@ -29,6 +30,7 @@ function App() {
           <Route path="/routing" element={<RoutingPage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/remaining" element={<RemainingPage />} />
           <Route path="/offers" element={<OffersPage />} />
         </Routes>
       </BrowserRouter>

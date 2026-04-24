@@ -39,6 +39,42 @@ const HomePage = () => {
   const [shoppingItems, setShoppingItems] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [offers, setOffers] = useState([]);
+  const [selectedOffer, setSelectedOffer] = useState(null);
+
+  const isInList = (product_id) => {
+    return (shoppingItems || []).some((i) => i.product_id === product_id);
+  };
+
+  const addOfferToList = async (offer) => {
+    try {
+      await fetch("http://localhost:3500/shopping-list/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: offer.product_id, quantity: 1 }),
+      });
+
+      // refresh shopping list state
+      fetchShoppingList();
+      // close modal (optional) or keep it open; we'll keep it open but indicate added
+    } catch (err) {
+      console.log("Add offer error", err);
+    }
+  };
+
+  const removeOfferFromList = async (offer) => {
+    try {
+      await fetch("http://localhost:3500/shopping-list/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: offer.product_id }),
+      });
+
+      // refresh shopping list state
+      fetchShoppingList();
+    } catch (err) {
+      console.log("Remove offer error", err);
+    }
+  };
 
   // ✅ FETCH CART ITEMS
   const fetchCartItems = async () => {
@@ -326,6 +362,26 @@ const HomePage = () => {
   return (
     <div className={`home ${fullscreen ? "fullscreen-active" : ""} ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
 
+      {/* Offer detail modal */}
+      {selectedOffer && (
+        <div className="offer-modal" role="dialog" onClick={() => setSelectedOffer(null)}>
+          <div className="offer-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="offer-modal-close" onClick={() => setSelectedOffer(null)}>✕</button>
+            <img className="offer-modal-img" src={selectedOffer.image_url} alt={selectedOffer.name} />
+            <h3>{selectedOffer.name}</h3>
+            <p className="offer-modal-price">Price: ₹{Number(selectedOffer.price || 0).toFixed(2)}</p>
+            <p className="offer-modal-discount">{selectedOffer.discount}% OFF</p>
+            <div style={{ marginTop: '0.75rem' }}>
+              {isInList(selectedOffer.product_id) ? (
+                <button className="offer-remove" onClick={() => { removeOfferFromList(selectedOffer); setSelectedOffer(null); }}>Remove</button>
+              ) : (
+                <button className="offer-add" onClick={() => addOfferToList(selectedOffer)}>＋ Add</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SIDEBAR OPEN BUTTON (only visible when sidebar is closed) */}
       {!sidebarOpen && (
         <button
@@ -411,6 +467,14 @@ const HomePage = () => {
           <button
             type="button"
             className="menu-item"
+            onClick={() => navigate("/remaining")}
+          >
+            <span className="menu-icon">📋</span>
+            <span>Remaining</span>
+          </button>
+          <button
+            type="button"
+            className="menu-item"
             onClick={() => navigate("/review-list")}
           >
             <span className="menu-icon">📋</span>
@@ -436,6 +500,8 @@ const HomePage = () => {
             currentPosition={currentPosition}
             fullscreen={fullscreen}
             onFullscreenToggle={() => setFullscreen((v) => !v)}
+            offers={offers}
+            onOfferClick={(o) => setSelectedOffer(o)}
             showLegend={false}
           />
         </div>
@@ -450,6 +516,8 @@ const HomePage = () => {
                 currentPosition={currentPosition}
                 fullscreen={true}
                 onFullscreenToggle={() => setFullscreen(false)}
+                offers={offers}
+                onOfferClick={(o) => setSelectedOffer(o)}
                 showLegend={true}
               />
             </div>
@@ -466,12 +534,19 @@ const HomePage = () => {
                     <p className="empty">No offers available</p>
                   ) : (
                     offers.map((o) => (
-                      <div key={o.product_id} className="offer-row">
+                      <div key={o.product_id} className="offer-row" onClick={() => setSelectedOffer(o)}>
                         <img src={o.image_url} alt={o.name} />
                         <div className="offer-info">
                           <div className="offer-name">{o.name}</div>
                           <div className="offer-price">₹{Number(o.price || 0).toFixed(2)}</div>
                           <div className="offer-discount">{o.discount}% OFF</div>
+                        </div>
+                        <div style={{ marginLeft: 'auto' }}>
+                          {isInList(o.product_id) ? (
+                            <button className="offer-remove" onClick={(e) => { e.stopPropagation(); removeOfferFromList(o); }}>Remove</button>
+                          ) : (
+                            <button className="offer-add" onClick={(e) => { e.stopPropagation(); addOfferToList(o); }}>＋</button>
+                          )}
                         </div>
                       </div>
                     ))
@@ -515,13 +590,13 @@ const HomePage = () => {
             <h3>Offers</h3>
             <p className="offer">Check out our latest deals!</p>
 
-            {offers.length === 0 ? (
+                  {offers.length === 0 ? (
               <p className="empty">No offers available</p>
             ) : (
               offers.map((o) => {
                 const discountedPrice = (o.price * (1 - o.discount / 100)).toFixed(2);
                 return (
-                  <div className="suggestion-item" key={o.product_id}>
+                  <div className="suggestion-item" key={o.product_id} onClick={() => setSelectedOffer(o)}>
                     <div className="suggestion-left">
                       <img className="suggestion-img" src={o.image_url} alt={o.name} />
                       <div className="offer-details">
@@ -533,6 +608,13 @@ const HomePage = () => {
                       </div>
                     </div>
                     <span className="offer-badge">{o.discount}% OFF</span>
+                    <div style={{ marginLeft: '0.5rem' }}>
+                      {isInList(o.product_id) ? (
+                        <button className="offer-remove" onClick={(e) => { e.stopPropagation(); removeOfferFromList(o); }}>Remove</button>
+                      ) : (
+                        <button className="offer-add" onClick={(e) => { e.stopPropagation(); addOfferToList(o); }}>＋</button>
+                      )}
+                    </div>
                   </div>
                 );
               })

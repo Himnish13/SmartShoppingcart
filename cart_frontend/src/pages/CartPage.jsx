@@ -31,19 +31,46 @@ const CartPage = () => {
   }, []);
 
   // ─── remove item ─────────────────────────────────────────────────────────────
-  const handleRemove = async (product_id) => {
-    setRemoving(product_id);
+  const handleRemove = async (barcode, qtyToRemove) => {
+    // remove entire line (send quantity equal to current qty)
+    setRemoving(barcode);
     try {
       await fetch("http://localhost:3500/cart/remove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id }),
+        body: JSON.stringify({ barcode, quantity: qtyToRemove }),
       });
       await fetchCart();
     } catch (err) {
       console.error("❌ Remove error", err);
     } finally {
       setRemoving(null);
+    }
+  };
+
+  const handleIncrease = async (barcode) => {
+    try {
+      await fetch("http://localhost:3500/cart/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode, quantity: 1 }),
+      });
+      await fetchCart();
+    } catch (err) {
+      console.error("❌ Increase error", err);
+    }
+  };
+
+  const handleDecrease = async (barcode) => {
+    try {
+      await fetch("http://localhost:3500/cart/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode, quantity: 1 }),
+      });
+      await fetchCart();
+    } catch (err) {
+      console.error("❌ Decrease error", err);
     }
   };
 
@@ -136,11 +163,11 @@ const CartPage = () => {
                     </p>
                   </div>
 
-                  {/* qty badge (read-only) */}
+                  {/* qty controls */}
                   <div className="cart-row-qty-wrap">
-                    <span className="cart-row-qty-label">
-                      Qty: {item.quantity || 1}
-                    </span>
+                    <button className="cart-qty-btn" type="button" onClick={() => handleDecrease(item.barcode)}>-</button>
+                    <span className="cart-row-qty-label">{item.quantity || 1}</span>
+                    <button className="cart-qty-btn" type="button" onClick={() => handleIncrease(item.barcode)}>+</button>
                   </div>
 
                   {/* price */}
@@ -153,12 +180,12 @@ const CartPage = () => {
                   {/* remove */}
                   <button
                     className="cart-row-remove"
-                    onClick={() => handleRemove(item.product_id)}
-                    disabled={removing === item.product_id}
+                    onClick={() => handleRemove(item.barcode, item.quantity || 1)}
+                    disabled={removing === item.barcode}
                     type="button"
                     aria-label={`Remove ${item.name}`}
                   >
-                    {removing === item.product_id ? "…" : "✕"}
+                    {removing === item.barcode ? "…" : "✕"}
                   </button>
                 </div>
               ))}
