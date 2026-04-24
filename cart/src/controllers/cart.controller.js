@@ -68,6 +68,7 @@ exports.getItems = (req, res) => {
             c.id, 
             p.name, 
             p.barcode, 
+            p.image_url,
             c.quantity, 
             c.price_at_scan,
             cat.category_name

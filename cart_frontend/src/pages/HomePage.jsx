@@ -20,11 +20,8 @@ const HomePage = () => {
 
   const manualRouteRef = useRef(false);
 
-  const [popup, setPopup] = useState(null);
-  const [barcode, setBarcode] = useState(null);
   const [cartItems, setCartItems] = useState([]);
 
-  const lastScannedRef = useRef(null);
   const lastFetchedNodeRef = useRef(null);
 
   const [mapNodes, setMapNodes] = useState({});
@@ -302,91 +299,6 @@ const HomePage = () => {
     };
   }, []);
 
-  // ✅ SCANNER LISTENER
-  useEffect(() => {
-
-    const interval = setInterval(async () => {
-
-      try {
-        const res = await fetch("http://127.0.0.1:5200/event");
-        const data = await res.json();
-
-        // 🚫 ignore duplicate scans
-        if (data.barcode && data.barcode === lastScannedRef.current) {
-          return;
-        }
-
-        if (data.type === "add") {
-
-          if (data.status === "scanning") {
-            setPopup("scan");
-          }
-
-          else if (data.status === "failed") {
-            setPopup("retry");
-          }
-
-          else if (data.status === "success") {
-
-            const scannedBarcode = String(data.barcode).trim();
-
-            console.log("📦 SCANNED:", scannedBarcode);
-
-            setPopup("success");
-            setBarcode(scannedBarcode);
-            lastScannedRef.current = scannedBarcode;
-
-            // 🔥 CALL BACKEND
-            try {
-              const resAdd = await fetch("http://localhost:3500/cart/add", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  barcode: scannedBarcode,
-                  quantity: 1
-                }),
-              });
-
-              const result = await resAdd.json();
-
-              console.log("🟢 ADD API RESPONSE:", result);
-
-              if (!resAdd.ok) {
-                console.log("❌ Add failed:", result);
-                setPopup("retry");
-                return;
-              }
-
-              // ✅ ONLY REFRESH AFTER SUCCESS
-              await fetchCartItems();
-
-            } catch (err) {
-              console.log("❌ API ERROR:", err);
-            }
-
-            // 🔁 reset scan after 2 sec (IMPORTANT)
-            setTimeout(() => {
-              lastScannedRef.current = null;
-            }, 2000);
-          }
-        }
-
-        // REMOVE FLOW (optional for now)
-        if (data.type === "remove") {
-          setPopup("remove");
-        }
-
-      } catch (err) {
-        console.log("⚠️ Event server not running");
-      }
-
-    }, 1500);
-
-    return () => clearInterval(interval);
-
-  }, []);
 
   // ✅ REMOVE ITEM
   const removeItem = async (product_id) => {
@@ -640,12 +552,6 @@ const HomePage = () => {
           })
         )}
       </div>
-
-      {/* POPUPS */}
-      {popup === "scan" && <div className="popup">📷 Scan product</div>}
-      {popup === "retry" && <div className="popup error">❌ Try again</div>}
-      {popup === "success" && <div className="popup success">✅ Added ({barcode})</div>}
-      {popup === "remove" && <div className="popup">⚠️ Remove detected</div>}
 
     </div>
   );
