@@ -330,6 +330,14 @@ const ListPage = () => {
           </button>
           <button
             type="button"
+            className="menu-item"
+            onClick={() => navigate("/remaining")}
+          >
+            <span className="menu-icon">📋</span>
+            <span>Remaining</span>
+          </button>
+          <button
+            type="button"
             className="menu-item active"
             onClick={() => navigate("/list")}
           >

@@ -427,7 +427,7 @@ const HomePage = () => {
           <button
             type="button"
             className="menu-item"
-            onClick={() => navigate("/create-list")}
+            onClick={() => navigate("/explore")}
           >
             <span className="menu-icon">🧭</span>
             <span>Explore</span>
@@ -475,7 +475,7 @@ const HomePage = () => {
           <button
             type="button"
             className="menu-item"
-            onClick={() => navigate("/review-list")}
+            onClick={() => navigate("/list")}
           >
             <span className="menu-icon">📋</span>
             <span>List</span>

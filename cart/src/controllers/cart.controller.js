@@ -66,6 +66,7 @@ exports.getItems = (req, res) => {
     db.all(
         `SELECT 
             c.id, 
+            c.product_id,
             p.name, 
             p.barcode, 
             p.image_url,
