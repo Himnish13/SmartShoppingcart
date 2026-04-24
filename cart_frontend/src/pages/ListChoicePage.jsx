@@ -32,15 +32,16 @@ const ListChoicePage = () => {
     pollingRef.current = setInterval(async () => {
       try {
         const res = await fetch(`${API}/mobile/status`);
-        const { status } = await res.json();
+        const data = await res.json();
+        const { status, missingItems: missing } = data;
 
         if (status === "importing") {
           setImportStatus("importing");
         } else if (status === "success") {
           setImportStatus("success");
           clearInterval(pollingRef.current);
-          // After 2 seconds on the success screen navigate to create-list
-          setTimeout(() => navigate("/review-list"), 2000);
+          
+          setTimeout(() => navigate("/review-list", { state: { missingItems: missing } }), 2000);
         }
       } catch (_) {}
     }, 1200);
@@ -143,7 +144,20 @@ const ListChoicePage = () => {
             Don't have a list ready? Lets make it together
           </p>
 
-          <button className="primary-btn" onClick={() => navigate("/create-list")}>
+          <button 
+            className="primary-btn" 
+            onClick={async () => {
+              try {
+                await Promise.all([
+                  fetch(`${API}/shopping-list/clear`, { method: "POST" }),
+                  fetch(`${API}/cart/clear`, { method: "POST" })
+                ]);
+              } catch (e) {
+                console.error("Failed to clear previous session data", e);
+              }
+              navigate("/create-list");
+            }}
+          >
             Make List
           </button>
         </div>

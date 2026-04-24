@@ -1,12 +1,13 @@
 // In-memory state for the mobile import session
 let mobileStatus = "idle"; // "idle" | "importing" | "success"
+let missingItems = [];
 
 const db = require("../config/sqlite");
 const os = require("os");
 
 // GET /mobile/status — cart frontend polls this
 exports.getStatus = (req, res) => {
-  res.json({ status: mobileStatus });
+  res.json({ status: mobileStatus, missingItems });
 };
 
 // POST /mobile/status — mobile page updates this
@@ -14,6 +15,7 @@ exports.setStatus = (req, res) => {
   const { status } = req.body;
   if (["idle", "importing", "success"].includes(status)) {
     mobileStatus = status;
+    if (status === "idle") missingItems = [];
   }
   res.json({ ok: true });
 };
@@ -37,6 +39,7 @@ exports.submitList = (req, res) => {
   }
 
   mobileStatus = "importing";
+  missingItems = [];
 
   // Parse each line into { name, qty }
   const parsed = lines.map((line) => {
@@ -49,6 +52,10 @@ exports.submitList = (req, res) => {
 
   // Use db.serialize() so every operation runs one-after-another (no race conditions)
   db.serialize(() => {
+    // Clear the current list first to start a new session
+    db.run(`DELETE FROM shopping_list`);
+    db.run(`DELETE FROM cart_items`);
+
     let completed = 0;
     const total = parsed.length;
 
@@ -60,6 +67,7 @@ exports.submitList = (req, res) => {
         (err, product) => {
           if (err || !product) {
             // product not found — still count it as done
+            missingItems.push({ name, qty });
             completed++;
             if (completed === total) mobileStatus = "success";
             return;

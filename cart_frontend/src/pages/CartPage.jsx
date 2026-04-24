@@ -177,16 +177,7 @@ const CartPage = () => {
                     )}
                   </p>
 
-                  {/* remove */}
-                  <button
-                    className="cart-row-remove"
-                    onClick={() => handleRemove(item.barcode, item.quantity || 1)}
-                    disabled={removing === item.barcode}
-                    type="button"
-                    aria-label={`Remove ${item.name}`}
-                  >
-                    {removing === item.barcode ? "…" : "✕"}
-                  </button>
+
                 </div>
               ))}
             </div>

@@ -1,0 +1,34 @@
+/* ExplorePage.css */
+
+.explore-page {
+  display: grid;
+  /* 2 columns: sidebar (0 or 15rem) and the main content (1fr) */
+  grid-template-columns: 0fr 1fr;
+  gap: 0.9375rem;
+  padding: 1.125rem;
+  min-height: 100vh;
+  background: #f5f5f5;
+  transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.explore-page.sidebar-open {
+  grid-template-columns: 15rem 1fr;
+}
+
+/* We need to ensure the create-container fills the second column perfectly without scrolling the whole page if possible, or just normal scrolling */
+.explore-page .center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+  border-radius: 1rem;
+  background: transparent;
+}
+
+.explore-page .create-container {
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+}
