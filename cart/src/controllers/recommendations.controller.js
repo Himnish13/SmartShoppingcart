@@ -37,16 +37,6 @@ exports.getNearbyRecommendations = async (req, res) => {
             JOIN category c ON p.category_id = c.category_id
         `);
 
-        // ✅ Get shopping categories
-        const shopping = await dbAll(`
-            SELECT DISTINCT c.category_name 
-            FROM shopping_list s
-            JOIN products p ON s.product_id = p.product_id
-            JOIN category c ON p.category_id = c.category_id
-        `);
-
-        const categories = shopping.map(s => s.category_name);
-
         // ✅ Process offers (no nested DB calls now)
         const recommendations = offers
             .map((o) => {
@@ -59,14 +49,13 @@ exports.getNearbyRecommendations = async (req, res) => {
 
                 if (distance > MAX_DISTANCE) return null;
 
-                if (!categories.includes(o.category_name)) return null;
-
                 return {
                     product_id: o.product_id,
                     name: o.name,
                     price: o.price,
                     image_url: o.image_url,
                     discount: o.discount,
+                    node_id: o.node_id,
                     distance
                 };
             })

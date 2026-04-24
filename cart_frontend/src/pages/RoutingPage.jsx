@@ -76,6 +76,46 @@ const RoutingPage = () => {
     setSelectAll(newSelected.size === items.length);
   };
 
+  const updateQuantity = async (product_id, quantity) => {
+    try {
+      await fetch("http://localhost:3500/shopping-list/updateQuantity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id, quantity }),
+      });
+      await fetchShoppingList();
+    } catch (err) {
+      console.error("❌ updateQuantity", err);
+    }
+  };
+
+  const handleIncreaseQty = (item) => {
+    updateQuantity(item.product_id, (item.quantity || 1) + 1);
+  };
+
+  const handleDecreaseQty = (item) => {
+    const newQ = (item.quantity || 1) - 1;
+    if (newQ <= 0) {
+      // remove from shopping list
+      removeFromList(item.product_id);
+    } else {
+      updateQuantity(item.product_id, newQ);
+    }
+  };
+
+  const removeFromList = async (product_id) => {
+    try {
+      await fetch("http://localhost:3500/shopping-list/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id }),
+      });
+      await fetchShoppingList();
+    } catch (err) {
+      console.error("❌ removeFromList", err);
+    }
+  };
+
   // ✅ GENERATE ROUTE
   const handleGenerateRoute = async () => {
     if (selectedItems.size === 0) {
@@ -185,7 +225,12 @@ const RoutingPage = () => {
 
                   <div className="item-info">
                     <h4>{item.name}</h4>
-                    <p>Qty: {item.quantity}</p>
+                    <p>
+                      <button className="qty-inline-btn action-decrease" type="button" onClick={(e) => { e.stopPropagation(); handleDecreaseQty(item); }}>-</button>
+                      &nbsp;Qty: {item.quantity}
+                      &nbsp;<button className="qty-inline-btn action-add" type="button" onClick={(e) => { e.stopPropagation(); handleIncreaseQty(item); }}>+</button>
+                      &nbsp;<button className="qty-inline-btn action-remove" style={{marginLeft:'0.5rem'}} type="button" onClick={(e) => { e.stopPropagation(); removeFromList(item.product_id); }}>🗑</button>
+                    </p>
                   </div>
 
                   <div className="item-section">

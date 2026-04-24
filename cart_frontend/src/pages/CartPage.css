@@ -235,6 +235,49 @@
   cursor: default;
 }
 
+/* small qty buttons shown inline with quantity */
+.cart-qty-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0 0.5rem;
+}
+
+.cart-qty-btn:active { transform: translateY(1px); }
+
+/* action color variants */
+.action-add {
+  background: #16a34a;
+  color: #fff;
+  border-color: #16a34a;
+}
+.action-add:hover { filter: brightness(1.03); }
+
+.action-decrease {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+
+.action-remove {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+.action-remove:hover { filter: brightness(0.97); }
+
+/* make qty label slightly bolder when adjacent to buttons */
+.cart-row-qty-label { font-weight: 700; }
+
 /* ── EMPTY / LOADING ── */
 .cart-empty,
 .cart-loading {
@@ -410,4 +453,15 @@
   .cart-row-qty-wrap {
     display: none;
   }
+}
+
+/* small inline qty controls used in RoutingPage */
+.qty-inline-btn {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  font-weight: 700;
+  margin: 0 0.25rem;
 }

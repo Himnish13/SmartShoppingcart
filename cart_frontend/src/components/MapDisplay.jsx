@@ -10,9 +10,12 @@ const MapDisplay = ({
   fullscreen,
   onFullscreenToggle,
   showLegend = true,
+  offers = [],
+  onOfferClick,
 }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
+  const markersRef = useRef([]);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   const normalizedPath = useMemo(() => {
@@ -168,6 +171,35 @@ const MapDisplay = ({
       ctx.fill();
     }
 
+    // Draw offers as markers at their node positions (show even if not in shopping list)
+    markersRef.current = [];
+    if (Array.isArray(offers) && offers.length > 0) {
+      offers.forEach((o) => {
+        const nid = o.node_id || o.nodeId || o.node;
+        if (!nid) return;
+        const node = nodes[String(nid)];
+        if (!node) return;
+        const x = toCanvasX(node.x);
+        const y = toCanvasY(node.y);
+
+        const r = 10;
+        // Offer marker (gold circle)
+        ctx.fillStyle = "#f59e0b";
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Discount text
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 10px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`${o.discount ?? ""}%`, x, y);
+
+        markersRef.current.push({ x, y, r, offer: o });
+      });
+    }
+
   }, [
     storeLayout,
     nodes,
@@ -176,6 +208,31 @@ const MapDisplay = ({
     currentPosition,
     containerSize,
   ]);
+
+  // Canvas click -> detect offer marker clicks
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleClick = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const found = markersRef.current.find((m) => {
+        const dx = m.x - x;
+        const dy = m.y - y;
+        return Math.hypot(dx, dy) <= (m.r || 10) + 4;
+      });
+
+      if (found && onOfferClick) {
+        onOfferClick(found.offer);
+      }
+    };
+
+    canvas.addEventListener("click", handleClick);
+    return () => canvas.removeEventListener("click", handleClick);
+  }, [offers, nodes, onOfferClick, containerSize]);
 
   return (
     <div
