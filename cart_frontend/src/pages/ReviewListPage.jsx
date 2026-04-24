@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./ReviewListPage.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const ReviewListPage = () => {
   const [items, setItems] = useState([]);
@@ -14,6 +14,19 @@ const ReviewListPage = () => {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [allProducts, setAllProducts] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [missingItems, setMissingItems] = useState(
+    location.state?.missingItems || []
+  );
+  const [showMissingPopup, setShowMissingPopup] = useState(
+    (location.state?.missingItems || []).length > 0
+  );
+
+  const handleCloseMissingPopup = () => {
+    setShowMissingPopup(false);
+    navigate(".", { replace: true, state: {} });
+  };
 
   const visibleCategories = useMemo(() => {
     return (categories || []).filter((cat) => {
@@ -428,6 +441,39 @@ const ReviewListPage = () => {
         </button>
 
       </div>
+
+      {showMissingPopup && (
+        <div className="scan-modal-backdrop" onClick={handleCloseMissingPopup} style={{ zIndex: 9999 }}>
+          <div className="scan-modal" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <button className="scan-close" onClick={handleCloseMissingPopup}>
+              ✕
+            </button>
+            <div className="scan-body" style={{ flexDirection: 'column', alignItems: 'center', padding: '24px 16px' }}>
+              <div className="scan-info" style={{ width: '100%', margin: 0 }}>
+                <div className="scan-header-row" style={{ justifyContent: 'center' }}>
+                  <h3 style={{ color: '#b91c1c', fontSize: '1.25rem' }}>Items Not Found</h3>
+                </div>
+                <div style={{ color: '#666', background: 'transparent', textAlign: 'center', marginTop: '12px' }}>
+                  The following items from your list are not available in the store:
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '20px', width: '100%' }}>
+                  {missingItems.map((mi, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: '#f8f8f8', border: '1px solid #eaeaea', borderRadius: '8px' }}>
+                      <strong style={{ color: '#333' }}>{mi.name}</strong>
+                      <span style={{ color: '#666', fontWeight: 600 }}>Qty: {mi.qty}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="scan-footer" style={{ justifyContent: 'center', marginTop: '16px', borderTop: 'none', padding: '16px' }}>
+              <button onClick={handleCloseMissingPopup} style={{ background: '#5b5bd6', color: '#fff', border: 'none', padding: '14px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontSize: '1rem' }}>
+                Continue to List
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

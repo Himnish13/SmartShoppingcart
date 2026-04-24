@@ -106,11 +106,14 @@ const OffersPage = () => {
                   <div className="offer-name">{o.name}</div>
 
                   <div className="offer-row">
-                    <span className="price">
+                    <span className="discount-badge">
+                      {o.discount}% OFF
+                    </span>
+                    <span className="price-original">
                       ₹{Number(o.price || 0).toFixed(2)}
                     </span>
-                    <span className="discount">
-                      {o.discount}% OFF
+                    <span className="price-discounted">
+                      ₹{(o.price * (1 - o.discount / 100)).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -147,11 +150,14 @@ const OffersPage = () => {
                       <div className="offer-name">{o.name}</div>
 
                       <div className="offer-row">
-                        <span className="price">
+                        <span className="discount-badge">
+                          {o.discount}% OFF
+                        </span>
+                        <span className="price-original">
                           ₹{Number(o.price || 0).toFixed(2)}
                         </span>
-                        <span className="discount">
-                          {o.discount}%
+                        <span className="price-discounted">
+                          ₹{(o.price * (1 - o.discount / 100)).toFixed(2)}
                         </span>
                       </div>
                     </div>
