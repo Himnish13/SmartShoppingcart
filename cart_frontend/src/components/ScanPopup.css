@@ -165,6 +165,12 @@
   width: fit-content;
 }
 
+.scan-remove-msg {
+  background: #fdf0f0;
+  color: #c92a2a;
+  border-color: #f7d4d4;
+}
+
 .scan-footer {
   display: flex;
   justify-content: space-around;

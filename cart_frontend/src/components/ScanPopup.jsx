@@ -5,6 +5,7 @@ import "./ScanPopup.css";
 export default function ScanPopup() {
   const {
     scanPopupVisible,
+    scanType,
     scannedItem,
     scannedPrice,
     scannedQty,
@@ -51,8 +52,8 @@ export default function ScanPopup() {
               Cost : Rs. {Number(scannedPrice * scannedQty).toFixed(2)}
             </div>
 
-            <div className="scan-success-msg">
-              <span style={{ fontSize: "16px" }}>✓</span> Scanned and added Successfully
+            <div className={`scan-success-msg ${scanType === "remove" ? "scan-remove-msg" : ""}`}>
+              <span style={{ fontSize: "16px" }}>{scanType === "add" ? "✓" : "✕"}</span> {scanType === "add" ? "Scanned and added Successfully" : "Scanned and removed Successfully"}
             </div>
           </div>
         </div>
