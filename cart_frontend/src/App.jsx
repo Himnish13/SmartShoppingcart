@@ -24,6 +24,7 @@ function App() {
           <Route path="/review-list" element={<ReviewListPage />} />
           <Route path="/routing" element={<RoutingPage />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/cart" element={<CartPage />} />
           <Route path="/offers" element={<OffersPage />} />
         </Routes>
       </BrowserRouter>

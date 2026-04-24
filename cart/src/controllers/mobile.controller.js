@@ -31,60 +31,75 @@ exports.submitList = (req, res) => {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  mobileStatus = "importing";
-
-  // Match each line to a product and add to shopping list
-  let pending = lines.length;
-  if (pending === 0) {
+  if (lines.length === 0) {
     mobileStatus = "success";
     return res.json({ message: "Empty list" });
   }
 
-  lines.forEach((line) => {
-    // Try to extract quantity from end of line e.g. "Milk 2" or "Banana 1"
+  mobileStatus = "importing";
+
+  // Parse each line into { name, qty }
+  const parsed = lines.map((line) => {
     const match = line.match(/^(.*?)[\s]+(\d+)\s*$/);
-    const name = match ? match[1].trim() : line.trim();
-    const qty = match ? parseInt(match[2], 10) : 1;
+    return {
+      name: (match ? match[1] : line).trim(),
+      qty: match ? parseInt(match[2], 10) : 1,
+    };
+  });
 
-    db.get(
-      `SELECT product_id FROM products WHERE LOWER(name) LIKE LOWER(?)`,
-      [`%${name}%`],
-      (err, product) => {
-        pending--;
+  // Use db.serialize() so every operation runs one-after-another (no race conditions)
+  db.serialize(() => {
+    let completed = 0;
+    const total = parsed.length;
 
-        if (product) {
+    parsed.forEach(({ name, qty }) => {
+      // Step 1: find matching product
+      db.get(
+        `SELECT product_id FROM products WHERE LOWER(name) LIKE LOWER(?) LIMIT 1`,
+        [`%${name}%`],
+        (err, product) => {
+          if (err || !product) {
+            // product not found — still count it as done
+            completed++;
+            if (completed === total) mobileStatus = "success";
+            return;
+          }
+
+          // Step 2: check if already in shopping list
           db.get(
-            `SELECT * FROM shopping_list WHERE product_id = ?`,
+            `SELECT product_id FROM shopping_list WHERE product_id = ?`,
             [product.product_id],
             (err2, existing) => {
               if (existing) {
                 db.run(
                   `UPDATE shopping_list SET quantity = quantity + ? WHERE product_id = ?`,
-                  [qty, product.product_id]
+                  [qty, product.product_id],
+                  () => {
+                    completed++;
+                    if (completed === total) mobileStatus = "success";
+                  }
                 );
               } else {
                 db.run(
                   `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
-                  [product.product_id, qty]
+                  [product.product_id, qty],
+                  () => {
+                    completed++;
+                    if (completed === total) mobileStatus = "success";
+                  }
                 );
-              }
-
-              if (pending === 0) {
-                mobileStatus = "success";
               }
             }
           );
-        } else {
-          if (pending === 0) {
-            mobileStatus = "success";
-          }
         }
-      }
-    );
+      );
+    });
   });
 
   res.json({ message: "Processing list" });
 };
+
+
 
 // GET /mobile — serve the mobile-facing web page
 exports.serveMobilePage = (req, res) => {

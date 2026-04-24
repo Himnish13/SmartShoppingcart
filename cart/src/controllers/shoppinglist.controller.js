@@ -109,9 +109,11 @@ exports.getList = (req, res) => {
             p.name, 
             p.barcode, 
             p.image_url,
+            p.node_id,
             s.quantity, 
             s.picked,
-            c.category_name
+            c.category_name,
+            c.category_name AS aisle
          FROM shopping_list s
          JOIN products p ON s.product_id = p.product_id
          LEFT JOIN category c ON p.category_id = c.category_id`,
@@ -122,6 +124,7 @@ exports.getList = (req, res) => {
         }
     );
 };
+
 exports.getByCategory = (req, res) => {
     const { category_id } = req.params;
 
