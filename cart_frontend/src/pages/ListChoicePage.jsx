@@ -40,7 +40,7 @@ const ListChoicePage = () => {
           setImportStatus("success");
           clearInterval(pollingRef.current);
           // After 2 seconds on the success screen navigate to create-list
-          setTimeout(() => navigate("/create-list"), 2000);
+          setTimeout(() => navigate("/review-list"), 2000);
         }
       } catch (_) {}
     }, 1200);
@@ -134,10 +134,7 @@ const ListChoicePage = () => {
 
           {/* Real QR code */}
           <div className="qr-box">
-            <QRGenerator value={mobileUrl} />
-            {mobileUrl && (
-              <p className="qr-url-hint">{mobileUrl}</p>
-            )}
+            <QRGenerator value={mobileUrl} size={240} />
           </div>
 
           <p className="or-text">OR</p>
