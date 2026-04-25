@@ -7,6 +7,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
 
   const menuItems = [
+    { icon: "🏠", label: "Dashboard", path: "/" },
     { icon: "📦", label: "Products", path: "/products" },
     { icon: "🎁", label: "Offers", path: "/offers" },
     { icon: "📝", label: "Shopping Lists", path: "/shopping-lists" },
@@ -27,7 +28,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       <aside className={`sidebar ${sidebarOpen ? "visible" : ""}`}>
         <div className="sidebar-header">
           <div className="logo">
-            <span className="logo-icon">🔧</span>
+            <span className="logo-icon">🛒</span>
             <span>Admin</span>
           </div>
           <button
@@ -55,7 +56,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <p>Smart Shopping Cart Admin</p>
+          <p>Smart Shopping Cart</p>
         </div>
       </aside>
     </>

@@ -167,6 +167,7 @@ const ProductManagement = () => {
                   <th>Barcode</th>
                   <th>Price</th>
                   <th>Category</th>
+                  <th>Stock</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -177,6 +178,11 @@ const ProductManagement = () => {
                     <td className="barcode">{product.barcode}</td>
                     <td className="price">₹{product.price}</td>
                     <td className="category">{product.category_name || "-"}</td>
+                    <td className="stock">
+                      <span className={`stock-badge ${product.stock > 10 ? "in-stock" : product.stock > 0 ? "low-stock" : "out-of-stock"}`}>
+                        {product.stock || 0} units
+                      </span>
+                    </td>
                     <td className="actions">
                       <button
                         className="action-btn edit-btn"
