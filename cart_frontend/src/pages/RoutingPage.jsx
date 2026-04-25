@@ -33,13 +33,36 @@ const RoutingPage = () => {
     }
   };
 
-  // ✅ FETCH SHOPPING LIST ITEMS
+  // ✅ FETCH SHOPPING LIST ITEMS AND CART ITEMS
   const fetchShoppingList = async () => {
     try {
-      const data = await fetchJson("http://localhost:3500/shopping-list/items");
-      setItems(data);
-      if (data.length > 0) {
-        setSelectedItems(new Set(data.map(item => item.product_id)));
+      const [shopData, cartData] = await Promise.all([
+        fetchJson("http://localhost:3500/shopping-list/items"),
+        fetchJson("http://localhost:3500/cart/items").catch(() => [])
+      ]);
+
+      const cartMap = {};
+      (cartData || []).forEach((c) => {
+        cartMap[c.product_id] = (cartMap[c.product_id] || 0) + c.quantity;
+      });
+
+      const rem = [];
+      (shopData || []).forEach((s) => {
+        const cartQty = cartMap[s.product_id] || 0;
+        const remainingQty = s.quantity - cartQty;
+        if (remainingQty > 0) {
+          rem.push({
+            ...s,
+            remaining_quantity: remainingQty,
+            shopping_quantity: s.quantity,
+            quantity: remainingQty, // Override for display and routing
+          });
+        }
+      });
+
+      setItems(rem);
+      if (rem.length > 0) {
+        setSelectedItems(new Set(rem.map(item => item.product_id)));
         setSelectAll(true);
       }
     } catch (err) {
@@ -74,46 +97,6 @@ const RoutingPage = () => {
     }
     setSelectedItems(newSelected);
     setSelectAll(newSelected.size === items.length);
-  };
-
-  const updateQuantity = async (product_id, quantity) => {
-    try {
-      await fetch("http://localhost:3500/shopping-list/updateQuantity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id, quantity }),
-      });
-      await fetchShoppingList();
-    } catch (err) {
-      console.error("❌ updateQuantity", err);
-    }
-  };
-
-  const handleIncreaseQty = (item) => {
-    updateQuantity(item.product_id, (item.quantity || 1) + 1);
-  };
-
-  const handleDecreaseQty = (item) => {
-    const newQ = (item.quantity || 1) - 1;
-    if (newQ <= 0) {
-      // remove from shopping list
-      removeFromList(item.product_id);
-    } else {
-      updateQuantity(item.product_id, newQ);
-    }
-  };
-
-  const removeFromList = async (product_id) => {
-    try {
-      await fetch("http://localhost:3500/shopping-list/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product_id }),
-      });
-      await fetchShoppingList();
-    } catch (err) {
-      console.error("❌ removeFromList", err);
-    }
   };
 
   // ✅ GENERATE ROUTE
@@ -225,12 +208,7 @@ const RoutingPage = () => {
 
                   <div className="item-info">
                     <h4>{item.name}</h4>
-                    <p>
-                      <button className="qty-inline-btn action-decrease" type="button" onClick={(e) => { e.stopPropagation(); handleDecreaseQty(item); }}>-</button>
-                      &nbsp;Qty: {item.quantity}
-                      &nbsp;<button className="qty-inline-btn action-add" type="button" onClick={(e) => { e.stopPropagation(); handleIncreaseQty(item); }}>+</button>
-                      &nbsp;<button className="qty-inline-btn action-remove" style={{marginLeft:'0.5rem'}} type="button" onClick={(e) => { e.stopPropagation(); removeFromList(item.product_id); }}>🗑</button>
-                    </p>
+                    <p>Qty: {item.quantity}</p>
                   </div>
 
                   <div className="item-section">

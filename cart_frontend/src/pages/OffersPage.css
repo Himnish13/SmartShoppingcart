@@ -16,9 +16,21 @@ body {
 
 /* PAGE */
 .offers-page {
-  padding: 20px;
+  display: grid;
+  grid-template-columns: 0 1fr; /* Sidebar is 0 when closed */
+  transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--bg-main);
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.offers-page.sidebar-open {
+  grid-template-columns: 280px 1fr; /* Shift content when sidebar opens */
+}
+
+.offers-content-wrapper {
+  padding: 20px;
+  width: 100%;
 }
 
 /* TOP */
@@ -29,13 +41,7 @@ body {
   margin-bottom: 20px;
 }
 
-.back-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-}
+
 
 /* SEARCH */
 .search-input {

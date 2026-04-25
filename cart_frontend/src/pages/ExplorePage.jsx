@@ -351,22 +351,27 @@ const ExplorePage = () => {
                 <div className="products-grid">
                   {filtered.map((item) => (
                     <div key={item.product_id} className="product-card">
-                      <div className="image-box">
-                        <img src={item.image_url} alt={item.name} />
-                      </div>
-
-                      <div className="product-bottom">
-                        <span className="product-name">{item.name}</span>
-
-                        {!cart[item.product_id] ? (
-                          <button onClick={() => addItem(item)}>+ Add</button>
-                        ) : (
-                          <div className="qty-control">
-                            <button onClick={() => decreaseQty(item.product_id)}>-</button>
-                            <span>{cart[item.product_id].qty}</span>
-                            <button onClick={() => increaseQty(item.product_id)}>+</button>
+                      <div className="product-card-inner">
+                        <div className="image-box">
+                          <img src={item.image_url} alt={item.name} />
+                        </div>
+                        
+                        <div className="product-info">
+                          <h4 className="product-name">{item.name}</h4>
+                          <p className="product-price">Price: ₹{Number(item.price || 0).toFixed(0)}</p>
+                          
+                          <div className="product-actions">
+                            {!cart[item.product_id] ? (
+                              <button className="add-btn" onClick={() => addItem(item)}>Add</button>
+                            ) : (
+                              <div className="qty-control">
+                                <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
+                                <span className="qty-value">{cart[item.product_id].qty}</span>
+                                <button className="qty-btn plus" onClick={() => increaseQty(item.product_id)}>+</button>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -388,22 +393,27 @@ const ExplorePage = () => {
                     <div className="products-grid">
                       {groupedProducts[catId].map((item) => (
                         <div key={item.product_id} className="product-card">
-                          <div className="image-box">
-                            <img src={item.image_url} alt={item.name} />
-                          </div>
-
-                          <div className="product-bottom">
-                            <span className="product-name">{item.name}</span>
-
-                            {!cart[item.product_id] ? (
-                              <button onClick={() => addItem(item)}>+ Add</button>
-                            ) : (
-                              <div className="qty-control">
-                                <button onClick={() => decreaseQty(item.product_id)}>-</button>
-                                <span>{cart[item.product_id].qty}</span>
-                                <button onClick={() => increaseQty(item.product_id)}>+</button>
+                          <div className="product-card-inner">
+                            <div className="image-box">
+                              <img src={item.image_url} alt={item.name} />
+                            </div>
+                            
+                            <div className="product-info">
+                              <h4 className="product-name">{item.name}</h4>
+                              <p className="product-price">Price: ₹{Number(item.price || 0).toFixed(0)}</p>
+                              
+                              <div className="product-actions">
+                                {!cart[item.product_id] ? (
+                                  <button className="add-btn" onClick={() => addItem(item)}>Add</button>
+                                ) : (
+                                  <div className="qty-control">
+                                    <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
+                                    <span className="qty-value">{cart[item.product_id].qty}</span>
+                                    <button className="qty-btn plus" onClick={() => increaseQty(item.product_id)}>+</button>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            </div>
                           </div>
                         </div>
                       ))}
