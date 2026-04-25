@@ -152,33 +152,48 @@ const ProductManagement = () => {
         ) : products.length === 0 ? (
           <div className="empty-state">No products found. Add your first product!</div>
         ) : (
-          <div className="products-grid">
-            {products.map((product) => (
-              <div key={product.id} className="product-card">
-                <h3>{product.name}</h3>
-                <p className="barcode">Barcode: {product.barcode}</p>
-                <p className="price">₹ {product.price}</p>
-                <p className="category">{product.category}</p>
-                <p className="stock">Stock: {product.stock}</p>
-                {product.description && (
-                  <p className="description">{product.description}</p>
-                )}
-                <div className="card-actions">
-                  <button
-                    className="edit-btn"
-                    onClick={() => handleEdit(product)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(product.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="table-wrapper">
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>Barcode</th>
+                  <th>Price</th>
+                  <th>Category</th>
+                  <th>Stock</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product) => (
+                  <tr key={product.id} className="product-row">
+                    <td className="product-name">{product.name}</td>
+                    <td className="barcode">{product.barcode}</td>
+                    <td className="price">₹{product.price}</td>
+                    <td className="category">{product.category || "-"}</td>
+                    <td className="stock">{product.stock || 0}</td>
+                    <td className="description">{product.description || "-"}</td>
+                    <td className="actions">
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => handleEdit(product)}
+                        title="Edit product"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={() => handleDelete(product.id)}
+                        title="Delete product"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
