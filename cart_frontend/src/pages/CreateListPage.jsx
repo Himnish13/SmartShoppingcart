@@ -174,15 +174,16 @@ const CreateListPage = () => {
   // ✅ IMPORT PASTE
   const importPaste = async () => {
     try {
-      await fetch("http://localhost:3500/shopping-list/paste", {
+      const res1 = await fetch("http://localhost:3500/shopping-list/paste", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: pasteText }),
       });
+      const result = await res1.json();
 
       // refresh shopping-list from server
-      const res = await fetch("http://localhost:3500/shopping-list/items");
-      const data = await res.json();
+      const res2 = await fetch("http://localhost:3500/shopping-list/items");
+      const data = await res2.json();
 
       const newCart = {};
       data.forEach((p) => {
@@ -191,8 +192,10 @@ const CreateListPage = () => {
 
       setCart(newCart);
       setPasteText("");
+      return result;
     } catch (err) {
       console.log("Import error:", err);
+      return null;
     }
   };
 
@@ -395,25 +398,28 @@ const CreateListPage = () => {
             <div className="products-grid">
               {filtered.map((item) => (
                 <div key={item.product_id} className="product-card">
-
-                  <div className="image-box">
-                    <img src={item.image_url} alt={item.name} />
-                  </div>
-
-                  <div className="product-bottom">
-                    <span className="product-name">{item.name}</span>
-
-                    {!cart[item.product_id] ? (
-                      <button onClick={() => addItem(item)}>+ Add</button>
-                    ) : (
-                      <div className="qty-control">
-                        <button onClick={() => decreaseQty(item.product_id)}>-</button>
-                        <span>{cart[item.product_id].qty}</span>
-                        <button onClick={() => increaseQty(item.product_id)}>+</button>
+                  <div className="product-card-inner">
+                    <div className="image-box">
+                      <img src={item.image_url} alt={item.name} />
+                    </div>
+                    
+                    <div className="product-info">
+                      <h4 className="product-name">{item.name}</h4>
+                      <p className="product-price">Price: ₹{Number(item.price || 0).toFixed(0)}</p>
+                      
+                      <div className="product-actions">
+                        {!cart[item.product_id] ? (
+                          <button className="add-btn" onClick={() => addItem(item)}>Add</button>
+                        ) : (
+                          <div className="qty-control">
+                            <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
+                            <span className="qty-value">{cart[item.product_id].qty}</span>
+                            <button className="qty-btn plus" onClick={() => increaseQty(item.product_id)}>+</button>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-
                 </div>
               ))}
             </div>
@@ -437,25 +443,28 @@ const CreateListPage = () => {
                 <div className="products-grid">
                   {groupedProducts[catId].map((item) => (
                     <div key={item.product_id} className="product-card">
-
-                      <div className="image-box">
-                        <img src={item.image_url} alt={item.name} />
-                      </div>
-
-                      <div className="product-bottom">
-                        <span className="product-name">{item.name}</span>
-
-                        {!cart[item.product_id] ? (
-                          <button onClick={() => addItem(item)}>+ Add</button>
-                        ) : (
-                          <div className="qty-control">
-                            <button onClick={() => decreaseQty(item.product_id)}>-</button>
-                            <span>{cart[item.product_id].qty}</span>
-                            <button onClick={() => increaseQty(item.product_id)}>+</button>
+                      <div className="product-card-inner">
+                        <div className="image-box">
+                          <img src={item.image_url} alt={item.name} />
+                        </div>
+                        
+                        <div className="product-info">
+                          <h4 className="product-name">{item.name}</h4>
+                          <p className="product-price">Price: ₹{Number(item.price || 0).toFixed(0)}</p>
+                          
+                          <div className="product-actions">
+                            {!cart[item.product_id] ? (
+                              <button className="add-btn" onClick={() => addItem(item)}>Add</button>
+                            ) : (
+                              <div className="qty-control">
+                                <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
+                                <span className="qty-value">{cart[item.product_id].qty}</span>
+                                <button className="qty-btn plus" onClick={() => increaseQty(item.product_id)}>+</button>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
-
                     </div>
                   ))}
                 </div>
@@ -474,10 +483,17 @@ const CreateListPage = () => {
         <button
           className="review-btn"
           onClick={async () => {
+            let importResult = null;
             if (pasteText && pasteText.trim()) {
-              await importPaste();
+              importResult = await importPaste();
             }
-            navigate("/review-list", { state: { cart } });
+            navigate("/review-list", { 
+              state: { 
+                cart,
+                ambiguousItems: importResult?.ambiguousItems || [],
+                missingItems: importResult?.missingItems || []
+              } 
+            });
           }}
         >
           Review list

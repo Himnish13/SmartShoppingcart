@@ -22,9 +22,25 @@ const ReviewListPage = () => {
   const [showMissingPopup, setShowMissingPopup] = useState(
     (location.state?.missingItems || []).length > 0
   );
+  const [ambiguousItems, setAmbiguousItems] = useState(
+    location.state?.ambiguousItems || []
+  );
+  const [showAmbiguousPopup, setShowAmbiguousPopup] = useState(
+    (location.state?.ambiguousItems || []).length > 0
+  );
 
   const handleCloseMissingPopup = () => {
     setShowMissingPopup(false);
+    // If we have ambiguous items, show that popup next
+    if (ambiguousItems.length > 0) {
+      setShowAmbiguousPopup(true);
+    } else {
+      navigate(".", { replace: true, state: {} });
+    }
+  };
+
+  const handleCloseAmbiguousPopup = () => {
+    setShowAmbiguousPopup(false);
     navigate(".", { replace: true, state: {} });
   };
 
@@ -232,6 +248,37 @@ const ReviewListPage = () => {
     fetchSuggestions(list);
     setSearchQuery("");
     setShowAutocomplete(false);
+  };
+
+  const handleSelectAmbiguous = async (enteredName, product, qty) => {
+    try {
+      await fetch("http://localhost:3500/shopping-list/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: product.product_id,
+          quantity: qty || 1,
+        }),
+      });
+
+      // Remove this item from the ambiguous list
+      setAmbiguousItems(prev => {
+        const updated = prev.filter(item => item.enteredName !== enteredName);
+        if (updated.length === 0) {
+          setShowAmbiguousPopup(false);
+          navigate(".", { replace: true, state: {} });
+        }
+        return updated;
+      });
+
+      const list = await fetchAllList();
+      if (selectedCategory !== null) {
+        await fetchListByCategory(selectedCategory);
+      }
+      fetchSuggestions(list);
+    } catch (err) {
+      console.error("Select ambiguous error:", err);
+    }
   };
 
   const handleCategorySelect = async (categoryId) => {
@@ -468,7 +515,48 @@ const ReviewListPage = () => {
             </div>
             <div className="scan-footer" style={{ justifyContent: 'center', marginTop: '16px', borderTop: 'none', padding: '16px' }}>
               <button onClick={handleCloseMissingPopup} style={{ background: '#5b5bd6', color: '#fff', border: 'none', padding: '14px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontSize: '1rem' }}>
-                Continue to List
+                {ambiguousItems.length > 0 ? "Next: Choose Ambiguous Items" : "Continue to List"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAmbiguousPopup && ambiguousItems.length > 0 && (
+        <div className="scan-modal-backdrop" onClick={handleCloseAmbiguousPopup} style={{ zIndex: 10000 }}>
+          <div className="scan-modal ambiguous-modal" onClick={(e) => e.stopPropagation()} style={{ width: '700px', maxWidth: '90vw' }}>
+            <button className="scan-close" onClick={handleCloseAmbiguousPopup}>
+              ✕
+            </button>
+            <div className="ambiguous-header" style={{ padding: '20px', borderBottom: '1px solid #eee' }}>
+              <h3 style={{ color: '#1e1b4b', margin: 0 }}>Select Correct Item</h3>
+              <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                We found multiple matches for "<strong>{ambiguousItems[0].enteredName}</strong>". Please choose the right one:
+              </p>
+            </div>
+            <div className="ambiguous-list" style={{ padding: '20px', maxHeight: '60vh', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
+              {ambiguousItems[0].matches.map((product) => (
+                <div key={product.product_id} className="ambiguous-item-card" onClick={() => handleSelectAmbiguous(ambiguousItems[0].enteredName, product, ambiguousItems[0].qty)}>
+                  <div className="ambiguous-image-box">
+                    <img src={product.image_url} alt={product.name} />
+                  </div>
+                  <div className="ambiguous-info">
+                    <div className="ambiguous-name">{product.name}</div>
+                    <div className="ambiguous-price">Price: ₹{product.price}</div>
+                    <button className="ambiguous-select-btn">Select</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="ambiguous-footer" style={{ padding: '16px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ color: '#64748b', fontSize: '14px' }}>
+                Item {ambiguousItems.length} more to disambiguate
+              </div>
+              <button onClick={() => {
+                setAmbiguousItems(prev => prev.slice(1));
+                if (ambiguousItems.length === 1) handleCloseAmbiguousPopup();
+              }} style={{ background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+                Skip this item
               </button>
             </div>
           </div>

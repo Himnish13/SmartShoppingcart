@@ -11,6 +11,7 @@ export const ScanProvider = ({ children }) => {
   const [scannedQty, setScannedQty] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
+  const [scanType, setScanType] = useState("add");
 
   const lastScannedRef = useRef(null);
 
@@ -39,37 +40,53 @@ export const ScanProvider = ({ children }) => {
   };
 
   // Process a barcode scan
-  const handleBarcodeDetected = async (code) => {
+  const handleBarcodeDetected = async (code, type = "add") => {
     if (!code) return;
+    setScanType(type);
 
     try {
-      // add one unit to cart via backend
-      await fetch("http://localhost:3500/cart/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ barcode: code, quantity: 1 }),
-      });
+      // Find item in current cart before modification (useful for remove)
+      const currentCartItems = await fetchCartItems();
+      const existingItem = currentCartItems.find((c) => String(c.barcode) === String(code));
+
+      if (type === "add") {
+        await fetch("http://localhost:3500/cart/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ barcode: code, quantity: 1 }),
+        });
+      } else if (type === "remove") {
+        await fetch("http://localhost:3500/cart/remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ barcode: code, quantity: 1 }),
+        });
+      }
 
       // refresh cart items
-      const cartItems = await fetchCartItems();
+      const newCartItems = await fetchCartItems();
+      const updatedItem = newCartItems.find((c) => String(c.barcode) === String(code));
 
-      // find added item in cart
-      const added = cartItems.find((c) => String(c.barcode) === String(code));
-
-      if (added) {
-        setScannedItem(added);
-        setScannedPrice(added.price_at_scan || 0);
-        setScannedQty(added.quantity || 1);
+      if (updatedItem) {
+        setScannedItem(updatedItem);
+        setScannedPrice(updatedItem.price_at_scan || 0);
+        setScannedQty(updatedItem.quantity || (type === "add" ? 1 : 0));
         setScanPopupVisible(true);
       } else {
-        // If it wasn't added properly, just show a minimal state or fallback
-        setScannedItem({ name: "Unknown Item", image_url: "", barcode: code });
-        setScannedPrice(0);
-        setScannedQty(1);
-        setScanPopupVisible(true);
+        if (type === "remove" && existingItem) {
+          setScannedItem(existingItem);
+          setScannedPrice(existingItem.price_at_scan || 0);
+          setScannedQty(0);
+          setScanPopupVisible(true);
+        } else {
+          setScannedItem({ name: type === "add" ? "Unknown Item" : "Item not in cart", image_url: "", barcode: code });
+          setScannedPrice(0);
+          setScannedQty(type === "add" ? 1 : 0);
+          setScanPopupVisible(true);
+        }
       }
     } catch (err) {
-      console.log("Scan add error:", err);
+      console.log("Scan add/remove error:", err);
     }
   };
 
@@ -120,11 +137,11 @@ export const ScanProvider = ({ children }) => {
           return;
         }
 
-        if (data.type === "add" && data.status === "success") {
+        if (data.status === "success" && (data.type === "add" || data.type === "remove")) {
           const scannedBarcode = String(data.barcode).trim();
           lastScannedRef.current = scannedBarcode;
           
-          await handleBarcodeDetected(scannedBarcode);
+          await handleBarcodeDetected(scannedBarcode, data.type);
 
           setTimeout(() => {
             lastScannedRef.current = null;
@@ -147,6 +164,7 @@ export const ScanProvider = ({ children }) => {
     <ScanContext.Provider
       value={{
         scanPopupVisible,
+        scanType,
         scannedItem,
         scannedPrice,
         scannedQty,
