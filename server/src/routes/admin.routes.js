@@ -125,3 +125,34 @@ router.get(
   requireRole("ADMIN"),
   crowdController.getCrowd
 );
+
+// router.get(
+//   "/analytics/demand",
+//   verifyToken,
+//   requireRole("ADMIN"),
+//   require("../controllers/order.controller").getDemand
+// );
+
+// router.get(
+//   "/analytics/cart-activity",
+//   verifyToken,
+//   requireRole("ADMIN"),
+//   require("../controllers/cart.controller").getCartActivity
+// );
+
+// router.get(
+//   "/carts/active",
+//   verifyToken,
+//   requireRole("ADMIN"),
+//   require("../controllers/cart.controller").getActiveCarts
+// );
+
+
+// router.post(
+//   "/sync/trigger",
+//   verifyToken,
+//   requireRole("ADMIN"),
+//   syncController.triggerSync
+// );
+
+module.exports = router;
