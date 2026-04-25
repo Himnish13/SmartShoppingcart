@@ -25,8 +25,9 @@
   padding: 0.625rem 0.875rem;
   border-radius: 0.75rem;
   cursor: pointer;
-  font-weight: 650;
+  font-weight: 800;
   margin-bottom: 0.875rem;
+  width: fit-content; /* Prevent stretching in flex column */
 }
 
 .review-container .back-btn:hover {
@@ -109,6 +110,7 @@
   border-radius: 0.625rem;
   cursor: pointer;
   font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .review-container .category-pill.active {
@@ -516,7 +518,129 @@
   background: transparent;
 }
 
-@media (max-width: 61.25em) {
+/* Adjustments for smaller screens (1024x600) */
+@media (max-width: 1024px) or (max-height: 700px) {
+  .review-container {
+    gap: 1rem;
+    padding: 1rem;
+    height: 100vh;
+    overflow: hidden; /* Prevent body scroll */
+  }
+
+  .review-container .left {
+    padding: 1rem;
+    height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .review-container .back-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.925rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .review-container .left h2 {
+    font-size: 1.1rem;
+  }
+
+  .review-container .search-row {
+    margin: 0.4rem 0;
+  }
+
+  .review-container .search {
+    height: 2.2rem;
+    font-size: 0.8rem;
+  }
+
+  .review-container .category-row {
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .review-container .category-pill {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.775rem;
+  }
+
+  .review-container .items {
+    flex: 1;
+    max-height: unset; /* Use flex instead */
+  }
+
+  .review-container .item-card {
+    padding: 0.6rem 0;
+    gap: 0.75rem;
+  }
+
+  .review-container .item-image {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .review-container .item-image img {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .review-container .info h4 {
+    font-size: 0.95rem;
+  }
+
+  .review-container .qty-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1rem;
+  }
+
+  .review-container .right {
+    padding: 1.5rem 1rem;
+    min-height: calc(100vh - 2rem);
+  }
+
+  .review-container .right h2 {
+    font-size: 1.5rem;
+  }
+
+  .review-container .right p {
+    font-size: 0.8rem;
+  }
+
+  .review-container .search-product-input {
+    height: 2.2rem;
+    font-size: 0.75rem;
+  }
+
+  .review-container .smart-title {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .review-container .suggestions {
+    gap: 0.5rem;
+  }
+
+  .review-container .suggestion-card {
+    padding: 0.5rem;
+  }
+
+  .review-container .suggestion-img {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .review-container .suggestion-name {
+    font-size: 0.8rem;
+  }
+
+  .review-container .route-btn {
+    margin-top: 1.5rem;
+    height: 2.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 61.25em) and (min-height: 701px) {
   .review-container {
     flex-direction: column;
   }

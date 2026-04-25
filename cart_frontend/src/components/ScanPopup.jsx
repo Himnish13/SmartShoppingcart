@@ -6,6 +6,7 @@ export default function ScanPopup() {
   const {
     scanPopupVisible,
     scanType,
+    scanStatus, // "idle", "waiting", "success"
     scannedItem,
     scannedPrice,
     scannedQty,
@@ -14,16 +15,16 @@ export default function ScanPopup() {
     closePopup,
   } = useScan();
 
-  // Auto-close after 3 seconds of inactivity
+  // Auto-close after 3 seconds of inactivity (only if success)
   useEffect(() => {
-    if (!scanPopupVisible || !scannedItem) return;
+    if (!scanPopupVisible || scanStatus !== "success") return;
     const t = setTimeout(() => {
       closePopup();
     }, 3000);
     return () => clearTimeout(t);
-  }, [scanPopupVisible, scannedItem, scannedQty, closePopup]);
+  }, [scanPopupVisible, scanStatus, closePopup]);
 
-  if (!scanPopupVisible || !scannedItem) return null;
+  if (!scanPopupVisible) return null;
 
   return (
     <div className="scan-modal-backdrop" onClick={closePopup}>
@@ -33,29 +34,48 @@ export default function ScanPopup() {
         </button>
 
         <div className="scan-body">
-          <div className="scan-image">
-            <img src={scannedItem.image_url} alt={scannedItem.name} />
-          </div>
-
-          <div className="scan-info">
-            <div className="scan-header-row">
-              <h3>{scannedItem.name}</h3>
-              <span className="scan-badge">Category</span>
+          {scanStatus === "waiting" ? (
+            <div className="scan-waiting-content">
+              <div className="scan-waiting-icon">✋</div>
+              <h3>Detected Hand Movement</h3>
+              <p>Something is being <strong>{scanType === "add" ? "added" : "removed"}</strong>.</p>
+              <div className="scan-waiting-subtext">Please scan the barcode now...</div>
+              <div className="scan-loading-bar">
+                 <div className="scan-loading-progress"></div>
+              </div>
             </div>
+          ) : scannedItem ? (
+            <>
+              <div className="scan-image">
+                <img src={scannedItem.image_url} alt={scannedItem.name} />
+              </div>
 
-            <div className="scan-quantity-row">
-              <span>Quantity:</span>
-              <span className="scan-qty-value">{scannedQty}</span>
-            </div>
+              <div className="scan-info">
+                <div className="scan-header-row">
+                  <h3>{scannedItem.name}</h3>
+                  <span className="scan-badge">Category</span>
+                </div>
 
-            <div className="scan-cost">
-              Cost : Rs. {Number(scannedPrice * scannedQty).toFixed(2)}
-            </div>
+                <div className="scan-quantity-row">
+                  <span>Quantity:</span>
+                  <span className="scan-qty-value">{scannedQty}</span>
+                </div>
 
-            <div className={`scan-success-msg ${scanType === "remove" ? "scan-remove-msg" : ""}`}>
-              <span style={{ fontSize: "16px" }}>{scanType === "add" ? "✓" : "✕"}</span> {scanType === "add" ? "Scanned and added Successfully" : "Scanned and removed Successfully"}
+                <div className="scan-cost">
+                  Cost : Rs. {Number(scannedPrice * scannedQty).toFixed(2)}
+                </div>
+
+                <div className={`scan-success-msg ${scanType === "remove" ? "scan-remove-msg" : ""}`}>
+                  <span style={{ fontSize: "16px" }}>{scanType === "add" ? "✓" : "✕"}</span>{" "}
+                  {scanType === "add" ? "Scanned and added Successfully" : "Scanned and removed Successfully"}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="scan-waiting-content">
+               <h3>Processing...</h3>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="scan-footer">

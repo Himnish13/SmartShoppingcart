@@ -3,10 +3,12 @@ import cv2
 def detect_hand_movement():
 
     cap = cv2.VideoCapture(0)
-
     if not cap.isOpened():
-        print("Camera error")
+        print("❌ [CAMERA] Error: Could not open camera.")
         return None
+    
+    print("📷 [CAMERA] Camera opened, watching for movement...")
+
 
     frame_width = int(cap.get(3))
     frame_height = int(cap.get(4))
