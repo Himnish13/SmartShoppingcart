@@ -50,9 +50,24 @@ def background_detection():
         elif movement == "outside":
             current_event = {
                 "type": "remove",
-                "barcode": None,
-                "status": "success"
+                "status": "scanning",
+                "barcode": None
             }
+
+            code = scan_barcode()
+
+            if code:
+                current_event = {
+                    "type": "remove",
+                    "barcode": code,
+                    "status": "success"
+                }
+            else:
+                current_event = {
+                    "type": "remove",
+                    "barcode": None,
+                    "status": "failed"
+                }
 
         time.sleep(1)
 
