@@ -1,48 +1,30 @@
-import cv2
-from pyzbar.pyzbar import decode
+import sys
+import select
 
-def scan_barcode():
+def scan_barcode(timeout=None):
+    """
+    Blocks until barcode is scanned (keyboard scanner).
+    Can optionally take a timeout.
+    """
+    try:
+        print("\n📦 [BARCODE] Waiting for scan... (Ensure terminal is focused)")
+        sys.stdout.flush()
 
-    cap = cv2.VideoCapture(0)
+        # If timeout is provided, use select to wait
+        if timeout:
+            ready, _, _ = select.select([sys.stdin], [], [], timeout)
+            if not ready:
+                print("⏳ [BARCODE] Scan timed out.")
+                return None
 
-    if not cap.isOpened():
+        # Read line from stdin
+        barcode = sys.stdin.readline().strip()
+        
+        if barcode:
+            print(f"✅ [BARCODE] Scanned: {barcode}")
+            return barcode
         return None
 
-    frame_count = 0
-    MAX_FRAMES = 120
-
-    while frame_count < MAX_FRAMES:
-
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # 🔥 PREPROCESSING (IMPORTANT)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        # increase contrast
-        gray = cv2.equalizeHist(gray)
-
-        # blur to remove noise
-        gray = cv2.GaussianBlur(gray, (5, 5), 0)
-
-        # threshold for sharper barcode
-        _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
-
-        # try decoding both
-        barcodes = decode(thresh) or decode(gray)
-
-        for barcode in barcodes:
-            data = barcode.data.decode('utf-8')
-
-            cap.release()
-            cv2.destroyAllWindows()
-
-            return data
-
-        frame_count += 1
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    return None
+    except Exception as e:
+        print(f"❌ [BARCODE] Error: {e}")
+        return None

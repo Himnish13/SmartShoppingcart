@@ -18,62 +18,68 @@ from track import detect_hand_movement
 from barcode import scan_barcode
 
 
+# Unused: replaced by parallel threads
+# def process_scan(event_type):
+#     ... 
+
+
+# Shared event for synchronization
+scan_done = threading.Event()
+
+def barcode_listener():
+    """
+    Dedicated thread for the barcode scanner.
+    """
+    global current_event
+    while True:
+        # This will block until a barcode is scanned
+        code = scan_barcode()
+        
+        if code:
+            # Determine if this scan is part of a triggered movement or a manual scan
+            event_type = current_event.get("type") or "add"
+            
+            print(f"🛒 [EVENT] Processing {event_type} for barcode: {code}")
+            current_event = {
+                "type": event_type,
+                "barcode": code,
+                "status": "success"
+            }
+            
+            # Signal the detection thread that we are done
+            scan_done.set()
+            
+            # Keep the success status for a few seconds so frontend can see it
+            time.sleep(3)
+            current_event = {"type": None, "barcode": None, "status": None}
+
+
 def background_detection():
     global current_event
-
+    print("📷 [CAMERA] Hand tracking started...")
     while True:
         movement = detect_hand_movement()
 
-        if movement == "inside":
-
+        if movement:
+            print(f"✋ [MOVEMENT] Detected: {movement}")
+            
+            # 1. Update state to tell frontend we are waiting for a scan
             current_event = {
-                "type": "add",
-                "status": "scanning",
+                "type": "add" if movement == "inside" else "remove",
+                "status": "waiting_for_scan",
                 "barcode": None
             }
-
-            code = scan_barcode()
-
-            if code:
-                current_event = {
-                    "type": "add",
-                    "barcode": code,   # ✅ RETURNED
-                    "status": "success"
-                }
-            else:
-                current_event = {
-                    "type": "add",
-                    "barcode": None,
-                    "status": "failed"
-                }
-
-        elif movement == "outside":
-            current_event = {
-                "type": "remove",
-                "status": "scanning",
-                "barcode": None
-            }
-
-            code = scan_barcode()
-
-            if code:
-                current_event = {
-                    "type": "remove",
-                    "barcode": code,
-                    "status": "success"
-                }
-            else:
-                current_event = {
-                    "type": "remove",
-                    "barcode": None,
-                    "status": "failed"
-                }
-
-        time.sleep(1)
+            
+            # 2. Wait until barcode_listener signals that a scan happened
+            scan_done.clear()
+            print("⏳ [SYSTEM] Waiting for barcode scan before resuming tracking...")
+            scan_done.wait() 
+            print("✅ [SYSTEM] Scan complete. Resuming hand tracking.")
 
 
-# Run detection in background
+# Run both in background threads
 threading.Thread(target=background_detection, daemon=True).start()
+threading.Thread(target=barcode_listener, daemon=True).start()
 
 
 @app.route("/event")
@@ -82,4 +88,7 @@ def get_event():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5200, debug=True)
+    print("🚀 Server running on http://localhost:5200")
+    print("💡 TIP: Keep this terminal window focused when scanning!")
+    # Disable reloader because it interferes with terminal input (stdin)
+    app.run(host="0.0.0.0", port=5200, debug=True, use_reloader=False)
