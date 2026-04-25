@@ -25,6 +25,16 @@
   gap: 1.5rem;
 }
 
+@media (min-width: 769px) {
+  .admin-layout {
+    grid-template-columns: 15rem 1fr;
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .admin-layout {
     grid-template-columns: 1fr;
