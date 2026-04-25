@@ -32,10 +32,18 @@ exports.syncList = (req, res) => {
                     if (err) return res.status(500).json(err);
 
                     if (product) {
-                        db.run(
-                            `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
-                             VALUES (?, ?, 0, 0)`,
-                            [product.product_id, item.quantity || 1]
+                        db.get(
+                            `SELECT stock FROM products WHERE product_id = ?`,
+                            [product.product_id],
+                            (err2, stockRow) => {
+                                if (!err2 && stockRow && stockRow.stock > 0) {
+                                    db.run(
+                                        `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
+                                         VALUES (?, ?, 0, 0)`,
+                                        [product.product_id, item.quantity || 1]
+                                    );
+                                }
+                            }
                         );
                     }
 
@@ -56,13 +64,46 @@ exports.addToList = (req, res) => {
         return res.status(400).json({ message: "Invalid data" });
     }
 
-    db.run(
-        `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
-         VALUES (?, ?, 0, 0)`,
-        [product_id, quantity],
-        function (err) {
+    // ✅ Step 1: Check stock first
+    db.get(
+        `SELECT stock, name FROM products WHERE product_id = ?`,
+        [product_id],
+        (err, product) => {
             if (err) return res.status(500).json(err);
-            res.json({ message: "Item added to shopping list", id: this.lastID });
+
+            if (!product) {
+                return res.status(404).json({ message: "Product not found" });
+            }
+            
+            if (product.stock <= 0) {
+                return res.json({
+                    status: "out_of_stock",
+                    product_name: product.name,
+                    product_id: product_id
+                });
+            }
+
+            if (quantity > product.stock) {
+                return res.json({
+                    status: "insufficient_stock",
+                    available_stock: product.stock,
+                    product_name: product.name
+                });
+            }
+            db.run(
+                `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
+                 VALUES (?, ?, 0, 0)`,
+                [product_id, quantity],
+                function (err) {
+                    if (err) return res.status(500).json(err);
+
+                    res.json({
+                        status: "added",
+                        message: "Item added to shopping list",
+                        id: this.lastID
+                    });
+                }
+            );
         }
     );
 };
@@ -74,14 +115,31 @@ exports.updateQuantity = (req, res) => {
         return res.status(400).json({ message: "Invalid data" });
     }
 
-    db.run(
-        `UPDATE shopping_list 
-         SET quantity = ? 
-         WHERE product_id = ?`,
-        [quantity, product_id],
-        function (err) {
+    db.get(
+        `SELECT stock, name FROM products WHERE product_id = ?`,
+        [product_id],
+        (err, product) => {
             if (err) return res.status(500).json(err);
-            res.json({ message: "Quantity updated" });
+            if (!product) return res.status(404).json({ message: "Product not found" });
+
+            if (quantity > product.stock) {
+                return res.json({
+                    status: "insufficient_stock",
+                    available_stock: product.stock,
+                    product_name: product.name
+                });
+            }
+
+            db.run(
+                `UPDATE shopping_list 
+                 SET quantity = ? 
+                 WHERE product_id = ?`,
+                [quantity, product_id],
+                function (err) {
+                    if (err) return res.status(500).json(err);
+                    res.json({ status: "success", message: "Quantity updated" });
+                }
+            );
         }
     );
 };
@@ -253,7 +311,7 @@ exports.pasteList = (req, res) => {
         items.forEach(item => {
             const searchTerm = item.name.trim();
             db.all(
-                `SELECT product_id, name, price, image_url 
+                `SELECT product_id, name, price, image_url, stock 
                  FROM products 
                  WHERE LOWER(name) LIKE LOWER(?)`,
                 [`%${searchTerm}%`],
@@ -264,22 +322,54 @@ exports.pasteList = (req, res) => {
                         missingItems.push({ name: searchTerm, qty: item.quantity });
                     } else if (matches.length === 1) {
                         const product = matches[0];
-                        db.run(
-                            `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
-                             VALUES (?, ?, 0, 0)`,
-                            [product.product_id, item.quantity || 1]
+                        db.get(
+                            `SELECT stock FROM products WHERE product_id = ?`,
+                            [product.product_id],
+                            (err2, stockRow) => {
+                                if (!err2 && stockRow && stockRow.stock >= (item.quantity || 1)) {
+                                    db.run(
+                                        `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
+                                         VALUES (?, ?, 0, 0)`,
+                                        [product.product_id, item.quantity || 1]
+                                    );
+                                    addedItems.push({ name: searchTerm, product_id: product.product_id });
+                                } else {
+                                    const reason = (!stockRow || stockRow.stock <= 0) ? "out_of_stock" : "insufficient_stock";
+                                    missingItems.push({ 
+                                        name: searchTerm, 
+                                        qty: item.quantity, 
+                                        reason: reason,
+                                        available_stock: stockRow ? stockRow.stock : 0
+                                    });
+                                }
+                            }
                         );
-                        addedItems.push({ name: searchTerm, product_id: product.product_id });
                     } else {
                         // Check if there is an exact match that should take precedence
                         const exactMatch = matches.find(m => m.name.toLowerCase() === searchTerm.toLowerCase());
                         if (exactMatch) {
-                            db.run(
-                                `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
-                                 VALUES (?, ?, 0, 0)`,
-                                [exactMatch.product_id, item.quantity || 1]
+                            db.get(
+                                `SELECT stock FROM products WHERE product_id = ?`,
+                                [exactMatch.product_id],
+                                (err2, stockRow) => {
+                                    if (!err2 && stockRow && stockRow.stock >= (item.quantity || 1)) {
+                                        db.run(
+                                            `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
+                                             VALUES (?, ?, 0, 0)`,
+                                            [exactMatch.product_id, item.quantity || 1]
+                                        );
+                                        addedItems.push({ name: searchTerm, product_id: exactMatch.product_id });
+                                    } else {
+                                        const reason = (!stockRow || stockRow.stock <= 0) ? "out_of_stock" : "insufficient_stock";
+                                        missingItems.push({ 
+                                            name: searchTerm, 
+                                            qty: item.quantity, 
+                                            reason: reason,
+                                            available_stock: stockRow ? stockRow.stock : 0
+                                        });
+                                    }
+                                }
                             );
-                            addedItems.push({ name: searchTerm, product_id: exactMatch.product_id });
                         } else {
                             ambiguousItems.push({
                                 enteredName: searchTerm,

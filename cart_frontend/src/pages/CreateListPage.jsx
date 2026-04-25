@@ -13,6 +13,7 @@ const CreateListPage = () => {
   const pasteSelection = useRef({ start: 0, end: 0 });
   const [showVK, setShowVK] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [stockError, setStockError] = useState(null);
   const navigate = useNavigate();
 
   const billingCategoryIds = useMemo(() => {
@@ -89,7 +90,7 @@ const CreateListPage = () => {
     const newQty = 1;
 
     try {
-      await fetch("http://localhost:3500/shopping-list/add", {
+      const res = await fetch("http://localhost:3500/shopping-list/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,6 +98,17 @@ const CreateListPage = () => {
           quantity: newQty,
         }),
       });
+
+      const data = await res.json();
+      if (data.status === "insufficient_stock") {
+        setStockError({ name: data.product_name, available: data.available_stock });
+        return;
+      }
+      
+      if (data.status === "out_of_stock") {
+        setStockError({ name: data.product_name, available: 0 });
+        return;
+      }
 
       setCart((prev) => ({
         ...prev,
@@ -112,7 +124,7 @@ const CreateListPage = () => {
     const newQty = cart[id].qty + 1;
 
     try {
-      await fetch("http://localhost:3500/shopping-list/update", {
+      const res = await fetch("http://localhost:3500/shopping-list/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,6 +132,12 @@ const CreateListPage = () => {
           quantity: newQty,
         }),
       });
+
+      const data = await res.json();
+      if (data.status === "insufficient_stock") {
+        setStockError({ name: data.product_name, available: data.available_stock });
+        return;
+      }
 
       setCart((prev) => ({
         ...prev,
@@ -397,10 +415,13 @@ const CreateListPage = () => {
 
             <div className="products-grid">
               {filtered.map((item) => (
-                <div key={item.product_id} className="product-card">
+                <div key={item.product_id} className={`product-card ${item.stock === 0 ? 'out-of-stock' : ''}`}>
                   <div className="product-card-inner">
                     <div className="image-box">
                       <img src={item.image_url} alt={item.name} />
+                      {item.stock === 0 && (
+                        <div className="out-of-stock-overlay">OUT OF STOCK</div>
+                      )}
                     </div>
                     
                     <div className="product-info">
@@ -409,7 +430,14 @@ const CreateListPage = () => {
                       
                       <div className="product-actions">
                         {!cart[item.product_id] ? (
-                          <button className="add-btn" onClick={() => addItem(item)}>Add</button>
+                          <button 
+                            className="add-btn" 
+                            onClick={() => item.stock > 0 && addItem(item)}
+                            disabled={item.stock === 0}
+                            style={{ background: item.stock === 0 ? '#ccc' : undefined }}
+                          >
+                            {item.stock === 0 ? 'Unavailable' : 'Add'}
+                          </button>
                         ) : (
                           <div className="qty-control">
                             <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
@@ -442,10 +470,13 @@ const CreateListPage = () => {
 
                 <div className="products-grid">
                   {groupedProducts[catId].map((item) => (
-                    <div key={item.product_id} className="product-card">
+                    <div key={item.product_id} className={`product-card ${item.stock === 0 ? 'out-of-stock' : ''}`}>
                       <div className="product-card-inner">
                         <div className="image-box">
                           <img src={item.image_url} alt={item.name} />
+                          {item.stock === 0 && (
+                            <div className="out-of-stock-overlay">OUT OF STOCK</div>
+                          )}
                         </div>
                         
                         <div className="product-info">
@@ -454,7 +485,14 @@ const CreateListPage = () => {
                           
                           <div className="product-actions">
                             {!cart[item.product_id] ? (
-                              <button className="add-btn" onClick={() => addItem(item)}>Add</button>
+                              <button 
+                                className="add-btn" 
+                                onClick={() => item.stock > 0 && addItem(item)}
+                                disabled={item.stock === 0}
+                                style={{ background: item.stock === 0 ? '#ccc' : undefined }}
+                              >
+                                {item.stock === 0 ? 'Unavailable' : 'Add'}
+                              </button>
                             ) : (
                               <div className="qty-control">
                                 <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
@@ -499,6 +537,38 @@ const CreateListPage = () => {
           Review list
         </button>
       </div>
+
+      {stockError && (
+        <div className="scan-modal-backdrop" onClick={() => setStockError(null)} style={{ zIndex: 10001 }}>
+          <div className="scan-modal" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center', padding: '30px' }}>
+            <div style={{ fontSize: '50px', marginBottom: '15px' }}>⚠️</div>
+            <h3 style={{ color: '#1e1b4b', marginBottom: '10px' }}>Insufficient Stock</h3>
+            <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>
+              {stockError.available > 0 
+                ? <>Sorry, only <strong>{stockError.available}</strong> units of <strong>{stockError.name}</strong> are available.</>
+                : <>Sorry, <strong>{stockError.name}</strong> is currently <strong>out of stock</strong>.</>
+              }
+            </p>
+            <button 
+              onClick={() => setStockError(null)}
+              style={{ 
+                marginTop: '25px', 
+                width: '100%', 
+                padding: '14px', 
+                background: '#5b5bd6', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: '10px', 
+                fontWeight: 'bold', 
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

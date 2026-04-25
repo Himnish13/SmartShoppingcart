@@ -17,7 +17,7 @@ const ReviewListPage = () => {
   const location = useLocation();
 
   const [missingItems, setMissingItems] = useState(
-    location.state?.missingItems || []
+    (location.state?.missingItems || []).map(it => ({ ...it, feedback: "" }))
   );
   const [showMissingPopup, setShowMissingPopup] = useState(
     (location.state?.missingItems || []).length > 0
@@ -28,6 +28,7 @@ const ReviewListPage = () => {
   const [showAmbiguousPopup, setShowAmbiguousPopup] = useState(
     (location.state?.ambiguousItems || []).length > 0
   );
+  const [stockError, setStockError] = useState(null);
 
   const handleCloseMissingPopup = () => {
     setShowMissingPopup(false);
@@ -41,7 +42,43 @@ const ReviewListPage = () => {
 
   const handleCloseAmbiguousPopup = () => {
     setShowAmbiguousPopup(false);
-    navigate(".", { replace: true, state: {} });
+    // If we now have missing items (possibly from skipping), show that popup
+    if (missingItems.length > 0) {
+      setShowMissingPopup(true);
+    } else {
+      navigate(".", { replace: true, state: {} });
+    }
+  };
+
+  const handleFeedbackChange = (idx, value) => {
+    setMissingItems(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], feedback: value };
+      return updated;
+    });
+  };
+
+  const submitMissingFeedback = async () => {
+    try {
+      const promises = missingItems.map(item => 
+        fetch("http://localhost:3500/feedback/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            product_name: item.name,
+            product_id: item.product_id || null,
+            message: item.feedback
+          })
+        })
+      );
+      
+      await Promise.all(promises);
+      handleCloseMissingPopup();
+    } catch (err) {
+      console.error("Feedback submission error:", err);
+      // Still close the popup even if feedback fails
+      handleCloseMissingPopup();
+    }
   };
 
   const visibleCategories = useMemo(() => {
@@ -156,11 +193,17 @@ const ReviewListPage = () => {
 
   // ➕ INCREASE
   const increaseQty = async (id, qty) => {
-    await fetch("http://localhost:3500/shopping-list/update", {
+    const res = await fetch("http://localhost:3500/shopping-list/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id, quantity: qty + 1 }),
     });
+
+    const data = await res.json();
+    if (data.status === "insufficient_stock") {
+      setStockError({ name: data.product_name, available: data.available_stock });
+      return;
+    }
 
     const list = await fetchAllList();
     if (selectedCategory !== null) {
@@ -191,7 +234,7 @@ const ReviewListPage = () => {
 
   // ➕ ADD FROM SUGGESTIONS
   const addSuggestion = async (item) => {
-    await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch("http://localhost:3500/shopping-list/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -200,6 +243,24 @@ const ReviewListPage = () => {
       }),
     });
 
+    const data = await res.json();
+
+    // ❌ OUT OF STOCK → SHOW POPUP
+    if (data.status === "out_of_stock") {
+      setMissingItems(prev => [
+        ...prev,
+        { name: data.product_name, qty: 1, feedback: "" }
+      ]);
+      setShowMissingPopup(true);
+      return;
+    }
+
+    if (data.status === "insufficient_stock") {
+      setStockError({ name: data.product_name, available: data.available_stock });
+      return;
+    }
+
+    // ✅ NORMAL FLOW
     const list = await fetchAllList();
     if (selectedCategory !== null) {
       await fetchListByCategory(selectedCategory);
@@ -232,7 +293,7 @@ const ReviewListPage = () => {
   };
 
   const handleAddSearchResult = async (product) => {
-    await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch("http://localhost:3500/shopping-list/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -240,6 +301,12 @@ const ReviewListPage = () => {
         quantity: 1,
       }),
     });
+
+    const data = await res.json();
+    if (data.status === "insufficient_stock") {
+      setStockError({ name: data.product_name, available: data.available_stock });
+      return;
+    }
 
     const list = await fetchAllList();
     if (selectedCategory !== null) {
@@ -252,7 +319,7 @@ const ReviewListPage = () => {
 
   const handleSelectAmbiguous = async (enteredName, product, qty) => {
     try {
-      await fetch("http://localhost:3500/shopping-list/add", {
+      const res = await fetch("http://localhost:3500/shopping-list/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,6 +327,12 @@ const ReviewListPage = () => {
           quantity: qty || 1,
         }),
       });
+
+      const data = await res.json();
+      if (data.status === "insufficient_stock") {
+        setStockError({ name: data.product_name, available: data.available_stock });
+        return;
+      }
 
       // Remove this item from the ambiguous list
       setAmbiguousItems(prev => {
@@ -440,20 +513,34 @@ const ReviewListPage = () => {
             {showAutocomplete && searchAutocomplete.length > 0 && (
               <div className="autocomplete-dropdown">
                 {searchAutocomplete.map((product) => (
-                  <div key={product.product_id} className="autocomplete-item">
+                  <div key={product.product_id} className={`autocomplete-item ${product.stock === 0 ? 'out-of-stock' : ''}`} style={{ opacity: product.stock === 0 ? 0.6 : 1 }}>
                     <div className="autocomplete-item-content">
                       <img src={product.image_url} alt={product.name} className="autocomplete-img" />
                       <div className="autocomplete-text">
-                        <div className="autocomplete-name">{product.name}</div>
+                        <div className="autocomplete-name">
+                          {product.name}
+                          {product.stock === 0 && (
+                            <span style={{ color: '#ef4444', fontSize: '10px', marginLeft: '6px', fontWeight: 700 }}>OUT OF STOCK</span>
+                          )}
+                        </div>
                         <div className="autocomplete-price">Rs. {product.price}</div>
                       </div>
                     </div>
                     <button
                       type="button"
                       className="autocomplete-add-btn"
-                      onClick={() => handleAddSearchResult(product)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (product.stock > 0) {
+                          handleAddSearchResult(product);
+                        } else {
+                          setSearchQuery("");
+                          setShowAutocomplete(false);
+                        }
+                      }}
+                      style={{ background: product.stock === 0 ? '#fee2e2' : undefined, color: product.stock === 0 ? '#ef4444' : undefined }}
                     >
-                      +
+                      {product.stock === 0 ? '×' : '+'}
                     </button>
                   </div>
                 ))}
@@ -466,17 +553,27 @@ const ReviewListPage = () => {
 
         <div className="suggestions">
           {suggestions.map((item) => (
-            <div key={item.product_id} className="suggestion-card">
+            <div key={item.product_id} className="suggestion-card" style={{ opacity: item.stock === 0 ? 0.6 : 1 }}>
 
               <div className="suggestion-left">
                 <div className="suggestion-img">
                   <img src={item.image_url} alt={item.name} />
                 </div>
-                <span className="suggestion-name">{item.name}</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span className="suggestion-name">{item.name}</span>
+                  {item.stock === 0 && (
+                    <span style={{ color: '#ef4444', fontSize: '10px', fontWeight: 700 }}>OUT OF STOCK</span>
+                  )}
+                </div>
               </div>
 
-              <button type="button" onClick={() => addSuggestion(item)}>
-                + Add
+              <button 
+                type="button" 
+                onClick={() => item.stock > 0 && addSuggestion(item)}
+                disabled={item.stock === 0}
+                style={{ background: item.stock === 0 ? '#ccc' : undefined }}
+              >
+                {item.stock === 0 ? 'No Stock' : '+ Add'}
               </button>
 
             </div>
@@ -501,21 +598,55 @@ const ReviewListPage = () => {
                   <h3 style={{ color: '#b91c1c', fontSize: '1.25rem' }}>Items Not Found</h3>
                 </div>
                 <div style={{ color: '#666', background: 'transparent', textAlign: 'center', marginTop: '12px' }}>
-                  The following items from your list are not available in the store:
+                  The following items are unavailable or out of stock:
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '20px', width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '20px', width: '100%' }}>
                   {missingItems.map((mi, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: '#f8f8f8', border: '1px solid #eaeaea', borderRadius: '8px' }}>
-                      <strong style={{ color: '#333' }}>{mi.name}</strong>
-                      <span style={{ color: '#666', fontWeight: 600 }}>Qty: {mi.qty}</span>
+                    <div key={idx} style={{ padding: '16px', background: '#f8f8f8', border: '1px solid #eaeaea', borderRadius: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                        <div>
+                          <strong style={{ color: '#333' }}>{mi.name}</strong>
+                          {mi.reason === "out_of_stock" && (
+                            <span style={{ 
+                              color: '#ef4444', 
+                              fontSize: '0.75rem', 
+                              fontWeight: 700, 
+                              marginLeft: '8px',
+                              background: '#fee2e2',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              textTransform: 'uppercase'
+                            }}>
+                              Out of Stock
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ color: '#666', fontWeight: 600 }}>Qty: {mi.qty}</span>
+                      </div>
+                      <textarea
+                        placeholder="Write feedback... (e.g. need this brand, out of stock)"
+                        value={mi.feedback}
+                        onChange={(e) => handleFeedbackChange(idx, e.target.value)}
+                        style={{
+                          width: '100%',
+                          height: '60px',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #ddd',
+                          fontSize: '0.875rem',
+                          resize: 'none',
+                          marginTop: '4px',
+                          fontFamily: 'inherit'
+                        }}
+                      />
                     </div>
                   ))}
                 </div>
               </div>
             </div>
             <div className="scan-footer" style={{ justifyContent: 'center', marginTop: '16px', borderTop: 'none', padding: '16px' }}>
-              <button onClick={handleCloseMissingPopup} style={{ background: '#5b5bd6', color: '#fff', border: 'none', padding: '14px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontSize: '1rem' }}>
-                {ambiguousItems.length > 0 ? "Next: Choose Ambiguous Items" : "Continue to List"}
+              <button onClick={submitMissingFeedback} style={{ background: '#5b5bd6', color: '#fff', border: 'none', padding: '14px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontSize: '1rem' }}>
+                Submit & Continue
               </button>
             </div>
           </div>
@@ -535,30 +666,83 @@ const ReviewListPage = () => {
               </p>
             </div>
             <div className="ambiguous-list" style={{ padding: '20px', maxHeight: '60vh', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px' }}>
-              {ambiguousItems[0].matches.map((product) => (
-                <div key={product.product_id} className="ambiguous-item-card" onClick={() => handleSelectAmbiguous(ambiguousItems[0].enteredName, product, ambiguousItems[0].qty)}>
-                  <div className="ambiguous-image-box">
-                    <img src={product.image_url} alt={product.name} />
+              {ambiguousItems[0].matches.map((product) => {
+                const isOutOfStock = product.stock <= 0;
+                return (
+                  <div 
+                    key={product.product_id} 
+                    className={`ambiguous-item-card ${isOutOfStock ? 'out-of-stock' : ''}`} 
+                    onClick={() => !isOutOfStock && handleSelectAmbiguous(ambiguousItems[0].enteredName, product, ambiguousItems[0].qty)}
+                    style={{ opacity: isOutOfStock ? 0.7 : 1, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
+                  >
+                    <div className="ambiguous-image-box">
+                      <img src={product.image_url} alt={product.name} />
+                    </div>
+                    <div className="ambiguous-info">
+                      <div className="ambiguous-name">
+                        {product.name}
+                        {isOutOfStock && (
+                          <div style={{ color: '#ef4444', fontSize: '10px', fontWeight: 700, marginTop: '2px' }}>OUT OF STOCK</div>
+                        )}
+                      </div>
+                      <div className="ambiguous-price">Price: ₹{product.price}</div>
+                      <button 
+                        className="ambiguous-select-btn" 
+                        disabled={isOutOfStock}
+                        style={{ background: isOutOfStock ? '#ccc' : undefined }}
+                      >
+                        {isOutOfStock ? 'Unavailable' : 'Select'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="ambiguous-info">
-                    <div className="ambiguous-name">{product.name}</div>
-                    <div className="ambiguous-price">Price: ₹{product.price}</div>
-                    <button className="ambiguous-select-btn">Select</button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="ambiguous-footer" style={{ padding: '16px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ color: '#64748b', fontSize: '14px' }}>
                 Item {ambiguousItems.length} more to disambiguate
               </div>
               <button onClick={() => {
+                const current = ambiguousItems[0];
+                setMissingItems(prev => [...prev, { name: current.enteredName, qty: current.qty, feedback: "" }]);
                 setAmbiguousItems(prev => prev.slice(1));
-                if (ambiguousItems.length === 1) handleCloseAmbiguousPopup();
+                if (ambiguousItems.length === 1) {
+                  setShowAmbiguousPopup(false);
+                  setShowMissingPopup(true);
+                }
               }} style={{ background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
                 Skip this item
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {stockError && (
+        <div className="scan-modal-backdrop" onClick={() => setStockError(null)} style={{ zIndex: 10001 }}>
+          <div className="scan-modal" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center', padding: '30px' }}>
+            <div style={{ fontSize: '50px', marginBottom: '15px' }}>⚠️</div>
+            <h3 style={{ color: '#1e1b4b', marginBottom: '10px' }}>Insufficient Stock</h3>
+            <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>
+              Sorry, only <strong>{stockError.available}</strong> units of <strong>{stockError.name}</strong> are available in stock.
+            </p>
+            <button 
+              onClick={() => setStockError(null)}
+              style={{ 
+                marginTop: '25px', 
+                width: '100%', 
+                padding: '14px', 
+                background: '#5b5bd6', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: '10px', 
+                fontWeight: 'bold', 
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              Got it
+            </button>
           </div>
         </div>
       )}
