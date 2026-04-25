@@ -29,7 +29,7 @@ app.get("/system/ip", mobileController.getLocalIp);
 
 
 // initPositionSystem();
-const PORT = 3500;
+const PORT = 3700;
 const HOST = "0.0.0.0"; // listen on all network interfaces (hotspot, LAN, etc.)
 app.listen(PORT, HOST, () => {
     console.log(`Server running at http://${HOST}:${PORT}`);
