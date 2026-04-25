@@ -524,3 +524,117 @@
     min-height: unset;
   }
 }
+
+/* 🔥 AMBIGUOUS MODAL STYLES (Matching CreateListPage) */
+.ambiguous-modal {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.ambiguous-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 24px !important;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ambiguous-item-card {
+  background: #fff9e6; /* Soft beige background */
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  text-align: center;
+}
+
+.ambiguous-item-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(212, 175, 55, 0.1);
+  border-color: #d4af37;
+}
+
+.ambiguous-image-box {
+  width: 100%;
+  height: 120px;
+  background: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.ambiguous-image-box img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.ambiguous-item-card:hover .ambiguous-image-box img {
+  transform: scale(1.1);
+}
+
+.ambiguous-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ambiguous-name {
+  font-weight: 650;
+  color: #1e293b;
+  font-size: 0.9375rem;
+  font-style: italic; /* Matching Make List */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ambiguous-price {
+  color: #b8860b; /* Gold price */
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.ambiguous-select-btn {
+  margin-top: 10px;
+  background:#6b63c6; 
+  color: white;
+  border: none;
+  padding: 8px 0;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: 650;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ambiguous-item-card:hover .ambiguous-select-btn {
+  background:#463da8;
+  transform: scale(1.02);
+}
+
+.ambiguous-footer {
+  background: #f8fafc;
+  padding: 16px 24px !important;
+}
+
+.ambiguous-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ambiguous-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}

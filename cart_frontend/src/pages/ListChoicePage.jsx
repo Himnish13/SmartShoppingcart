@@ -41,7 +41,14 @@ const ListChoicePage = () => {
           setImportStatus("success");
           clearInterval(pollingRef.current);
           
-          setTimeout(() => navigate("/review-list", { state: { missingItems: missing } }), 2000);
+          const ambiguous = data.ambiguousItems || [];
+          
+          setTimeout(() => navigate("/review-list", { 
+            state: { 
+              missingItems: missing,
+              ambiguousItems: ambiguous 
+            } 
+          }), 2000);
         }
       } catch (_) {}
     }, 1200);

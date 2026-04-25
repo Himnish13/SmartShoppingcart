@@ -175,6 +175,28 @@ const HomePage = () => {
     }
   }, [location.state]);
 
+  const remainingShoppingItems = useMemo(() => {
+    const cartMap = {};
+    (cartItems || []).forEach((c) => {
+      cartMap[c.product_id] = (cartMap[c.product_id] || 0) + c.quantity;
+    });
+
+    const rem = [];
+    (shoppingItems || []).forEach((s) => {
+      const cartQty = cartMap[s.product_id] || 0;
+      const remainingQty = s.quantity - cartQty;
+      if (remainingQty > 0) {
+        rem.push({
+          ...s,
+          remaining_quantity: remainingQty,
+          shopping_quantity: s.quantity,
+          quantity: remainingQty, // Override for display
+        });
+      }
+    });
+    return rem;
+  }, [shoppingItems, cartItems]);
+
   // ✅ GENERATE STORE ROUTE FOR SHOPPING LIST
   useEffect(() => {
     let cancelled = false;
@@ -184,12 +206,12 @@ const HomePage = () => {
         // If we arrived from the route planner with a generated route, don't override it.
         if (manualRouteRef.current) return;
 
-        if (!shoppingItems || shoppingItems.length === 0) {
+        if (!remainingShoppingItems || remainingShoppingItems.length === 0) {
           setRoute(null);
           return;
         }
 
-        const productIds = shoppingItems
+        const productIds = remainingShoppingItems
           .map((i) => i.product_id)
           .filter((id) => id !== null && id !== undefined);
 
@@ -248,10 +270,10 @@ const HomePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [shoppingItems, laterProductIds]);
+  }, [remainingShoppingItems, laterProductIds]);
 
   const upNextItems = useMemo(() => {
-    const raw = shoppingItems;
+    const raw = remainingShoppingItems;
     if (!Array.isArray(raw)) return [];
 
     let filtered = raw;
@@ -264,7 +286,7 @@ const HomePage = () => {
     const later = filtered.filter(i => laterProductIds.includes(i.product_id))
                           .sort((a, b) => laterProductIds.indexOf(a.product_id) - laterProductIds.indexOf(b.product_id));
     return [...normal, ...later];
-  }, [shoppingItems, search, laterProductIds]);
+  }, [remainingShoppingItems, search, laterProductIds]);
 
   const smartSuggestions = useMemo(() => {
     const inList = new Set((shoppingItems || []).map((i) => i.product_id));
@@ -663,7 +685,7 @@ const HomePage = () => {
                       {isInList(o.product_id) ? (
                         <button className="offer-remove" onClick={(e) => { e.stopPropagation(); removeOfferFromList(o); }}>Remove</button>
                       ) : (
-                        <button className="offer-add" onClick={(e) => { e.stopPropagation(); addOfferToList(o); }}>＋</button>
+                        <button className="offer-add" onClick={(e) => { e.stopPropagation(); addOfferToList(o); }}>+</button>
                       )}
                     </div>
                   </div>

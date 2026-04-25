@@ -1,13 +1,13 @@
-// In-memory state for the mobile import session
 let mobileStatus = "idle"; // "idle" | "importing" | "success"
 let missingItems = [];
+let ambiguousItems = [];
 
 const db = require("../config/sqlite");
 const os = require("os");
 
 // GET /mobile/status — cart frontend polls this
 exports.getStatus = (req, res) => {
-  res.json({ status: mobileStatus, missingItems });
+  res.json({ status: mobileStatus, missingItems, ambiguousItems });
 };
 
 // POST /mobile/status — mobile page updates this
@@ -15,7 +15,10 @@ exports.setStatus = (req, res) => {
   const { status } = req.body;
   if (["idle", "importing", "success"].includes(status)) {
     mobileStatus = status;
-    if (status === "idle") missingItems = [];
+    if (status === "idle") {
+      missingItems = [];
+      ambiguousItems = [];
+    }
   }
   res.json({ ok: true });
 };
@@ -40,6 +43,7 @@ exports.submitList = (req, res) => {
 
   mobileStatus = "importing";
   missingItems = [];
+  ambiguousItems = [];
 
   // Parse each line into { name, qty }
   const parsed = lines.map((line) => {
@@ -60,45 +64,40 @@ exports.submitList = (req, res) => {
     const total = parsed.length;
 
     parsed.forEach(({ name, qty }) => {
-      // Step 1: find matching product
-      db.get(
-        `SELECT product_id FROM products WHERE LOWER(name) LIKE LOWER(?) LIMIT 1`,
+      // Step 1: find matching products
+      db.all(
+        `SELECT product_id, name, price, image_url FROM products WHERE LOWER(name) LIKE LOWER(?)`,
         [`%${name}%`],
-        (err, product) => {
-          if (err || !product) {
-            // product not found — still count it as done
+        (err, matches) => {
+          if (err || !matches || matches.length === 0) {
             missingItems.push({ name, qty });
-            completed++;
-            if (completed === total) mobileStatus = "success";
-            return;
+          } else if (matches.length === 1) {
+            const product = matches[0];
+            db.run(
+              `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
+              [product.product_id, qty]
+            );
+          } else {
+            // Multiple matches! Check for an exact match first
+            const exactMatch = matches.find(m => m.name.toLowerCase() === name.toLowerCase());
+            if (exactMatch) {
+              db.run(
+                `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
+                [exactMatch.product_id, qty]
+              );
+            } else {
+              ambiguousItems.push({
+                enteredName: name,
+                qty: qty,
+                matches: matches
+              });
+            }
           }
 
-          // Step 2: check if already in shopping list
-          db.get(
-            `SELECT product_id FROM shopping_list WHERE product_id = ?`,
-            [product.product_id],
-            (err2, existing) => {
-              if (existing) {
-                db.run(
-                  `UPDATE shopping_list SET quantity = quantity + ? WHERE product_id = ?`,
-                  [qty, product.product_id],
-                  () => {
-                    completed++;
-                    if (completed === total) mobileStatus = "success";
-                  }
-                );
-              } else {
-                db.run(
-                  `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
-                  [product.product_id, qty],
-                  () => {
-                    completed++;
-                    if (completed === total) mobileStatus = "success";
-                  }
-                );
-              }
-            }
-          );
+          completed++;
+          if (completed === total) {
+            mobileStatus = "success";
+          }
         }
       );
     });

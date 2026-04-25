@@ -241,29 +241,62 @@ exports.pasteList = (req, res) => {
         db.run(`DELETE FROM shopping_list`);
 
         let done = 0;
+        const total = items.length;
+        const ambiguousItems = [];
+        const missingItems = [];
+        const addedItems = [];
+
+        if (total === 0) {
+            return res.json({ message: 'Empty list', ambiguousItems: [], missingItems: [], addedItems: [] });
+        }
 
         items.forEach(item => {
-            db.get(
-                `SELECT product_id 
+            const searchTerm = item.name.trim();
+            db.all(
+                `SELECT product_id, name, price, image_url 
                  FROM products 
-                 WHERE LOWER(name) LIKE LOWER(?) 
-                 LIMIT 1`,
-                [`%${item.name.trim()}%`],
-                (err, product) => {
-
-                    if (err) return res.status(500).json(err);
-
-                    if (product) {
+                 WHERE LOWER(name) LIKE LOWER(?)`,
+                [`%${searchTerm}%`],
+                (err, matches) => {
+                    if (err) {
+                        console.error("PasteList DB error:", err);
+                    } else if (!matches || matches.length === 0) {
+                        missingItems.push({ name: searchTerm, qty: item.quantity });
+                    } else if (matches.length === 1) {
+                        const product = matches[0];
                         db.run(
                             `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
                              VALUES (?, ?, 0, 0)`,
                             [product.product_id, item.quantity || 1]
                         );
+                        addedItems.push({ name: searchTerm, product_id: product.product_id });
+                    } else {
+                        // Check if there is an exact match that should take precedence
+                        const exactMatch = matches.find(m => m.name.toLowerCase() === searchTerm.toLowerCase());
+                        if (exactMatch) {
+                            db.run(
+                                `INSERT INTO shopping_list (product_id, quantity, picked, picked_quantity)
+                                 VALUES (?, ?, 0, 0)`,
+                                [exactMatch.product_id, item.quantity || 1]
+                            );
+                            addedItems.push({ name: searchTerm, product_id: exactMatch.product_id });
+                        } else {
+                            ambiguousItems.push({
+                                enteredName: searchTerm,
+                                qty: item.quantity,
+                                matches: matches
+                            });
+                        }
                     }
 
                     done++;
-                    if (done === items.length) {
-                        res.json({ message: 'Pasted shopping list imported' });
+                    if (done === total) {
+                        res.json({
+                            message: 'Pasted shopping list processed',
+                            ambiguousItems,
+                            missingItems,
+                            addedItems
+                        });
                     }
                 }
             );
