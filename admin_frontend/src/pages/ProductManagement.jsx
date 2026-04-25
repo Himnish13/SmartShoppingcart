@@ -60,8 +60,15 @@ const ProductManagement = () => {
   };
 
   const handleEdit = (product) => {
-    setFormData(product);
-    setEditingId(product.id);
+    setFormData({
+      name: product.name,
+      barcode: product.barcode,
+      price: product.price,
+      category: product.category_name || "",
+      stock: product.stock || "",
+      description: product.description || "",
+    });
+    setEditingId(product.product_id);
     setShowForm(true);
   };
 
@@ -160,20 +167,16 @@ const ProductManagement = () => {
                   <th>Barcode</th>
                   <th>Price</th>
                   <th>Category</th>
-                  <th>Stock</th>
-                  <th>Description</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr key={product.id} className="product-row">
+                  <tr key={product.product_id} className="product-row">
                     <td className="product-name">{product.name}</td>
                     <td className="barcode">{product.barcode}</td>
                     <td className="price">₹{product.price}</td>
-                    <td className="category">{product.category || "-"}</td>
-                    <td className="stock">{product.stock || 0}</td>
-                    <td className="description">{product.description || "-"}</td>
+                    <td className="category">{product.category_name || "-"}</td>
                     <td className="actions">
                       <button
                         className="action-btn edit-btn"
@@ -184,7 +187,7 @@ const ProductManagement = () => {
                       </button>
                       <button
                         className="action-btn delete-btn"
-                        onClick={() => handleDelete(product.id)}
+                        onClick={() => handleDelete(product.product_id)}
                         title="Delete product"
                       >
                         🗑️ Delete

@@ -8,6 +8,7 @@ const OffersManagement = () => {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [filterType, setFilterType] = useState("all"); // all, with-offers, without-offers
   const [formData, setFormData] = useState({
     product_id: "",
     discount_percentage: "",
@@ -59,13 +60,13 @@ const OffersManagement = () => {
 
   const handleEdit = (product) => {
     setFormData({
-      product_id: product.id,
-      discount_percentage: product.discount_percentage || "",
+      product_id: product.product_id,
+      discount_percentage: product.discount_percent || "",
       valid_from: product.valid_from || "",
       valid_until: product.valid_until || "",
       description: product.offer_description || "",
     });
-    setEditingProductId(product.id);
+    setEditingProductId(product.product_id);
     setShowForm(true);
   };
 
@@ -80,19 +81,16 @@ const OffersManagement = () => {
     }
   };
 
-  // Group products by category
-  const groupedByCategory = products.reduce((acc, product) => {
-    const category = product.category || "Uncategorized";
-    if (!acc[category]) {
-      acc[category] = { withOffers: [], withoutOffers: [] };
-    }
-    if (product.discount_percentage) {
-      acc[category].withOffers.push(product);
-    } else {
-      acc[category].withoutOffers.push(product);
-    }
-    return acc;
-  }, {});
+  // Count statistics
+  const productsWithOffers = products.filter(p => p.discount_percent);
+  const productsWithoutOffers = products.filter(p => !p.discount_percent);
+
+  // Filter products based on selected filter
+  const filteredProducts = filterType === "with-offers"
+    ? productsWithOffers
+    : filterType === "without-offers"
+    ? productsWithoutOffers
+    : products;
 
   return (
     <div className="offers-page">
@@ -104,6 +102,22 @@ const OffersManagement = () => {
       </div>
 
       {error && <div className="error-message">{error}</div>}
+
+      {/* STATS SECTION */}
+      <div className="stats-section">
+        <div className="stat-card">
+          <div className="stat-number">{products.length}</div>
+          <div className="stat-label">Total Products</div>
+        </div>
+        <div className="stat-card active-offers">
+          <div className="stat-number">{productsWithOffers.length}</div>
+          <div className="stat-label">Active Offers</div>
+        </div>
+        <div className="stat-card no-offers">
+          <div className="stat-number">{productsWithoutOffers.length}</div>
+          <div className="stat-label">No Offers</div>
+        </div>
+      </div>
 
       {showForm && (
         <form className="offer-form" onSubmit={handleSubmit}>
@@ -118,9 +132,9 @@ const OffersManagement = () => {
             >
               <option value="">Select Product</option>
               {products
-                .filter((p) => !editingProductId || p.id === editingProductId)
+                .filter((p) => !editingProductId || p.product_id === editingProductId)
                 .map((p) => (
-                  <option key={`select-${p.id}`} value={p.id}>
+                  <option key={`select-${p.product_id}`} value={p.product_id}>
                     {p.name} (₹{p.price})
                   </option>
                 ))}
@@ -175,121 +189,124 @@ const OffersManagement = () => {
         </form>
       )}
 
+      {/* FILTER BUTTONS */}
+      <div className="filter-section">
+        <button
+          className={`filter-btn ${filterType === "all" ? "active" : ""}`}
+          onClick={() => setFilterType("all")}
+        >
+          All Products ({products.length})
+        </button>
+        <button
+          className={`filter-btn ${filterType === "with-offers" ? "active" : ""}`}
+          onClick={() => setFilterType("with-offers")}
+        >
+          ✨ With Offers ({productsWithOffers.length})
+        </button>
+        <button
+          className={`filter-btn ${filterType === "without-offers" ? "active" : ""}`}
+          onClick={() => setFilterType("without-offers")}
+        >
+          📌 No Offers ({productsWithoutOffers.length})
+        </button>
+      </div>
+
+      {/* PRODUCTS TABLE */}
       <div className="offers-container">
         {loading ? (
           <div className="loading">Loading products...</div>
-        ) : products.length === 0 ? (
-          <div className="empty-state">No products available</div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="empty-state">
+            {filterType === "with-offers"
+              ? "No products with offers yet. Create one!"
+              : filterType === "without-offers"
+              ? "All products have offers!"
+              : "No products available"}
+          </div>
         ) : (
-          <div className="categories-list">
-            {Object.entries(groupedByCategory)
-              .sort(([catA], [catB]) => catA.localeCompare(catB))
-              .map(([category, { withOffers, withoutOffers }]) => (
-                <div key={`category-${category}`} className="category-section">
-                  <div className="category-header">
-                    <h2>{category}</h2>
-                    <span className="category-count">
-                      {withOffers.length} active offer{withOffers.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-
-                  {/* Active Offers Table */}
-                  {withOffers.length > 0 && (
-                    <div className="offers-table-wrapper">
-                      <table className="offers-table">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Original Price</th>
-                            <th>Discount</th>
-                            <th>Final Price</th>
-                            <th>Valid Until</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {withOffers.map((product) => (
-                            <tr key={`offer-${product.id}`} className="offer-row">
-                              <td className="product-name">{product.name}</td>
-                              <td className="original-price">₹{product.price}</td>
-                              <td className="discount-badge">
-                                <span className="badge">
-                                  {product.discount_percentage}% OFF
-                                </span>
-                              </td>
-                              <td className="final-price">
-                                ₹{(
-                                  product.price *
-                                  (1 - product.discount_percentage / 100)
-                                ).toFixed(2)}
-                              </td>
-                              <td className="validity">
-                                {product.valid_until ? (
-                                  new Date(product.valid_until).toLocaleDateString()
-                                ) : (
-                                  <span className="no-expiry">No expiry</span>
-                                )}
-                              </td>
-                              <td className="actions">
-                                <button
-                                  className="action-btn edit-btn"
-                                  onClick={() => handleEdit(product)}
-                                  title="Edit offer"
-                                >
-                                  ✏️ Edit
-                                </button>
-                                <button
-                                  className="action-btn delete-btn"
-                                  onClick={() => handleDeleteOffer(product.id)}
-                                  title="Delete offer"
-                                >
-                                  🗑️ Delete
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* Products without offers */}
-                  {withoutOffers.length > 0 && (
-                    <div className="no-offers-table-wrapper">
-                      <h3 className="no-offers-title">
-                        Products without offers ({withoutOffers.length})
-                      </h3>
-                      <table className="no-offers-table">
-                        <thead>
-                          <tr>
-                            <th>Product Name</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {withoutOffers.map((product) => (
-                            <tr key={`no-offer-${product.id}`} className="no-offer-row">
-                              <td className="product-name">{product.name}</td>
-                              <td className="price">₹{product.price}</td>
-                              <td className="stock">{product.stock || 0}</td>
-                              <td className="action">
-                                <button
-                                  className="quick-add-btn"
-                                  onClick={() => handleEdit(product)}
-                                >
-                                  + Add Offer
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              ))}
+          <div className="table-wrapper">
+            <table className="offers-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Product Name</th>
+                  <th>Price</th>
+                  <th>Offer Details</th>
+                  <th>Discount</th>
+                  <th>Final Price</th>
+                  <th>Valid Until</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((product) => (
+                  <tr key={`product-${product.product_id}`}
+                      className={`product-row ${product.discount_percent ? "has-offer" : "no-offer"}`}>
+                    <td className="status-cell">
+                      {product.discount_percent ? (
+                        <span className="badge-offer">✨ OFFER</span>
+                      ) : (
+                        <span className="badge-no-offer">-</span>
+                      )}
+                    </td>
+                    <td className="product-name">{product.name}</td>
+                    <td className="price">₹{product.price}</td>
+                    <td className="offer-info">
+                      {product.discount_percent ? (
+                        <span className="offer-active">{product.discount_percent}% OFF</span>
+                      ) : (
+                        <span className="no-offer-text">No active offer</span>
+                      )}
+                    </td>
+                    <td className="discount">
+                      {product.discount_percent ? (
+                        <span>-₹{(product.price * product.discount_percent / 100).toFixed(2)}</span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="final-price">
+                      {product.discount_percent ? (
+                        <span className="price-highlight">
+                          ₹{(product.price * (1 - product.discount_percent / 100)).toFixed(2)}
+                        </span>
+                      ) : (
+                        "₹" + product.price
+                      )}
+                    </td>
+                    <td className="validity">
+                      {product.discount_percent ? (
+                        product.valid_until ? (
+                          new Date(product.valid_until).toLocaleDateString()
+                        ) : (
+                          <span className="no-expiry">No expiry</span>
+                        )
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => handleEdit(product)}
+                        title={product.discount_percent ? "Edit offer" : "Add offer"}
+                      >
+                        {product.discount_percent ? "✏️ Edit" : "+ Add"}
+                      </button>
+                      {product.discount_percent && (
+                        <button
+                          className="action-btn delete-btn"
+                          onClick={() => handleDeleteOffer(product.product_id)}
+                          title="Delete offer"
+                        >
+                          🗑️ Delete
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

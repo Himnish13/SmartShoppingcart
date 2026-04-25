@@ -62,7 +62,12 @@ export const apiService = {
     const response = await fetch(`${API_BASE}/admin/offers`, {
       method: "POST",
       headers: getHeaders(),
-      body: JSON.stringify(offerData),
+      body: JSON.stringify({
+        product_id: offerData.product_id,
+        discount_percent: offerData.discount_percentage,
+        valid_from: offerData.valid_from,
+        valid_until: offerData.valid_until,
+      }),
     });
     if (!response.ok) throw new Error("Failed to add offer");
     return response.json();
@@ -72,7 +77,11 @@ export const apiService = {
     const response = await fetch(`${API_BASE}/admin/offers/${productId}`, {
       method: "PUT",
       headers: getHeaders(),
-      body: JSON.stringify(offerData),
+      body: JSON.stringify({
+        discount_percent: offerData.discount_percentage,
+        valid_from: offerData.valid_from,
+        valid_until: offerData.valid_until,
+      }),
     });
     if (!response.ok) throw new Error("Failed to update offer");
     return response.json();
@@ -89,7 +98,7 @@ export const apiService = {
 
   // ========== CARTS ==========
   async getActiveCarts() {
-    const response = await fetch(`${API_BASE}/carts`, {
+    const response = await fetch(`${API_BASE}/admin/crowd`, {
       headers: getHeaders(),
     });
     if (!response.ok) throw new Error("Failed to fetch carts");
