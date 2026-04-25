@@ -5,6 +5,7 @@ const { verifyToken, requireRole } = require("../middleware/auth");
 
 const productController = require("../controllers/product.controller");
 const crowdController = require("../controllers/crowd.controller");
+const feedbackController = require("../controllers/feedback.controller");
 
 
 router.put(
@@ -42,6 +43,13 @@ router.get(
   verifyToken,
   requireRole("STAFF"),
   crowdController.getCrowd
+);
+
+router.post(
+  "/feedback/bulk",
+  verifyToken,
+  requireRole("STAFF"),
+  feedbackController.bulkFeedback
 );
 
 module.exports = router;

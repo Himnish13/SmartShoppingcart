@@ -8,6 +8,7 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stockError, setStockError] = useState(null);
 
   const TAX_RATE = 0.08;
   const SHIPPING = 0;
@@ -50,11 +51,18 @@ const CartPage = () => {
 
   const handleIncrease = async (barcode) => {
     try {
-      await fetch("http://localhost:3500/cart/add", {
+      const res = await fetch("http://localhost:3500/cart/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode, quantity: 1 }),
       });
+
+      const data = await res.json();
+      if (data.status === "insufficient_stock") {
+        setStockError({ name: data.product_name, available: data.available_stock });
+        return;
+      }
+
       await fetchCart();
     } catch (err) {
       console.error("❌ Increase error", err);
@@ -322,6 +330,35 @@ const CartPage = () => {
           </aside>
         </div>
       </div>
+      {stockError && (
+        <div className="scan-modal-backdrop" onClick={() => setStockError(null)} style={{ zIndex: 10001 }}>
+          <div className="scan-modal" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center', padding: '30px' }}>
+            <div style={{ fontSize: '50px', marginBottom: '15px' }}>⚠️</div>
+            <h3 style={{ color: '#1e1b4b', marginBottom: '10px' }}>Insufficient Stock</h3>
+            <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>
+              Sorry, only <strong>{stockError.available}</strong> units of <strong>{stockError.name}</strong> are available in stock.
+            </p>
+            <button 
+              onClick={() => setStockError(null)}
+              style={{ 
+                marginTop: '25px', 
+                width: '100%', 
+                padding: '14px', 
+                background: '#5b5bd6', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: '10px', 
+                fontWeight: 'bold', 
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

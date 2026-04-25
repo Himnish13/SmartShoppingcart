@@ -36,6 +36,7 @@ function initializeTables() {
       image_url TEXT,
       name TEXT,
       price REAL,
+      stock INTEGER DEFAULT 0,
       category_id INTEGER,
       node_id INTEGER,
       FOREIGN KEY (category_id) REFERENCES category(category_id),
@@ -115,7 +116,17 @@ function initializeTables() {
     db.run(`INSERT INTO cart_position (id, node_id, updated_at)
             VALUES (1, NULL, datetime('now'))`);
 
-    console.log("Cart DB ready with FK + category support");
+    // ✅ NEW FEEDBACK TABLE
+    db.run(`CREATE TABLE feedback (
+      feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_name TEXT,
+      product_id INTEGER,
+      message TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      synced INTEGER DEFAULT 0
+    )`);
+
+    console.log("Cart DB ready with FK + category support + feedback table");
   });
 
   return db;

@@ -14,6 +14,7 @@ const ListPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchAutocomplete, setSearchAutocomplete] = useState([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [stockError, setStockError] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
   const navigate = useNavigate();
 
@@ -130,11 +131,17 @@ const ListPage = () => {
 
   // ➕ INCREASE
   const increaseQty = async (id, qty) => {
-    await fetch("http://localhost:3500/shopping-list/update", {
+    const res = await fetch("http://localhost:3500/shopping-list/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id, quantity: qty + 1 }),
     });
+
+    const data = await res.json();
+    if (data.status === "insufficient_stock") {
+      setStockError({ name: data.product_name, available: data.available_stock });
+      return;
+    }
 
     const list = await fetchAllList();
     if (selectedCategory !== null) {
@@ -165,7 +172,7 @@ const ListPage = () => {
 
   // ➕ ADD FROM SUGGESTIONS
   const addSuggestion = async (item) => {
-    await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch("http://localhost:3500/shopping-list/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -173,6 +180,12 @@ const ListPage = () => {
         quantity: 1,
       }),
     });
+
+    const data = await res.json();
+    if (data.status === "insufficient_stock") {
+      setStockError({ name: data.product_name, available: data.available_stock });
+      return;
+    }
 
     const list = await fetchAllList();
     if (selectedCategory !== null) {
@@ -205,7 +218,7 @@ const ListPage = () => {
   };
 
   const handleAddSearchResult = async (product) => {
-    await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch("http://localhost:3500/shopping-list/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -213,6 +226,12 @@ const ListPage = () => {
         quantity: 1,
       }),
     });
+
+    const data = await res.json();
+    if (data.status === "insufficient_stock") {
+      setStockError({ name: data.product_name, available: data.available_stock });
+      return;
+    }
 
     const list = await fetchAllList();
     if (selectedCategory !== null) {
@@ -472,20 +491,34 @@ const ListPage = () => {
                 {showAutocomplete && searchAutocomplete.length > 0 && (
                   <div className="autocomplete-dropdown">
                     {searchAutocomplete.map((product) => (
-                      <div key={product.product_id} className="autocomplete-item">
+                      <div key={product.product_id} className={`autocomplete-item ${product.stock === 0 ? 'out-of-stock' : ''}`} style={{ opacity: product.stock === 0 ? 0.6 : 1 }}>
                         <div className="autocomplete-item-content">
                           <img src={product.image_url} alt={product.name} className="autocomplete-img" />
                           <div className="autocomplete-text">
-                            <div className="autocomplete-name">{product.name}</div>
+                            <div className="autocomplete-name">
+                              {product.name}
+                              {product.stock === 0 && (
+                                <span style={{ color: '#ef4444', fontSize: '10px', marginLeft: '6px', fontWeight: 700 }}>OUT OF STOCK</span>
+                              )}
+                            </div>
                             <div className="autocomplete-price">Rs. {product.price}</div>
                           </div>
                         </div>
                         <button
                           type="button"
                           className="autocomplete-add-btn"
-                          onClick={() => handleAddSearchResult(product)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (product.stock > 0) {
+                              handleAddSearchResult(product);
+                            } else {
+                              setSearchQuery("");
+                              setShowAutocomplete(false);
+                            }
+                          }}
+                          style={{ background: product.stock === 0 ? '#fee2e2' : undefined, color: product.stock === 0 ? '#ef4444' : undefined }}
                         >
-                          +
+                          {product.stock === 0 ? '×' : '+'}
                         </button>
                       </div>
                     ))}
@@ -498,15 +531,25 @@ const ListPage = () => {
 
             <div className="suggestions">
               {suggestions.map((item) => (
-                <div key={item.product_id} className="suggestion-card">
+                <div key={item.product_id} className="suggestion-card" style={{ opacity: item.stock === 0 ? 0.6 : 1 }}>
                   <div className="suggestion-left">
                     <div className="suggestion-img">
                       <img src={item.image_url} alt={item.name} />
                     </div>
-                    <span className="suggestion-name">{item.name}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className="suggestion-name">{item.name}</span>
+                      {item.stock === 0 && (
+                        <span style={{ color: '#ef4444', fontSize: '10px', fontWeight: 700 }}>OUT OF STOCK</span>
+                      )}
+                    </div>
                   </div>
-                  <button type="button" onClick={() => addSuggestion(item)}>
-                    + Add
+                  <button 
+                    type="button" 
+                    onClick={() => item.stock > 0 && addSuggestion(item)}
+                    disabled={item.stock === 0}
+                    style={{ background: item.stock === 0 ? '#ccc' : undefined }}
+                  >
+                    {item.stock === 0 ? 'No Stock' : '+ Add'}
                   </button>
                 </div>
               ))}
@@ -516,6 +559,35 @@ const ListPage = () => {
           </div>
         </div>
       </div>
+      {stockError && (
+        <div className="scan-modal-backdrop" onClick={() => setStockError(null)} style={{ zIndex: 10001 }}>
+          <div className="scan-modal" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center', padding: '30px' }}>
+            <div style={{ fontSize: '50px', marginBottom: '15px' }}>⚠️</div>
+            <h3 style={{ color: '#1e1b4b', marginBottom: '10px' }}>Insufficient Stock</h3>
+            <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5' }}>
+              Sorry, only <strong>{stockError.available}</strong> units of <strong>{stockError.name}</strong> are available in stock.
+            </p>
+            <button 
+              onClick={() => setStockError(null)}
+              style={{ 
+                marginTop: '25px', 
+                width: '100%', 
+                padding: '14px', 
+                background: '#5b5bd6', 
+                color: '#fff', 
+                border: 'none', 
+                borderRadius: '10px', 
+                fontWeight: 'bold', 
+                cursor: 'pointer',
+                fontSize: '1rem'
+              }}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -28,41 +28,45 @@ function seedData() {
     // ---- PRODUCTS ----
     db.run(`
   INSERT INTO products 
-  (product_id, barcode, name, price, category_id, node_id, image_url) VALUES
+(product_id, barcode, name, price, stock, category_id, node_id, image_url) VALUES
 
-  -- 🍫 Chocolates
-  (1,'890100000001','Dairy Milk Chocolate',50.00,1,5,'https://fbflowerbasket.com/wp-content/uploads/2023/11/5-Cadbury-Dairy-Milk-Chcolates-13.2-gms.jpg'),
-  (2,'890100000002','KitKat',40.00,1,5,'https://ik.imagekit.io/wlfr/wellness/images/products/300995-1.jpg/tr:w-3840,c-at_max,cm-pad_resize,ar-1210-700,pr-true,f-auto,q-70,l-image,i-Wellness_logo_BDwqbQao9.png,lfo-bottom_right,w-200,h-90,c-at_least,cm-pad_resize,l-end'),
-  (3,'890100000003','Five Star',35.00,1,5,'https://www.snackspause.com/cdn/shop/products/image_c265338f-aa28-4eec-a740-cc873ad51391.jpg?v=1671685509'),
-  (101,'890100001019','Munch',20.00,1,5,'https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/NI_CATALOG/IMAGES/CIW/2026/2/28/47ef4582-28b8-485e-868f-0135e9465b7c_61015_1.png'),
+-- 🍫 Chocolates
+(1,'890100000001','Dairy Milk Chocolate',50.00,20,1,5,'https://fbflowerbasket.com/wp-content/uploads/2023/11/5-Cadbury-Dairy-Milk-Chcolates-13.2-gms.jpg'),
+(2,'890100000002','KitKat',40.00,20,1,5,'https://ik.imagekit.io/wlfr/wellness/images/products/300995-1.jpg'),
+(3,'890100000003','Five Star',35.00,20,1,5,'https://www.snackspause.com/cdn/shop/products/image_c265338f-aa28-4eec-a740-cc873ad51391.jpg'),
+(101,'890100001019','Munch',20.00,20,1,5,'https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/NI_CATALOG/IMAGES/CIW/2026/2/28/47ef4582-28b8-485e-868f-0135e9465b7c_61015_1.png'),
 
-  -- 🍪 Biscuits
-  (4,'890100000004','Oreo Biscuits',30.00,2,10,'https://www.bbassets.com/media/uploads/p/l/100609485_42-cadbury-oreo-creame-biscuit-chocolate.jpg'),
-  (5,'890100000005','Good Day Biscuits',25.00,2,10,'https://hbkirana.in/wp-content/uploads/2025/03/image_19_z4kx-rb_1920x.jpg'),
-  (6,'890100000006','Marie Gold',20.00,2,10,'https://www.haridwarmart.com/wp-content/uploads/2021/01/haridwar-mart-marie-gold.png'),
+-- 🍪 Biscuits
+(4,'890100000004','Oreo Biscuits',30.00,20,2,10,'https://www.bbassets.com/media/uploads/p/l/100609485_42-cadbury-oreo-creame-biscuit-chocolate.jpg'),
+(5,'890100000005','Good Day Biscuits',25.00,20,2,10,'https://hbkirana.in/wp-content/uploads/2025/03/image_19_z4kx-rb_1920x.jpg'),
+(6,'890100000006','Marie Gold',20.00,20,2,10,'https://www.haridwarmart.com/wp-content/uploads/2021/01/haridwar-mart-marie-gold.png'),
 
-  -- 🍟 Chips
-  (7,'890100000007','Lays Masala',20.00,3,9,'https://www.bbassets.com/media/uploads/p/xl/102750_17-lays-potato-chips-indias-magic-masala.jpg'),
-  (8,'890100000008','Kurkure Masala Munch',20.00,3,9,'https://m.media-amazon.com/images/I/71LyKlizpuL.jpg'),
-  (9,'890100000009','Doritos Nacho Cheese',35.00,3,9,'https://m.media-amazon.com/images/I/81IyMnDbyaL.jpg'),
-  (102,'890100001020','Pringles',30.00,3,9,'https://m.media-amazon.com/images/I/71Am3+vMg+L.jpg'),
+-- 🍟 Chips
+(7,'890100000007','Lays Masala',20.00,20,3,9,'https://www.bbassets.com/media/uploads/p/xl/102750_17-lays-potato-chips-indias-magic-masala.jpg'),
+(8,'890100000008','Kurkure Masala Munch',20.00,20,3,9,'https://m.media-amazon.com/images/I/71LyKlizpuL.jpg'),
+(9,'890100000009','Doritos Nacho Cheese',35.00,20,3,9,'https://m.media-amazon.com/images/I/81IyMnDbyaL.jpg'),
 
-  -- ✏️ Stationary
-  (10,'890100000010','Ball Pen',10.00,4,3,'https://www.sfdstore.com/wp-content/uploads/2020/04/CelloPinpoint.jpg'),
-  (11,'890100000011','Classmate Notebook',60.00,4,3,'https://i0.wp.com/grovertechno.com/wp-content/uploads/2024/07/Untitled-4_0000_Layer-2-1.jpg?fit=1000%2C1000&ssl=1'),
-  (12,'890100000012','Marker',25.00,4,3,'https://i0.wp.com/wisycart.com/wp-content/uploads/2022/09/WBM-Black-sqr-img.png'),
-  (104,'8901765126122','Hauser Black Pen',10.00,4,3,'https://www.rangbeerangee.com/wp-content/uploads/2021/08/Hauser-XO-Ball-point-pen-Black.jpg'),
+-- ❗ Pringles = 0 stock
+(102,'890100001020','Pringles',30.00,0,3,9,'https://m.media-amazon.com/images/I/71Am3+vMg+L.jpg'),
 
-  -- 🧴 Skin Care
-  (13,'890100000013','Nivea Face Wash',180.00,5,7,'https://static.beautytocare.com/media/catalog/product/n/i/nivea-men-protect-care-deep-cleaning-face-wash-100ml_1.jpg'),
-  (14,'890100000014','Ponds Cream',150.00,5,7,'https://www.bbassets.com/media/uploads/p/l/40002056_11-ponds-bright-beauty-spot-less-glow-spf-15-day-cream.jpg'),
-  (15,'890100000015','Himalaya Face Scrub',200.00,5,7,'https://himalayawellness.in/cdn/shop/products/PURIFYING-NEEM-FACE-SCRUB-50G.jpg?v=1663758125'),
-  (103,'8901138508159','Himalaya Body Lotion',300.00,5,7,'https://m.media-amazon.com/images/I/51HzgC8ytcL._SY879_.jpg'),
+-- ✏️ Stationary
+(10,'890100000010','Ball Pen',10.00,20,4,3,'https://www.sfdstore.com/wp-content/uploads/2020/04/CelloPinpoint.jpg'),
+(11,'890100000011','Classmate Notebook',60.00,20,4,3,'https://i0.wp.com/grovertechno.com/wp-content/uploads/2024/07/Untitled-4_0000_Layer-2-1.jpg'),
+(12,'890100000012','Marker',25.00,20,4,3,'https://i0.wp.com/wisycart.com/wp-content/uploads/2022/09/WBM-Black-sqr-img.png'),
+(104,'8901765126122','Hauser Black Pen',10.00,20,4,3,'https://www.rangbeerangee.com/wp-content/uploads/2021/08/Hauser-XO-Ball-point-pen-Black.jpg'),
 
-  -- 🥛 Fridge Items
-  (16,'890100000016','Amul Milk',60.00,6,8,'https://image.cdn.shpy.in/340140/amul-milk-450ml-1702624298460_SKU-1665_0.jpg?width=600&format=webp'),
-  (17,'890100000017','Coca Cola Bottle',40.00,6,8,'https://m.media-amazon.com/images/I/81kx2IPueEL.jpg'),
-  (18,'890100000018','Butter Pack',120.00,6,8,'https://cdn.rationatmydoor.com/wp-content/uploads/2019/02/amul-butter-250x250.jpg')
+-- 🧴 Skin Care
+(13,'890100000013','Nivea Face Wash',180.00,20,5,7,'https://static.beautytocare.com/media/catalog/product/n/i/nivea-men-protect-care-deep-cleaning-face-wash-100ml_1.jpg'),
+(14,'890100000014','Ponds Cream',150.00,20,5,7,'https://www.bbassets.com/media/uploads/p/l/40002056_11-ponds-bright-beauty-spot-less-glow-spf-15-day-cream.jpg'),
+
+-- ❗ Himalaya products = 1 stock
+(15,'890100000015','Himalaya Face Scrub',200.00,1,5,7,'https://himalayawellness.in/cdn/shop/products/PURIFYING-NEEM-FACE-SCRUB-50G.jpg'),
+(103,'8901138508159','Himalaya Body Lotion',300.00,1,5,7,'https://m.media-amazon.com/images/I/51HzgC8ytcL._SY879_.jpg'),
+
+-- 🥛 Fridge Items
+(16,'890100000016','Amul Milk',60.00,20,6,8,'https://image.cdn.shpy.in/340140/amul-milk-450ml-1702624298460_SKU-1665_0.jpg'),
+(17,'890100000017','Coco Cola Bottle',40.00,20,6,8,'https://m.media-amazon.com/images/I/81kx2IPueEL.jpg'),
+(18,'890100000018','Butter Pack',120.00,20,6,8,'https://cdn.rationatmydoor.com/wp-content/uploads/2019/02/amul-butter-250x250.jpg')
 `);
     // ---- EDGES (FULL) ----
     db.run(`

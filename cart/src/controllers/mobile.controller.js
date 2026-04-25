@@ -73,17 +73,37 @@ exports.submitList = (req, res) => {
             missingItems.push({ name, qty });
           } else if (matches.length === 1) {
             const product = matches[0];
-            db.run(
-              `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
-              [product.product_id, qty]
+            db.get(
+              `SELECT stock FROM products WHERE product_id = ?`,
+              [product.product_id],
+              (err2, stockRow) => {
+                if (!err2 && stockRow && stockRow.stock > 0) {
+                  db.run(
+                    `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
+                    [product.product_id, qty]
+                  );
+                } else {
+                  missingItems.push({ name, qty, reason: "out_of_stock" });
+                }
+              }
             );
           } else {
             // Multiple matches! Check for an exact match first
             const exactMatch = matches.find(m => m.name.toLowerCase() === name.toLowerCase());
             if (exactMatch) {
-              db.run(
-                `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
-                [exactMatch.product_id, qty]
+              db.get(
+                `SELECT stock FROM products WHERE product_id = ?`,
+                [exactMatch.product_id],
+                (err2, stockRow) => {
+                  if (!err2 && stockRow && stockRow.stock > 0) {
+                    db.run(
+                      `INSERT INTO shopping_list (product_id, quantity, picked_quantity, picked) VALUES (?, ?, 0, 0)`,
+                      [exactMatch.product_id, qty]
+                    );
+                  } else {
+                    missingItems.push({ name, qty, reason: "out_of_stock" });
+                  }
+                }
               );
             } else {
               ambiguousItems.push({

@@ -15,6 +15,7 @@ const positionRoutes = require("./routes/position.routes");
 const offersRoutes = require("./routes/offers.routes");
 const mobileRoutes = require("./routes/mobile.routes");
 const mobileController = require("./controllers/mobile.controller");
+const feedbackRoutes = require("./routes/feedback.routes");
 // const { initPositionSystem } = require("./services/position.system");
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
@@ -25,6 +26,7 @@ app.use("/recommend", recRoutes);
 app.use("/position", positionRoutes);
 app.use("/offers", offersRoutes);
 app.use("/mobile", mobileRoutes);
+app.use("/feedback", feedbackRoutes);
 app.get("/system/ip", mobileController.getLocalIp);
 
 
