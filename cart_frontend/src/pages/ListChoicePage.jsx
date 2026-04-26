@@ -94,7 +94,7 @@ const ListChoicePage = () => {
     <div className="listchoice-container">
 
       <div className="left-section">
-        <div className="logo">🛒 Smart Cart</div>
+        <div className="startlogo">🛒 Smart Cart</div>
 
         <div className="left-features">
           <div className="feature">
@@ -130,19 +130,13 @@ const ListChoicePage = () => {
       </div>
 
       <div className="right-section">
-        <div className="top-dots">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-
-        <div className="content">
+        <div className="listChoiceContent">
           <h1>Have Your list Ready?</h1>
           <p>Scan the QR code with your phone to import your list</p>
 
           {/* Real QR code */}
           <div className="qr-box">
-            <QRGenerator value={mobileUrl} size={240} />
+            <QRGenerator value={mobileUrl} size={200} />
           </div>
 
           <p className="or-text">OR</p>

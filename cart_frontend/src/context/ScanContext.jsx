@@ -12,6 +12,7 @@ export const ScanProvider = ({ children }) => {
   const [cartTotal, setCartTotal] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [scanType, setScanType] = useState("add");
+  const [scanStatus, setScanStatus] = useState("idle"); // "idle", "waiting", "success"
 
   const lastScannedRef = useRef(null);
 
@@ -133,19 +134,32 @@ export const ScanProvider = ({ children }) => {
         const res = await fetch("http://127.0.0.1:5200/event");
         const data = await res.json();
 
-        if (data.barcode && data.barcode === lastScannedRef.current) {
+        if (data.status === "waiting_for_scan") {
+          setScanType(data.type);
+          setScanStatus("waiting");
+          setScanPopupVisible(true);
           return;
         }
 
         if (data.status === "success" && (data.type === "add" || data.type === "remove")) {
           const scannedBarcode = String(data.barcode).trim();
+          
+          if (scannedBarcode === lastScannedRef.current) return;
           lastScannedRef.current = scannedBarcode;
           
+          setScanStatus("success");
           await handleBarcodeDetected(scannedBarcode, data.type);
 
           setTimeout(() => {
             lastScannedRef.current = null;
+            // Only clear if we are in success state
+            setScanStatus("idle");
           }, 5000);
+        } else if (!data.status) {
+           // Reset if no event
+           if (scanStatus !== "idle" && !scanPopupVisible) {
+             setScanStatus("idle");
+           }
         }
       } catch (err) {
         // Event server not running, ignore silently
@@ -165,6 +179,7 @@ export const ScanProvider = ({ children }) => {
       value={{
         scanPopupVisible,
         scanType,
+        scanStatus,
         scannedItem,
         scannedPrice,
         scannedQty,

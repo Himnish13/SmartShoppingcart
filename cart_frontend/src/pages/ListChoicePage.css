@@ -32,16 +32,17 @@
   display: flex;
   justify-content: center;
   gap: 5rem;
-  margin-bottom: 15.625rem;
+  margin-bottom: 9rem;
 }
 
 .feature {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0rem;
   color: #333;
   font-size: 1.5625rem;
+  text-align: center;
 }
 
 .right-section {
@@ -71,12 +72,12 @@
   border-radius: 0.1875rem;
 }
 
-.content {
+.listChoiceContent {
   text-align: center;
   max-width: 18.75rem;
 }
 
-.content h1 {
+.listChoiceContent h1 {
   font-size: 1.75rem;
   margin-bottom: 0.9375rem;
 }
@@ -88,8 +89,8 @@
 
 /* QR BOX */
 .qr-box {
-  width: 16.5rem;
-  height: 16.5rem;
+  width: 13.5rem;
+  height: 13.5rem;
   background: #e5e5e5;
   border-radius: 1rem;
   display: flex;
@@ -109,7 +110,7 @@
 }
 
 .small-text {
-  font-size: 0.8125rem;
+  font-size: 0.84rem;
   margin-bottom: 0.9375rem;
 }
 

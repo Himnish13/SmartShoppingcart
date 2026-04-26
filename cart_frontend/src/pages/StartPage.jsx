@@ -9,7 +9,7 @@ const StartPage = () => {
       
       
       <div className="left-section">
-        <div className="logo">🛒 Smart Cart</div>
+        <div className="startlogo">🛒 Smart Cart</div>
 
         <div className="illustration-wrapper">
           
@@ -93,7 +93,7 @@ const StartPage = () => {
           <span></span>
         </div>
 
-        <div className="content">
+        <div className="startcontent">
           <h1>Welcome!!</h1>
           <p>Lets start shopping</p>
 

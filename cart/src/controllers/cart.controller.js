@@ -23,13 +23,23 @@ exports.addItem = (req, res) => {
                         `SELECT * FROM cart_items WHERE product_id = ?`,
                         [product.product_id],
                         (err, item) => {
+                            const currentQty = item ? item.quantity : 0;
+                            const newTotalQty = currentQty + qty;
+
+                            if (newTotalQty > product.stock) {
+                                return res.json({
+                                    status: "insufficient_stock",
+                                    available_stock: product.stock,
+                                    product_name: product.name
+                                });
+                            }
 
                             if (item) {
                                 db.run(
                                     `UPDATE cart_items 
-                                     SET quantity = quantity + ? 
+                                     SET quantity = ? 
                                      WHERE product_id = ?`,
-                                    [qty, product.product_id]
+                                    [newTotalQty, product.product_id]
                                 );
                             } else {
                                 db.run(
@@ -38,6 +48,12 @@ exports.addItem = (req, res) => {
                                     [product.product_id, qty, finalPrice]
                                 );
                             }
+
+                            // Decrease stock in products table
+                            db.run(
+                                `UPDATE products SET stock = stock - ? WHERE product_id = ?`,
+                                [qty, product.product_id]
+                            );
 
                             db.run(
                                 `UPDATE shopping_list
@@ -49,6 +65,7 @@ exports.addItem = (req, res) => {
                                  WHERE product_id = ?`,
                                 [qty, qty, product.product_id],
                                 () => res.json({
+                                    status: "added",
                                     message: "Item added & updated",
                                     price_at_scan: finalPrice,
                                     discount_applied: discount
@@ -111,6 +128,12 @@ exports.removeItem = (req, res) => {
                             [product.product_id]
                         );
 
+                        // Restore stock
+                        db.run(
+                            `UPDATE products SET stock = stock + ? WHERE product_id = ?`,
+                            [item.quantity, product.product_id]
+                        );
+
                         db.run(
                             `UPDATE shopping_list
                              SET picked_quantity = 0, picked = 0
@@ -126,6 +149,12 @@ exports.removeItem = (req, res) => {
                              SET quantity = ? 
                              WHERE product_id = ?`,
                             [newQty, product.product_id]
+                        );
+
+                        // Restore partial stock
+                        db.run(
+                            `UPDATE products SET stock = stock + ? WHERE product_id = ?`,
+                            [qty, product.product_id]
                         );
 
                         db.run(
@@ -148,11 +177,20 @@ exports.removeItem = (req, res) => {
 
 exports.clearCart = (req, res) => {
     db.serialize(() => {
-        db.run(`DELETE FROM cart_items`);
-        db.run(
-            `UPDATE shopping_list 
-             SET picked_quantity = 0, picked = 0`,
-            () => res.json({ message: "Cart cleared & reset" })
-        );
+        // Restore all stock from cart items before deleting
+        db.all(`SELECT product_id, quantity FROM cart_items`, [], (err, items) => {
+            if (!err && items) {
+                items.forEach(item => {
+                    db.run(`UPDATE products SET stock = stock + ? WHERE product_id = ?`, [item.quantity, item.product_id]);
+                });
+            }
+            
+            db.run(`DELETE FROM cart_items`);
+            db.run(
+                `UPDATE shopping_list 
+                 SET picked_quantity = 0, picked = 0`,
+                () => res.json({ message: "Cart cleared & stock restored" })
+            );
+        });
     });
 };

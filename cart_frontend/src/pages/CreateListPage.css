@@ -484,3 +484,119 @@ h3 {
 .scan-ok-btn:hover {
   background: #4a45b5;
 }
+/* Stock Popup Styles */
+.stock-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.stock-modal {
+  background: white;
+  width: 400px;
+  border-radius: 20px;
+  padding: 30px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.stock-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.stock-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stock-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.stock-title {
+  font-size: 24px;
+  color: #1e1b4b;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.stock-text {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.stock-btn {
+  background: #1e1b4b;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.stock-btn:hover {
+  background: #2e2a70;
+  transform: translateY(-2px);
+}
+
+.product-card.out-of-stock {
+  opacity: 0.6;
+  filter: grayscale(0.8);
+}
+
+.product-card.out-of-stock .product-card-inner {
+  background: #f1f1f1;
+}
+
+.image-box {
+  position: relative;
+}
+
+.out-of-stock-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1.5px solid white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  letter-spacing: 0.05em;
+}

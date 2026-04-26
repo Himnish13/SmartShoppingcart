@@ -1,4 +1,5 @@
 const syncService = require("../services/sync.service");
+const db = require("../config/db"); // 🔥 MISSING IMPORT
 
 // FULL SYNC
 const fullSync = async (req, res) => {
@@ -67,6 +68,35 @@ const syncCategories = async (req, res) => {
   }
 };
 
+const bulkFeedback = (req, res) => {
+  const { feedbacks } = req.body;
+
+  if (!feedbacks || feedbacks.length === 0) {
+    return res.json({ message: "No data" });
+  }
+
+  const values = feedbacks.map(f => [
+    f.cart_id || null,
+    f.product_name || null,
+    f.product_id || null,
+    f.message || null
+  ]);
+
+  db.query(
+    `INSERT INTO feedback (cart_id, product_name, product_id, message)
+     VALUES ?`,
+    [values],
+    (err) => {
+      if (err) {
+        console.error("Feedback insert error:", err);
+        return res.status(500).json(err);
+      }
+
+      res.json({ message: "Feedback stored in server" });
+    }
+  );
+};
+
 module.exports = {
   fullSync,
   syncProducts,
@@ -74,5 +104,6 @@ module.exports = {
   syncCrowd,
   syncNodes,
   syncEdges,
-  syncCategories
+  syncCategories,
+  bulkFeedback // 🔥 IMPORTANT: EXPORT ADDED
 };
