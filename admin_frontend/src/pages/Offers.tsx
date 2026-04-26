@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
+import { Pencil, Plus, Tag, Trash2, Loader } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { actions, useStore } from "@/store/useStore";
+import { useProducts, useOffers, useOfferMutations } from "@/store/useStore";
 import { Offer } from "@/data/mock";
 import { toast } from "sonner";
 
@@ -35,7 +35,9 @@ const statusBadge = (s: Offer["status"]) =>
   );
 
 export default function OffersPage() {
-  const { offers, products } = useStore();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: offers = [], isLoading: offersLoading } = useOffers();
+  const { addOffer, updateOffer, deleteOffer } = useOfferMutations();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Offer>(empty());
 
@@ -57,13 +59,33 @@ export default function OffersPage() {
       toast.error("Pick a product and enter a title");
       return;
     }
-    actions.upsertOffer({ ...draft, id: draft.id || actions.newId("o") });
-    toast.success(draft.id ? "Offer updated" : "Offer added");
+
+    // Validate dates
+    const startDate = new Date(draft.startsAt);
+    const endDate = new Date(draft.endsAt);
+
+    if (startDate >= endDate) {
+      toast.error("Start date must be before end date");
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (endDate < today) {
+      toast.error("End date cannot be in the past");
+      return;
+    }
+
+    if (draft.id) {
+      updateOffer.mutate({ productId: draft.productId, offer: draft });
+    } else {
+      addOffer.mutate(draft);
+    }
     setOpen(false);
   };
   const remove = (o: Offer) => {
-    actions.deleteOffer(o.id);
-    toast.success("Offer removed");
+    deleteOffer.mutate(o.productId);
   };
 
   return (
@@ -109,8 +131,8 @@ export default function OffersPage() {
                       </TableCell>
                       <TableCell className="text-right text-primary font-semibold">-{o.discountPct}%</TableCell>
                       <TableCell className="text-right">
-                        <span className="text-muted-foreground line-through mr-2">${o.product!.price.toFixed(2)}</span>
-                        <span className="font-semibold">${(o.product!.price * (1 - o.discountPct / 100)).toFixed(2)}</span>
+                        <span className="text-muted-foreground line-through mr-2">₹{Number(o.product!.price).toFixed(2)}</span>
+                        <span className="font-semibold">₹{(Number(o.product!.price) * (1 - o.discountPct / 100)).toFixed(2)}</span>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {o.startsAt} → {o.endsAt}
@@ -155,7 +177,7 @@ export default function OffersPage() {
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell>{p.category}</TableCell>
-                      <TableCell className="text-right">${p.price.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">₹{Number(p.price).toFixed(2)}</TableCell>
                       <TableCell className="text-right">{p.stock}</TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" variant="outline" onClick={() => startNew(p.id)} className="border-primary/30 text-primary hover:bg-primary-soft">
@@ -220,8 +242,18 @@ export default function OffersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={save} className="bg-gradient-primary text-primary-foreground">Save offer</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={addOffer.isPending || updateOffer.isPending}>Cancel</Button>
+            <Button
+              onClick={save}
+              disabled={addOffer.isPending || updateOffer.isPending}
+              className="bg-gradient-primary text-primary-foreground"
+            >
+              {addOffer.isPending || updateOffer.isPending ? (
+                <><Loader className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+              ) : (
+                "Save offer"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

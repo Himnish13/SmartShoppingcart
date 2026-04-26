@@ -80,8 +80,39 @@ function createOrder(orderData) {
     );
   });
 }
+
+function updateOrder(orderId, orderData) {
+  return new Promise((resolve, reject) => {
+    const { status } = orderData;
+
+    db.query(
+      `UPDATE orders SET status = ? WHERE order_id = ?`,
+      [status || "pending", orderId],
+      (err, result) => {
+        if (err) return reject(err);
+        resolve({ success: true, orderId });
+      }
+    );
+  });
+}
+
+function deleteOrder(orderId) {
+  return new Promise((resolve, reject) => {
+    db.query(
+      `DELETE FROM orders WHERE order_id = ?`,
+      [orderId],
+      (err, result) => {
+        if (err) return reject(err);
+        resolve({ success: true, orderId });
+      }
+    );
+  });
+}
+
 module.exports = {
   getOrders,
   getOrderItems,
-    createOrder
+  createOrder,
+  updateOrder,
+  deleteOrder
 };

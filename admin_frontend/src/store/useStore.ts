@@ -1,5 +1,229 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/services/api";
+import { Product, Offer, Cart, Bill } from "@/data/mock";
+import { toast } from "sonner";
+
+// Query keys
+export const queryKeys = {
+  products: ["products"],
+  offers: ["offers"],
+  carts: ["carts"],
+  bills: ["bills"],
+};
+
+// Hooks for Products
+export const useProducts = () => {
+  return useQuery({
+    queryKey: queryKeys.products,
+    queryFn: () => api.getAllProducts(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    gcTime: 1000 * 60 * 10, // 10 minutes cache
+  });
+};
+
+// Hooks for Offers
+export const useOffers = () => {
+  return useQuery({
+    queryKey: queryKeys.offers,
+    queryFn: () => api.getOffers(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+// Hooks for Carts
+export const useCarts = () => {
+  return useQuery({
+    queryKey: queryKeys.carts,
+    queryFn: () => api.getCarts(),
+    staleTime: 1000 * 60 * 1, // 1 minute
+    retry: 2,
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+// Hooks for Bills
+export const useBills = () => {
+  return useQuery({
+    queryKey: queryKeys.bills,
+    queryFn: () => api.getBills(),
+    staleTime: 1000 * 60 * 1, // 1 minute
+    retry: 2,
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+// Hooks for Analytics
+export const useRevenueTrend = () => {
+  return useQuery({
+    queryKey: ["analytics", "revenue-trend"],
+    queryFn: () => api.getRevenueTrend(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+export const useCategoryShare = () => {
+  return useQuery({
+    queryKey: ["analytics", "category-share"],
+    queryFn: () => api.getCategoryShare(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+export const useOrdersCustomers = () => {
+  return useQuery({
+    queryKey: ["analytics", "orders-customers"],
+    queryFn: () => api.getOrdersCustomers(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+// Hooks for Bill Mutations
+export const useBillMutations = () => {
+  const queryClient = useQueryClient();
+
+  const addBillMutation = useMutation({
+    mutationFn: (bill: Omit<Bill, "id">) => api.createBill(bill),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.bills });
+      toast.success("Bill created successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create bill");
+    },
+  });
+
+  const updateBillMutation = useMutation({
+    mutationFn: ({ id, bill }: { id: string; bill: Partial<Bill> }) =>
+      api.updateBill(id, bill),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.bills });
+      toast.success("Bill updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update bill");
+    },
+  });
+
+  const deleteBillMutation = useMutation({
+    mutationFn: (id: string) => api.deleteBill(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.bills });
+      toast.success("Bill deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete bill");
+    },
+  });
+
+  return {
+    addBill: addBillMutation,
+    updateBill: updateBillMutation,
+    deleteBill: deleteBillMutation,
+  };
+};
+
+// Hooks for Products
+export const useProductMutations = () => {
+  const queryClient = useQueryClient();
+
+  const addProductMutation = useMutation({
+    mutationFn: (product: Omit<Product, "id">) => api.addProduct(product),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      toast.success("Product added successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to add product");
+    },
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ id, product }: { id: string; product: Partial<Product> }) =>
+      api.updateProduct(id, product),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      toast.success("Product updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update product");
+    },
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id: string) => api.deleteProduct(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      toast.success("Product deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete product");
+    },
+  });
+
+  return {
+    addProduct: addProductMutation,
+    updateProduct: updateProductMutation,
+    deleteProduct: deleteProductMutation,
+  };
+};
+
+// Hooks for Offers
+export const useOfferMutations = () => {
+  const queryClient = useQueryClient();
+
+  const addOfferMutation = useMutation({
+    mutationFn: (offer: Omit<Offer, "id">) => api.addOffer(offer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.offers });
+      toast.success("Offer added successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to add offer");
+    },
+  });
+
+  const updateOfferMutation = useMutation({
+    mutationFn: ({ productId, offer }: { productId: string; offer: Partial<Offer> }) =>
+      api.updateOffer(productId, offer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.offers });
+      toast.success("Offer updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update offer");
+    },
+  });
+
+  const deleteOfferMutation = useMutation({
+    mutationFn: (productId: string) => api.deleteOffer(productId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.offers });
+      toast.success("Offer deleted successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete offer");
+    },
+  });
+
+  return {
+    addOffer: addOfferMutation,
+    updateOffer: updateOfferMutation,
+    deleteOffer: deleteOfferMutation,
+  };
+};
+
+// For backward compatibility, export old-style store interface
 import { useSyncExternalStore } from "react";
-import { Bill, Cart, Offer, Product, seedBills, seedCarts, seedOffers, seedProducts } from "@/data/mock";
+import { seedProducts, seedOffers, seedCarts, seedBills } from "@/data/mock";
 
 type State = {
   products: Product[];
