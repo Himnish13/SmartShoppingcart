@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Download, Pencil, Plus, Trash2, X, Loader } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { Download, Eye, Pencil, Plus, Trash2, X, Loader } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,8 +106,8 @@ const downloadPDF = (bill: Bill) => {
             <tr>
               <td>${item.name}</td>
               <td class="text-right">${item.qty}</td>
-              <td class="text-right">$${item.price.toFixed(2)}</td>
-              <td class="text-right">$${(item.qty * item.price).toFixed(2)}</td>
+              <td class="text-right">₹${item.price.toFixed(2)}</td>
+              <td class="text-right">₹${(item.qty * item.price).toFixed(2)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -117,15 +117,15 @@ const downloadPDF = (bill: Bill) => {
         <div class="totals">
           <div class="total-row">
             <span>Subtotal:</span>
-            <span>$${bill.subtotal.toFixed(2)}</span>
+            <span>₹${bill.subtotal.toFixed(2)}</span>
           </div>
           <div class="total-row">
             <span>Tax (10%):</span>
-            <span>$${bill.tax.toFixed(2)}</span>
+            <span>₹${bill.tax.toFixed(2)}</span>
           </div>
           <div class="total-final">
             <span>Total:</span>
-            <span>$${bill.total.toFixed(2)}</span>
+            <span>₹${bill.total.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -155,6 +155,7 @@ export default function BillsPage() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Bill>(empty());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewBill, setPreviewBill] = useState<Bill | null>(null);
 
   const startNew = () => { setDraft(empty()); setOpen(true); };
   const startEdit = (b: Bill) => { setDraft(b); setOpen(true); };
@@ -169,7 +170,8 @@ export default function BillsPage() {
       if (draft.id) {
         await updateBill.mutateAsync({ id: draft.id, bill: final });
       } else {
-        await addBill.mutateAsync({ ...final, id: "" });
+        const { id, ...billData } = final;
+        await addBill.mutateAsync(billData);
       }
       setOpen(false);
     } finally {
@@ -237,7 +239,7 @@ export default function BillsPage() {
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-xs text-muted-foreground">Total Amount</p>
-                  <p className="font-display text-2xl font-bold text-primary mt-1">${bill.total.toFixed(2)}</p>
+                  <p className="font-display text-2xl font-bold text-primary mt-1">₹{bill.total.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -246,11 +248,11 @@ export default function BillsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => downloadPDF(bill)}
+                onClick={() => setPreviewBill(bill)}
                 className="flex-1 hover:text-primary"
               >
-                <Download className="h-4 w-4 mr-1" />
-                Export
+                <Eye className="h-4 w-4 mr-1" />
+                Preview
               </Button>
               <Button
                 variant="ghost"
@@ -348,9 +350,9 @@ export default function BillsPage() {
                 {draft.items.length === 0 && <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No items yet — add a product above.</p>}
               </div>
               <div className="mt-3 flex justify-end gap-6 text-sm">
-                <span className="text-muted-foreground">Subtotal: <strong className="text-foreground">${draft.items.reduce((s, i) => s + i.qty * i.price, 0).toFixed(2)}</strong></span>
-                <span className="text-muted-foreground">Tax (10%): <strong className="text-foreground">${(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * TAX).toFixed(2)}</strong></span>
-                <span className="font-display text-base font-bold text-primary">Total: ${(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * (1 + TAX)).toFixed(2)}</span>
+                 <span className="text-muted-foreground">Subtotal: <strong className="text-foreground">₹{draft.items.reduce((s, i) => s + i.qty * i.price, 0).toFixed(2)}</strong></span>
+                <span className="text-muted-foreground">Tax (10%): <strong className="text-foreground">₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * TAX).toFixed(2)}</strong></span>
+                <span className="font-display text-base font-bold text-primary">Total: ₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * (1 + TAX)).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -359,6 +361,96 @@ export default function BillsPage() {
             <Button onClick={save} disabled={isSubmitting} className="bg-gradient-primary text-primary-foreground">
               {isSubmitting ? <Loader className="mr-2 h-4 w-4 animate-spin" /> : null}
               Save bill
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Preview Dialog */}
+      <Dialog open={!!previewBill} onOpenChange={(v) => !v && setPreviewBill(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invoice Preview</DialogTitle>
+          </DialogHeader>
+          {previewBill && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-border pb-4">
+                <div>
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Smart Shopping Cart</h2>
+                  <p className="text-xs text-muted-foreground mt-1">Invoice Management System</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-sm font-bold">{previewBill.number}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Issued: {previewBill.issuedAt}</p>
+                  <p className="text-xs text-muted-foreground">Due: {previewBill.dueAt}</p>
+                  <div className="mt-2">{statusBadge(previewBill.status)}</div>
+                </div>
+              </div>
+
+              {/* Bill To */}
+              <div className="rounded-xl bg-secondary/40 p-4">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">Bill To</p>
+                <p className="font-medium">{previewBill.customer}</p>
+                <p className="text-sm text-muted-foreground">{previewBill.email}</p>
+              </div>
+
+              {/* Items Table */}
+              <div className="rounded-xl border border-border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-secondary/60">
+                      <th className="text-left p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Item</th>
+                      <th className="text-right p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Qty</th>
+                      <th className="text-right p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Price</th>
+                      <th className="text-right p-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewBill.items.map((item, idx) => (
+                      <tr key={idx} className="border-t border-border/50">
+                        <td className="p-3">{item.name}</td>
+                        <td className="p-3 text-right text-muted-foreground">{item.qty}</td>
+                        <td className="p-3 text-right">₹{Number(item.price).toFixed(2)}</td>
+                        <td className="p-3 text-right font-medium">₹{(item.qty * Number(item.price)).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals */}
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>₹{Number(previewBill.subtotal).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tax (10%)</span>
+                    <span>₹{Number(previewBill.tax).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t-2 border-primary/30">
+                    <span className="font-semibold">Total</span>
+                    <span className="font-display text-xl font-bold text-primary">₹{Number(previewBill.total).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="text-center text-xs text-muted-foreground border-t border-border pt-4">
+                <p>Thank you for your business!</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPreviewBill(null)}>Close</Button>
+            <Button
+              onClick={() => { if (previewBill) { downloadPDF(previewBill); } }}
+              className="bg-gradient-primary text-primary-foreground"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
             </Button>
           </DialogFooter>
         </DialogContent>

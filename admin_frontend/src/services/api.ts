@@ -154,4 +154,24 @@ export const api = {
       return [];
     }
   },
+
+  // Feedback
+  getFeedbackSummary: async () => {
+    try {
+      const response = await makeRequest("/feedback/summary");
+      return Array.isArray(response) ? response : response.data || [];
+    } catch (error) {
+      console.error("Failed to fetch feedback summary:", error);
+      return [];
+    }
+  },
+  getProductFeedback: async (productId: string) => {
+    try {
+      const response = await makeRequest(`/feedback/${productId}`);
+      return Array.isArray(response) ? response : response.data || [];
+    } catch (error) {
+      console.error(`Failed to fetch feedback for product ${productId}:`, error);
+      return [];
+    }
+  },
 };

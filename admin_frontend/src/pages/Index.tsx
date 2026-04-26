@@ -40,7 +40,9 @@ const Dashboard = () => {
   const isLoading = billsLoading || cartsLoading || productsLoading || revenueTrendLoading || categoryShareLoading || ordersCustomersLoading;
 
   // Calculate KPIs from backend data
-  const revenue = Array.isArray(bills) ? bills.reduce((s, b) => s + (b.total || 0), 0) : 0;
+  const revenue = Array.isArray(bills) 
+    ? bills.filter(b => b.status === "completed" || b.status === "paid").reduce((s, b) => s + (b.total || 0), 0) 
+    : 0;
   const activeCarts = Array.isArray(carts) ? carts.length : 0;
   const productCount = Array.isArray(products) ? products.length : 0;
   const lowStock = Array.isArray(products) ? products.filter((p) => p.stock && p.stock > 0 && p.stock < 15) : [];
@@ -100,7 +102,7 @@ const Dashboard = () => {
         <KPI
           icon={DollarSign}
           label="Revenue"
-          value={`$${revenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
+          value={`₹${revenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`}
           delta="+18.2%"
         />
         <KPI

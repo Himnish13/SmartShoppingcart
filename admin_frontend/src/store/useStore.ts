@@ -9,6 +9,8 @@ export const queryKeys = {
   offers: ["offers"],
   carts: ["carts"],
   bills: ["bills"],
+  feedbackSummary: ["feedback", "summary"],
+  productFeedback: (productId: string) => ["feedback", "product", productId],
 };
 
 // Hooks for Products
@@ -83,6 +85,28 @@ export const useOrdersCustomers = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
     gcTime: 1000 * 60 * 10,
+  });
+};
+
+// Hooks for Feedback
+export const useFeedbackSummary = () => {
+  return useQuery({
+    queryKey: queryKeys.feedbackSummary,
+    queryFn: () => api.getFeedbackSummary(),
+    staleTime: 1000 * 60 * 1, // 1 minute
+    retry: 2,
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+export const useProductFeedback = (productId: string) => {
+  return useQuery({
+    queryKey: queryKeys.productFeedback(productId),
+    queryFn: () => api.getProductFeedback(productId),
+    enabled: !!productId,
+    staleTime: 1000 * 60 * 1,
+    retry: 2,
+    gcTime: 1000 * 60 * 5,
   });
 };
 
