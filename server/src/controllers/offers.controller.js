@@ -1,5 +1,14 @@
 const offerService = require("../services/offer.service");
 
+async function getOffers(req, res) {
+  try {
+    const offers = await offerService.getOffers();
+    res.json(offers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 async function addOffer(req, res) {
   try {
     await offerService.addOffer(req.body);
@@ -30,6 +39,7 @@ async function deleteOffer(req, res) {
 }
 
 module.exports = {
+  getOffers,
   addOffer,
   updateOffer,
   deleteOffer

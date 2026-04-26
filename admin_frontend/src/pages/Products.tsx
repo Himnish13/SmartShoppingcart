@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, Loader } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { actions, useStore } from "@/store/useStore";
+import { useProducts, useProductMutations } from "@/store/useStore";
 import { Product } from "@/data/mock";
 import { toast } from "sonner";
 
@@ -52,7 +52,8 @@ const statusBadge = (s: Product["status"]) =>
   );
 
 export default function ProductsPage() {
-  const { products } = useStore();
+  const { data: products = [], isLoading, error } = useProducts();
+  const { addProduct, updateProduct, deleteProduct } = useProductMutations();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Product>(empty);
@@ -80,13 +81,15 @@ export default function ProductsPage() {
       toast.error("Name and SKU are required");
       return;
     }
-    actions.upsertProduct({ ...draft, id: draft.id || actions.newId("p") });
-    toast.success(draft.id ? "Product updated" : "Product added");
+    if (draft.id) {
+      updateProduct.mutate({ id: draft.id, product: draft });
+    } else {
+      addProduct.mutate(draft);
+    }
     setOpen(false);
   };
   const remove = (p: Product) => {
-    actions.deleteProduct(p.id);
-    toast.success(`Removed ${p.name}`);
+    deleteProduct.mutate(p.id);
   };
 
   return (
@@ -99,13 +102,24 @@ export default function ProductsPage() {
         </Button>
       }
     >
+      {error && (
+        <div className="mb-4 rounded-lg bg-destructive/15 p-4 text-destructive">
+          Failed to load products: {error.message}
+        </div>
+      )}
       <div className="rounded-2xl border border-border bg-card shadow-card">
         <div className="flex items-center gap-3 border-b border-border p-4">
           <div className="relative w-full max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or SKU…" className="pl-9" />
           </div>
-          <p className="ml-auto text-sm text-muted-foreground">{list.length} items</p>
+          <p className="ml-auto text-sm text-muted-foreground">
+            {isLoading ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              `${list.length} items`
+            )}
+          </p>
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -133,7 +147,7 @@ export default function ProductsPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">{p.sku}</TableCell>
                   <TableCell>{p.category}</TableCell>
-                  <TableCell className="text-right font-medium">${p.price.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-medium">₹{Number(p.price).toFixed(2)}</TableCell>
                   <TableCell className="text-right">{p.stock}</TableCell>
                   <TableCell>{statusBadge(p.status)}</TableCell>
                   <TableCell className="text-right">
@@ -141,14 +155,20 @@ export default function ProductsPage() {
                       <Button variant="ghost" size="icon" onClick={() => startEdit(p)} className="hover:text-primary">
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => remove(p)} className="hover:text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(p)}
+                        disabled={deleteProduct.isPending}
+                        className="hover:text-destructive"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
-              {list.length === 0 && (
+              {list.length === 0 && !isLoading && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
                     No products found.
@@ -180,7 +200,7 @@ export default function ProductsPage() {
               <Input value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Price ($)</Label>
+              <Label>Price (₹)</Label>
               <Input type="number" value={draft.price} onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })} />
             </div>
             <div className="space-y-1.5">
@@ -200,8 +220,20 @@ export default function ProductsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={save} className="bg-gradient-primary text-primary-foreground">Save</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={addProduct.isPending || updateProduct.isPending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={save}
+              disabled={addProduct.isPending || updateProduct.isPending}
+              className="bg-gradient-primary text-primary-foreground"
+            >
+              {addProduct.isPending || updateProduct.isPending ? (
+                <><Loader className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+              ) : (
+                "Save"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,18 +1,51 @@
 const db = require("../config/db");
 
+function getCategoryIdByName(categoryName) {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT category_id FROM category WHERE LOWER(category_name) = LOWER(?)`;
+    db.query(query, [categoryName], (err, results) => {
+      if (err) return reject(err);
+      resolve(results.length > 0 ? results[0].category_id : null);
+    });
+  });
+}
+
+function getOrCreateCategoryId(categoryName) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // First, try to find the category
+      const categoryId = await getCategoryIdByName(categoryName);
+      if (categoryId) {
+        return resolve(categoryId);
+      }
+
+      // If category doesn't exist, create it
+      const insertQuery = `INSERT INTO category (category_name) VALUES (?)`;
+      db.query(insertQuery, [categoryName], (err, results) => {
+        if (err) return reject(err);
+        resolve(results.insertId);
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 function getAllProductsFromDB() {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT 
+      SELECT
         p.product_id,
         p.barcode,
         p.name,
         p.price,
+        p.stock,
         c.category_name,
         c.node_id,
+        p.is_active,
         p.updated_at
       FROM product_mastery p
-      LEFT JOIN category c 
+      LEFT JOIN category c
         ON p.category_id = c.category_id
       WHERE p.is_active = 1
     `;
@@ -52,15 +85,16 @@ function searchProductsFromDB(name, category) {
   return new Promise((resolve, reject) => {
 
     let query = `
-      SELECT 
+      SELECT
         p.product_id,
         p.barcode,
         p.name,
         p.price,
+        p.stock,
         c.category_name,
         c.node_id
       FROM product_mastery p
-      LEFT JOIN category c 
+      LEFT JOIN category c
         ON p.category_id = c.category_id
       WHERE p.is_active = 1
     `;
@@ -85,40 +119,64 @@ function searchProductsFromDB(name, category) {
 }
 
 function insertProduct(data) {
-  return new Promise((resolve, reject) => {
-    const query = `
-      INSERT INTO product_mastery 
-      (barcode, name, price, category_id, is_active)
-      VALUES (?, ?, ?, ?, 1)
-    `;
+  return new Promise(async (resolve, reject) => {
+    try {
+      let categoryId = data.category_id;
 
-    db.query(
-      query,
-      [data.barcode, data.name, data.price, data.category_id],
-      (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
+      // If category_id is a string (category name), get or create it
+      if (typeof categoryId === 'string' && categoryId) {
+        categoryId = await getOrCreateCategoryId(categoryId);
       }
-    );
+
+      const stock = Number(data.stock) || 0;
+
+      const query = `
+        INSERT INTO product_mastery
+        (barcode, name, price, category_id, stock, is_active)
+        VALUES (?, ?, ?, ?, ?, 1)
+      `;
+
+      db.query(
+        query,
+        [data.barcode, data.name, data.price, categoryId, stock],
+        (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        }
+      );
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
 function updateProduct(id, data) {
-  return new Promise((resolve, reject) => {
-    const query = `
-      UPDATE product_mastery 
-      SET name = ?, price = ?, category_id = ?
-      WHERE product_id = ?
-    `;
+  return new Promise(async (resolve, reject) => {
+    try {
+      let categoryId = data.category_id;
 
-    db.query(
-      query,
-      [data.name, data.price, data.category_id, id],
-      (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
+      // If category_id is a string (category name), get or create it
+      if (typeof categoryId === 'string' && categoryId) {
+        categoryId = await getOrCreateCategoryId(categoryId);
       }
-    );
+
+      const query = `
+        UPDATE product_mastery
+        SET name = ?, price = ?, category_id = ?, stock = ?, is_active = ?
+        WHERE product_id = ?
+      `;
+
+      db.query(
+        query,
+        [data.name, data.price, categoryId, data.stock, data.is_active, id],
+        (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        }
+      );
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 

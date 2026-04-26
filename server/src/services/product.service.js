@@ -1,18 +1,34 @@
 const productModel = require("../models/product.model");
 
+// Transform database format to frontend format
+function transformProduct(dbProduct) {
+  return {
+    id: dbProduct.product_id,
+    name: dbProduct.name,
+    sku: dbProduct.barcode,
+    category: dbProduct.category_name || "Uncategorized",
+    price: Number(dbProduct.price) || 0,
+    stock: Number(dbProduct.stock) || 0,
+    status: dbProduct.is_active ? "active" : "inactive",
+  };
+}
+
 // Get all products
 async function fetchAllProducts() {
-  return await productModel.getAllProductsFromDB();
+  const products = await productModel.getAllProductsFromDB();
+  return products.map(transformProduct);
 }
 
 // Get product by barcode
 async function fetchProductByBarcode(barcode) {
-  return await productModel.getProductByBarcodeFromDB(barcode);
+  const product = await productModel.getProductByBarcodeFromDB(barcode);
+  return product ? transformProduct(product) : null;
 }
 
 // Search products by name and/or category
 async function searchProducts(name, category) {
-  return await productModel.searchProductsFromDB(name, category);
+  const products = await productModel.searchProductsFromDB(name, category);
+  return products.map(transformProduct);
 }
 
 function addProduct(data) {
