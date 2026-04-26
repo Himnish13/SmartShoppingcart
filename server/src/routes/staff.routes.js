@@ -49,7 +49,7 @@ router.post(
   "/feedback/bulk",
   verifyToken,
   requireRole("STAFF"),
-  feedbackController.bulkFeedback
+  feedbackController.createFeedback
 );
 
 module.exports = router;

@@ -30,13 +30,14 @@ function initializeTables() {
       FOREIGN KEY (node_id) REFERENCES nodes(node_id)
     )`);
 
+    // ✅ UPDATED DEFAULT STOCK = 20
     db.run(`CREATE TABLE products (
       product_id INTEGER PRIMARY KEY,
       barcode TEXT UNIQUE,
       image_url TEXT,
       name TEXT,
       price REAL,
-      stock INTEGER DEFAULT 0,
+      stock INTEGER DEFAULT 20,
       category_id INTEGER,
       node_id INTEGER,
       FOREIGN KEY (category_id) REFERENCES category(category_id),
@@ -116,7 +117,7 @@ function initializeTables() {
     db.run(`INSERT INTO cart_position (id, node_id, updated_at)
             VALUES (1, NULL, datetime('now'))`);
 
-    // ✅ NEW FEEDBACK TABLE
+    // ✅ FEEDBACK TABLE
     db.run(`CREATE TABLE feedback (
       feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_name TEXT,

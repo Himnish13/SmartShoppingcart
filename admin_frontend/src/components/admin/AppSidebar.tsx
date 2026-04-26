@@ -19,6 +19,7 @@ const items = [
   { title: "Offers", url: "/offers", icon: Tag },
   { title: "Carts", url: "/carts", icon: ShoppingCart },
   { title: "Bills", url: "/bills", icon: ReceiptText },
+  { title: "Feedback", url: "/feedback", icon: Sparkles },
 ];
 
 export function AppSidebar() {
@@ -30,7 +31,7 @@ export function AppSidebar() {
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary text-primary-foreground shadow-elegant">
-            <Sparkles className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4" />
           </div>
           {!collapsed && (
             <div className="leading-tight">

@@ -25,5 +25,6 @@ app.use("/users", require("./routes/users.routes"));
 app.use("/carts", require("./routes/carts.routes"));
 app.use("/orders", require("./routes/orders.routes"));
 app.use("/map", require("./routes/map.routes"));
+app.use("/feedback", require("./routes/feedback.routes"));
 
 module.exports = app;
