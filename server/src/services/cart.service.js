@@ -8,8 +8,8 @@ async function getActiveCarts() {
     carts.map(async (cart) => {
       let items = [];
       try {
-        if (cart.cart_id && cart.user_id) {
-          items = await cartModel.getCartItems(cart.cart_id, cart.user_id);
+        if (cart.cart_id) {
+          items = await cartModel.getCartItems(cart.cart_id);
         }
       } catch (e) {
         console.error("Failed to fetch cart items", e);
@@ -17,11 +17,12 @@ async function getActiveCarts() {
 
       return {
         id: cart.session_id || cart.id,
+        cartId: cart.cart_id,
         customer: cart.customer_name || cart.phone_number || "Unknown",
         email: cart.email || "unknown@example.com",
         items: items,
-        updatedAt: cart.updated_at || cart.started_at || new Date().toISOString(),
-        status: cart.status || "active",
+        updatedAt: cart.last_seen || cart.started_at || new Date().toISOString(),
+        status: String(cart.status || "ACTIVE").toLowerCase(),
         location: cart.location || "Unknown Location"
       };
     })
@@ -30,6 +31,21 @@ async function getActiveCarts() {
   return cartsWithItems;
 }
 
+async function getCartDevices() {
+  return await cartModel.getCartDevices();
+}
+
+async function startCartSession(data) {
+  return await cartModel.startCartSession(data.cart_id, data.user_id);
+}
+
+async function stopCartSession(cartId) {
+  return await cartModel.stopCartSession(cartId);
+}
+
 module.exports = {
-  getActiveCarts
+  getActiveCarts,
+  getCartDevices,
+  startCartSession,
+  stopCartSession
 };

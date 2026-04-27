@@ -23,6 +23,8 @@ const getProducts = (lastUpdated) => {
         p.barcode,
         p.name,
         p.price,
+        p.category_id,
+        p.stock,
         c.node_id,
         p.updated_at
       FROM product_mastery p
@@ -32,6 +34,30 @@ const getProducts = (lastUpdated) => {
     `;
 
     db.query(query, [lastUpdated], (err, results) => {
+      if (err) return reject(err);
+      resolve(results);
+    });
+  });
+};
+
+const getAllProducts = () => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
+        p.product_id,
+        p.barcode,
+        p.name,
+        p.price,
+        p.category_id,
+        p.stock,
+        c.node_id,
+        p.updated_at
+      FROM product_mastery p
+      LEFT JOIN category c 
+        ON p.category_id = c.category_id
+    `;
+
+    db.query(query, (err, results) => {
       if (err) return reject(err);
       resolve(results);
     });
@@ -51,6 +77,15 @@ const getOffers = (lastUpdated) => {
   });
 };
 
+const getAllOffers = () => {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT * FROM offers`, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 const getCrowd = (lastUpdated) => {
   return new Promise((resolve, reject) => {
     db.query(
@@ -63,6 +98,25 @@ const getCrowd = (lastUpdated) => {
     );
   });
 };
+
+const getAllCrowd = () => {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT * FROM crowd_data`, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
+const getAllBeacons = () => {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT beacon_id, node_id FROM beacons`, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 const getNodesUpdated = (lastUpdated) => {
   return new Promise((resolve, reject) => {
     db.query(
@@ -75,6 +129,16 @@ const getNodesUpdated = (lastUpdated) => {
     );
   });
 };
+
+const getAllNodes = () => {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT * FROM nodes`, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 const getEdgesUpdated = (lastUpdated) => {
   return new Promise((resolve, reject) => {
     db.query(
@@ -87,6 +151,16 @@ const getEdgesUpdated = (lastUpdated) => {
     );
   });
 };
+
+const getAllEdges = () => {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT * FROM edges`, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 const getCategories = (lastUpdated) => {
   return new Promise((resolve, reject) => {
     db.query(
@@ -99,12 +173,29 @@ const getCategories = (lastUpdated) => {
     );
   });
 };
+
+const getAllCategories = () => {
+  return new Promise((resolve, reject) => {
+    db.query(`SELECT * FROM category`, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 module.exports = {
   getLastUpdatedTimeByTable,
   getProducts,
+  getAllProducts,
   getOffers,
+  getAllOffers,
   getCrowd,
+  getAllCrowd,
+  getAllBeacons,
   getNodesUpdated,
+  getAllNodes,
   getEdgesUpdated,
-  getCategories
+  getAllEdges,
+  getCategories,
+  getAllCategories
 };

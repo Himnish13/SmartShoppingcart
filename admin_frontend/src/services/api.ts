@@ -38,6 +38,9 @@ const makeRequest = async (
 
 // Products API
 export const api = {
+  // Auth
+  login: (credentials: any) => makeRequest("/users/login", "POST", credentials),
+
   // Products
   getAllProducts: async () => {
     try {
@@ -95,13 +98,28 @@ export const api = {
   // Carts
   getCarts: async () => {
     try {
-      const response = await makeRequest("/admin/carts");
+      const response = await makeRequest("/carts/active");
       return Array.isArray(response) ? response : response.data || [];
     } catch (error) {
       console.error("Failed to fetch carts:", error);
       return [];
     }
   },
+  getCartDevices: async () => {
+    try {
+      const response = await makeRequest("/carts/devices");
+      return Array.isArray(response) ? response : response.data || [];
+    } catch (error) {
+      console.error("Failed to fetch cart devices:", error);
+      return [];
+    }
+  },
+  startCartSession: (cartId: string, userId?: string) =>
+    makeRequest("/carts/start", "POST", {
+      cart_id: cartId,
+      user_id: userId ? Number(userId) : null,
+    }),
+  stopCartSession: (cartId: string) => makeRequest(`/carts/${cartId}/stop`, "POST", {}),
 
   // Bills (Orders)
   getBills: async () => {

@@ -13,7 +13,8 @@ import { useBills, useBillMutations, useProducts } from "@/store/useStore";
 import { Bill } from "@/data/mock";
 import { toast } from "sonner";
 
-const TAX = 0.1;
+const CGST_RATE = 0.09;
+const SGST_RATE = 0.09;
 
 const empty = (): Bill => ({
   id: "",
@@ -40,7 +41,9 @@ const statusBadge = (s: Bill["status"]) =>
 
 const computeTotals = (b: Bill): Bill => {
   const subtotal = b.items.reduce((s, i) => s + i.qty * i.price, 0);
-  const tax = +(subtotal * TAX).toFixed(2);
+  const cgst = subtotal * CGST_RATE;
+  const sgst = subtotal * SGST_RATE;
+  const tax = +(cgst + sgst).toFixed(2);
   return { ...b, subtotal: +subtotal.toFixed(2), tax, total: +(subtotal + tax).toFixed(2) };
 };
 
@@ -120,8 +123,12 @@ const downloadPDF = (bill: Bill) => {
             <span>₹${bill.subtotal.toFixed(2)}</span>
           </div>
           <div class="total-row">
-            <span>Tax (10%):</span>
-            <span>₹${bill.tax.toFixed(2)}</span>
+            <span>CGST (9%):</span>
+            <span>₹${(bill.tax / 2).toFixed(2)}</span>
+          </div>
+          <div class="total-row">
+            <span>SGST (9%):</span>
+            <span>₹${(bill.tax / 2).toFixed(2)}</span>
           </div>
           <div class="total-final">
             <span>Total:</span>
@@ -156,6 +163,7 @@ export default function BillsPage() {
   const [draft, setDraft] = useState<Bill>(empty());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewBill, setPreviewBill] = useState<Bill | null>(null);
+  const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
 
   const startNew = () => { setDraft(empty()); setOpen(true); };
   const startEdit = (b: Bill) => { setDraft(b); setOpen(true); };
@@ -262,15 +270,17 @@ export default function BillsPage() {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deleteBill.mutate(bill.id)}
-                disabled={deleteBill.isPending}
-                className="hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deleteBill.mutate(bill.id)}
+                  disabled={deleteBill.isPending}
+                  className="hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </article>
         ))}
@@ -351,8 +361,9 @@ export default function BillsPage() {
               </div>
               <div className="mt-3 flex justify-end gap-6 text-sm">
                  <span className="text-muted-foreground">Subtotal: <strong className="text-foreground">₹{draft.items.reduce((s, i) => s + i.qty * i.price, 0).toFixed(2)}</strong></span>
-                <span className="text-muted-foreground">Tax (10%): <strong className="text-foreground">₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * TAX).toFixed(2)}</strong></span>
-                <span className="font-display text-base font-bold text-primary">Total: ₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * (1 + TAX)).toFixed(2)}</span>
+                <span className="text-muted-foreground">CGST (9%): <strong className="text-foreground">₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * CGST_RATE).toFixed(2)}</strong></span>
+                <span className="text-muted-foreground">SGST (9%): <strong className="text-foreground">₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * SGST_RATE).toFixed(2)}</strong></span>
+                <span className="font-display text-base font-bold text-primary">Total: ₹{(draft.items.reduce((s, i) => s + i.qty * i.price, 0) * (1 + CGST_RATE + SGST_RATE)).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -427,8 +438,12 @@ export default function BillsPage() {
                     <span>₹{Number(previewBill.subtotal).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (10%)</span>
-                    <span>₹{Number(previewBill.tax).toFixed(2)}</span>
+                    <span className="text-muted-foreground">CGST (9%)</span>
+                    <span>₹{(Number(previewBill.tax) / 2).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">SGST (9%)</span>
+                    <span>₹{(Number(previewBill.tax) / 2).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t-2 border-primary/30">
                     <span className="font-semibold">Total</span>

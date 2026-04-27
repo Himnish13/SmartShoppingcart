@@ -8,6 +8,7 @@ export const queryKeys = {
   products: ["products"],
   offers: ["offers"],
   carts: ["carts"],
+  cartDevices: ["cart-devices"],
   bills: ["bills"],
   feedbackSummary: ["feedback", "summary"],
   productFeedback: (productId: string) => ["feedback", "product", productId],
@@ -44,6 +45,50 @@ export const useCarts = () => {
     retry: 2,
     gcTime: 1000 * 60 * 5,
   });
+};
+
+export const useCartDevices = () => {
+  return useQuery({
+    queryKey: queryKeys.cartDevices,
+    queryFn: () => api.getCartDevices(),
+    staleTime: 1000 * 30,
+    retry: 2,
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+export const useCartMutations = () => {
+  const queryClient = useQueryClient();
+
+  const startCartMutation = useMutation({
+    mutationFn: ({ cartId, userId }: { cartId: string; userId?: string }) =>
+      api.startCartSession(cartId, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.carts });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cartDevices });
+      toast.success("Cart device activated");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to activate cart");
+    },
+  });
+
+  const stopCartMutation = useMutation({
+    mutationFn: (cartId: string) => api.stopCartSession(cartId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.carts });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cartDevices });
+      toast.success("Cart device released");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to release cart");
+    },
+  });
+
+  return {
+    startCart: startCartMutation,
+    stopCart: stopCartMutation,
+  };
 };
 
 // Hooks for Bills
