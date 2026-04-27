@@ -1,7 +1,9 @@
 const axios = require("axios");
 const db = require("../config/sqlite");
+const syncService = require("../services/sync.service");
 
-const SERVER_URL = "http://MAIN_SERVER_URL";
+// Use environment variable or fallback to localhost
+const SERVER_URL = process.env.SERVER_URL || "http://localhost:3200";
 
 exports.fullSync = async (req, res) => {
 
@@ -23,8 +25,6 @@ exports.fullSync = async (req, res) => {
 
             db.run("PRAGMA foreign_keys = OFF");
 
-            db.run(`DELETE FROM cart_items`);
-            db.run(`DELETE FROM shopping_list`);
             db.run(`DELETE FROM offers`);
             db.run(`DELETE FROM beacons`);
             db.run(`DELETE FROM edges`);
@@ -39,7 +39,7 @@ exports.fullSync = async (req, res) => {
                 db.run(
                     `INSERT INTO nodes (node_id, x, y)
                      VALUES (?, ?, ?)`,
-                    [n.node_id, n.x_coordinate || n.x, n.y_coordinate || n.y]
+                    [n.node_id, n.x_coordinate ?? n.x, n.y_coordinate ?? n.y]
                 );
             });
 
@@ -54,15 +54,16 @@ exports.fullSync = async (req, res) => {
             products.forEach(p => {
                 db.run(
                     `INSERT INTO products 
-                     (product_id, barcode, name, price, category_id, node_id)
-                     VALUES (?, ?, ?, ?, ?, ?)`,
+                     (product_id, barcode, name, price, stock, category_id, node_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`,
                     [
                         p.product_id,
                         p.barcode,
                         p.name,
                         p.price,
-                        p.category_id,
-                        p.node_id
+                        p.stock ?? 20,
+                        p.category_id ?? null,
+                        p.node_id ?? null
                     ]
                 );
             });
@@ -89,7 +90,7 @@ exports.fullSync = async (req, res) => {
                      VALUES (?, ?)`,
                     [
                         o.product_id,
-                        o.discount_percent || o.discount
+                        o.discount_percent ?? o.discount
                     ]
                 );
             });
@@ -98,7 +99,7 @@ exports.fullSync = async (req, res) => {
                 db.run(
                     `INSERT INTO crowd (node_id, density)
                      VALUES (?, ?)`,
-                    [c.node_id, c.crowd_level || c.density]
+                    [c.node_id, c.crowd_level ?? c.density]
                 );
             });
 
@@ -125,5 +126,66 @@ exports.fullSync = async (req, res) => {
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: "Sync failed" });
+    }
+};
+
+exports.pushShoppingList = async (req, res) => {
+    try {
+        const result = await syncService.sendShoppingList();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({
+            message: "Shopping list push failed",
+            error: err.response?.data || err.message
+        });
+    }
+};
+
+exports.pushCartItems = async (req, res) => {
+    try {
+        const result = await syncService.sendCurrentCartItems();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({
+            message: "Current cart push failed",
+            error: err.response?.data || err.message
+        });
+    }
+};
+
+exports.pushCheckout = async (req, res) => {
+    try {
+        const result = await syncService.sendCheckout();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({
+            message: "Cart checkout push failed",
+            error: err.response?.data || err.message
+        });
+    }
+};
+
+exports.pushPosition = async (req, res) => {
+    try {
+        const nodeId = req.body?.node_id || req.body?.nodeId || req.query.node_id || req.query.nodeId;
+        const result = await syncService.sendPosition(nodeId);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({
+            message: "Position push failed",
+            error: err.response?.data || err.message
+        });
+    }
+};
+
+exports.pushFeedback = async (req, res) => {
+    try {
+        const result = await syncService.sendFeedback();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({
+            message: "Feedback push failed",
+            error: err.response?.data || err.message
+        });
     }
 };

@@ -3,34 +3,19 @@ const model = require("../models/sync.model");
 //FULL SYNC
 async function fetchFullSync() {
 
-  // PRODUCTS
-  const productTime = await model.getLastUpdatedTimeByTable("product_mastery");
-  const products = await model.getProducts(productTime);
-
-  // OFFERS
-  const offerTime = await model.getLastUpdatedTimeByTable("offers");
-  const offers = await model.getOffers(offerTime);
-
-  // CROWD
-  const crowdTime = await model.getLastUpdatedTimeByTable("crowd_data");
-  const crowd = await model.getCrowd(crowdTime);
-
-  // NODES
-  const nodeTime = await model.getLastUpdatedTimeByTable("nodes");
-  const nodes = await model.getNodesUpdated(nodeTime);
-
-  // EDGES
-  const edgeTime = await model.getLastUpdatedTimeByTable("edges");
-  const edges = await model.getEdgesUpdated(edgeTime);
-
-  // CATEGORIES
-  const categoryTime = await model.getLastUpdatedTimeByTable("category");
-  const categories = await model.getCategories(categoryTime);
+  const products = await model.getAllProducts();
+  const offers = await model.getAllOffers();
+  const crowd = await model.getAllCrowd();
+  const beacons = await model.getAllBeacons();
+  const nodes = await model.getAllNodes();
+  const edges = await model.getAllEdges();
+  const categories = await model.getAllCategories();
 
   return {
     products,
     offers,
     crowd,
+    beacons,
     nodes,
     edges,
     categories

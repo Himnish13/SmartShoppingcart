@@ -40,6 +40,7 @@ export default function OffersPage() {
   const { addOffer, updateOffer, deleteOffer } = useOfferMutations();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Offer>(empty());
+  const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
 
   const productMap = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
   const withOffers = offers.map((o) => ({ ...o, product: productMap[o.productId] })).filter((x) => x.product);
@@ -91,11 +92,13 @@ export default function OffersPage() {
   return (
     <AdminLayout
       title="Offers"
-      subtitle="Run discounts on products and turn slow movers into stars."
+      subtitle={isAdmin ? "Run discounts on products and turn slow movers into stars." : "View-only — contact an admin to make changes."}
       actions={
-        <Button onClick={() => startNew()} className="bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
-          <Plus className="mr-2 h-4 w-4" /> New offer
-        </Button>
+        isAdmin ? (
+          <Button onClick={() => startNew()} className="bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
+            <Plus className="mr-2 h-4 w-4" /> New offer
+          </Button>
+        ) : undefined
       }
     >
       <Tabs defaultValue="with" className="space-y-4">
@@ -139,14 +142,18 @@ export default function OffersPage() {
                       </TableCell>
                       <TableCell>{statusBadge(o.status)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => startEdit(o)} className="hover:text-primary">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => remove(o)} className="hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {isAdmin ? (
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEdit(o)} className="hover:text-primary">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => remove(o)} className="hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">View only</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -180,9 +187,13 @@ export default function OffersPage() {
                       <TableCell className="text-right">₹{Number(p.price).toFixed(2)}</TableCell>
                       <TableCell className="text-right">{p.stock}</TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="outline" onClick={() => startNew(p.id)} className="border-primary/30 text-primary hover:bg-primary-soft">
-                          <Plus className="mr-1 h-3.5 w-3.5" /> Add offer
-                        </Button>
+                        {isAdmin ? (
+                          <Button size="sm" variant="outline" onClick={() => startNew(p.id)} className="border-primary/30 text-primary hover:bg-primary-soft">
+                            <Plus className="mr-1 h-3.5 w-3.5" /> Add offer
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">View only</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -196,7 +207,7 @@ export default function OffersPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {isAdmin && <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit offer" : "New offer"}</DialogTitle>
@@ -256,7 +267,7 @@ export default function OffersPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </AdminLayout>
   );
 }

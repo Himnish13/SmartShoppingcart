@@ -10,6 +10,8 @@ import Offers from "./pages/Offers.tsx";
 import Carts from "./pages/Carts.tsx";
 import Bills from "./pages/Bills.tsx";
 import Feedback from "./pages/Feedback.tsx";
+import Login from "./pages/Login.tsx";
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
 
 const queryClient = new QueryClient();
 
@@ -20,12 +22,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/offers" element={<Offers />} />
-          <Route path="/carts" element={<Carts />} />
-          <Route path="/bills" element={<Bills />} />
-          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/carts" element={<Carts />} />
+            <Route path="/bills" element={<Bills />} />
+            <Route path="/feedback" element={<Feedback />} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

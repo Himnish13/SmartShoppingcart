@@ -1,3 +1,8 @@
+const path = require("path");
+require("dotenv").config({
+  path: path.join(__dirname, "..", ".env"),
+});
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -16,6 +21,7 @@ const offersRoutes = require("./routes/offers.routes");
 const mobileRoutes = require("./routes/mobile.routes");
 const mobileController = require("./controllers/mobile.controller");
 const feedbackRoutes = require("./routes/feedback.routes");
+const { startAutoSync } = require("./services/autoSync.service");
 // const { initPositionSystem } = require("./services/position.system");
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
@@ -36,4 +42,5 @@ const HOST = "0.0.0.0"; // listen on all network interfaces (hotspot, LAN, etc.)
 app.listen(PORT, HOST, () => {
     console.log(`Server running at http://${HOST}:${PORT}`);
     console.log(`Mobile page accessible at http://<device-hotspot-ip>:${PORT}/mobile`);
+    startAutoSync();
 });

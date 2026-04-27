@@ -57,6 +57,7 @@ export default function ProductsPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Product>(empty);
+  const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
 
   const list = useMemo(
     () =>
@@ -95,11 +96,13 @@ export default function ProductsPage() {
   return (
     <AdminLayout
       title="Products"
-      subtitle="Manage your catalogue, stock and pricing."
+      subtitle={isAdmin ? "Manage your catalogue, stock and pricing." : "View-only — contact an admin to make changes."}
       actions={
-        <Button onClick={startNew} className="bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
-          <Plus className="mr-2 h-4 w-4" /> Add product
-        </Button>
+        isAdmin ? (
+          <Button onClick={startNew} className="bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
+            <Plus className="mr-2 h-4 w-4" /> Add product
+          </Button>
+        ) : undefined
       }
     >
       {error && (
@@ -151,20 +154,24 @@ export default function ProductsPage() {
                   <TableCell className="text-right">{p.stock}</TableCell>
                   <TableCell>{statusBadge(p.status)}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => startEdit(p)} className="hover:text-primary">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(p)}
-                        disabled={deleteProduct.isPending}
-                        className="hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {isAdmin ? (
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => startEdit(p)} className="hover:text-primary">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(p)}
+                          disabled={deleteProduct.isPending}
+                          className="hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">View only</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -180,7 +187,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      {isAdmin && <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger className="hidden" />
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -236,7 +243,7 @@ export default function ProductsPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </AdminLayout>
   );
 }

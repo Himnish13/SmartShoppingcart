@@ -26,5 +26,7 @@ app.use("/carts", require("./routes/carts.routes"));
 app.use("/orders", require("./routes/orders.routes"));
 app.use("/map", require("./routes/map.routes"));
 app.use("/feedback", require("./routes/feedback.routes"));
+app.use("/crowd", require("./routes/crowd.routes"));
+app.use("/", require("./routes/cartSync.routes"));
 
 module.exports = app;

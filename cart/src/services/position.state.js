@@ -39,7 +39,11 @@ function getNodeXY(nodeId, callback) {
 
 function updateCartPositionRow(nodeId) {
   db.run(
-    `UPDATE cart_position SET node_id = ?, updated_at = datetime('now') WHERE id = 1`,
+    `INSERT INTO cart_position (id, node_id, updated_at)
+     VALUES (1, ?, datetime('now'))
+     ON CONFLICT(id) DO UPDATE SET
+       node_id = excluded.node_id,
+       updated_at = excluded.updated_at`,
     [nodeId]
   );
 }
