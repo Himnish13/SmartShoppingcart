@@ -5,6 +5,16 @@ import { AppSidebar } from "@/components/admin/AppSidebar";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Props = {
   title: string;
@@ -14,6 +24,25 @@ type Props = {
 };
 
 export default function AdminLayout({ title, subtitle, actions, children }: Props) {
+  const navigate = useNavigate();
+  const userRole = localStorage.getItem("userRole") || "staff";
+  const userEmail = localStorage.getItem("userEmail") || "user@example.com";
+
+  const getInitials = (role: string) => {
+    return role.slice(0, 2).toUpperCase();
+  };
+
+  const getRoleDisplay = (role: string) => {
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
+    navigate("/login");
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-gradient-soft">
@@ -30,9 +59,30 @@ export default function AdminLayout({ title, subtitle, actions, children }: Prop
                 <Bell className="h-5 w-5" />
                 <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
               </Button>
-              <Avatar className="h-9 w-9 ring-2 ring-primary/20">
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">VA</AvatarFallback>
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9 ring-2 ring-primary/20">
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">{getInitials(userRole)}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{getRoleDisplay(userRole)} User</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {userRole.toLowerCase() === "admin" ? "admin@example.com" : "staff@example.com"}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 

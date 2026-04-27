@@ -69,14 +69,14 @@ const syncCategories = async (req, res) => {
 };
 
 const bulkFeedback = (req, res) => {
-  const { feedbacks } = req.body;
+  const { cart_id, feedbacks } = req.body;
 
   if (!feedbacks || feedbacks.length === 0) {
     return res.json({ message: "No data" });
   }
 
   const values = feedbacks.map(f => [
-    f.cart_id || null,
+    f.cart_id || cart_id || null,
     f.product_name || null,
     f.product_id || null,
     f.message || null
