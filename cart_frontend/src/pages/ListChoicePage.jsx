@@ -9,7 +9,23 @@ const ListChoicePage = () => {
   const navigate = useNavigate();
   const [mobileUrl, setMobileUrl] = useState("");
   const [importStatus, setImportStatus] = useState("idle"); // idle | importing | success
+  const [qrSize, setQrSize] = useState(200);
   const pollingRef = useRef(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1024px) and (max-height: 600px)");
+    const apply = () => setQrSize(mq.matches ? 160 : 200);
+    apply();
+
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", apply);
+      return () => mq.removeEventListener("change", apply);
+    }
+
+    // Safari fallback
+    mq.addListener(apply);
+    return () => mq.removeListener(apply);
+  }, []);
 
   // 1. On mount: fetch local IP to build the QR URL, then start polling
   useEffect(() => {
@@ -136,7 +152,7 @@ const ListChoicePage = () => {
 
           {/* Real QR code */}
           <div className="qr-box">
-            <QRGenerator value={mobileUrl} size={200} />
+            <QRGenerator value={mobileUrl} size={qrSize} />
           </div>
 
           <p className="or-text">OR</p>

@@ -1,177 +1,201 @@
-body {
-  margin: 0;
-  font-family: "Inter", sans-serif;
+/* OffersPage.css - Inherits layout from CartPage.css */
+
+.offers-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+  min-height: 0;
 }
 
-:root {
-  --bg-main: #f5f5f5;
-  --bg-card: #ffffff;
-  --border: #e2e2e2;
-  --text-primary: #222;
-  --text-secondary: #666;
-  --accent: #6b7280;
-  --accent-soft: #eef0f2;
-  --success: #2e7d32;
-}
-
-/* PAGE */
-.offers-page {
-  display: grid;
-  grid-template-columns: 0 1fr; /* Sidebar is 0 when closed */
-  transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--bg-main);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-.offers-page.sidebar-open {
-  grid-template-columns: 280px 1fr; /* Shift content when sidebar opens */
-}
-
-.offers-content-wrapper {
-  padding: 20px;
-  width: 100%;
-}
-
-/* TOP */
-.offers-top {
+.offers-actions {
   display: flex;
-  gap: 12px;
+  gap: 1rem;
   align-items: center;
-  margin-bottom: 20px;
 }
 
-
-
-/* SEARCH */
 .search-input {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  min-width: 15rem;
+  transition: border-color 0.2s ease;
 }
 
-/* SORT BUTTON */
+.search-input:focus {
+  border-color: #3b82f6;
+}
+
 .sort-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #475569;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .sort-btn:hover {
-  background: var(--accent-soft);
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
-.sort-btn.asc {
-  background: var(--accent-soft);
-}
-
-.sort-btn.desc {
-  background: var(--bg-card);
-}
-
-/* SECTION */
-.section-title {
-  margin: 18px 0 10px;
-  color: var(--text-primary);
-}
-
-/* GRID */
 .offers-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  padding: 0.5rem 0;
 }
 
-/* CARD */
 .offer-card {
-  width: 220px;
-  background: var(--bg-card);
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 1.125rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
   overflow: hidden;
-  border: 1px solid var(--border);
-  transition: 0.25s;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .offer-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
-/* IMAGE FIX */
-.offer-card img {
+.offer-card:hover .offer-img-wrapper img {
+  transform: scale(1.08);
+}
+
+.offer-img-wrapper {
+  position: relative;
   width: 100%;
-  height: 160px;
-  object-fit: cover;
+  padding-top: 80%; /* Slightly taller ratio for product images */
+  background: #f8fafc; /* Soft slate background */
+  border-bottom: 1px solid #f1f5f9;
+  overflow: hidden;
 }
 
-/* CONTENT */
+.offer-img-wrapper img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Prevents cropping */
+  padding: 1.5rem; /* Breathing room so it doesn't touch edges */
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: multiply; /* Makes white backgrounds on images disappear cleanly */
+}
+
+.discount-badge-absolute {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #fff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
 .offer-content {
-  padding: 12px;
-  text-align: center;
-}
-
-/* NAME */
-.offer-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-/* ROW */
-.offer-row {
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  flex: 1;
+}
+
+.offer-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.offer-row {
+  margin-top: auto;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  justify-content: space-between;
 }
 
 .price-original {
   text-decoration: line-through;
-  color: rgba(0, 0, 0, 0.4);
-  font-weight: 500;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .price-discounted {
-  color: var(--success);
-  font-weight: 700;
-}
-
-.discount-badge {
-  background: linear-gradient(135deg, #ff6b35, #f7931a);
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
+  color: #10b981;
+  font-size: 1.25rem;
   font-weight: 800;
-  white-space: nowrap;
-  letter-spacing: 0.02em;
-  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
 }
 
-/* CATEGORY BLOCK */
 .category-block {
-  margin-top: 22px;
+  margin-bottom: 2.5rem;
 }
 
 .category-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1.5px solid #f1f5f9;
 }
 
-/* SMALL */
-.offer-card.small {
-  width: 200px;
+.empty {
+  text-align: center;
+  padding: 4rem;
+  color: #64748b;
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: #ffffff;
+  border-radius: 1.125rem;
+  border: 1px solid #e2e8f0;
 }
 
-.offer-card.small img {
-  height: 140px;
+/* 1024x600 Responsive Adjustments */
+@media (max-width: 64em) {
+  .offers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .offer-content {
+    padding: 0.875rem;
+  }
+
+  .offer-name {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .price-discounted {
+    font-size: 1.1rem;
+  }
+
+  .price-original {
+    font-size: 0.8rem;
+  }
+
+  .discount-badge-absolute {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.7rem;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
 }

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "./ExplorePage.css"; // We can reuse the explore page layout
-import "./HomePage.css"; // For sidebar
-import "./ReviewListPage.css"; // For list items styling
+import "./CartPage.css";
+import "./ReviewListPage.css";
 import { useNavigate } from "react-router-dom";
 
 const ListPage = () => {
@@ -264,12 +263,12 @@ const ListPage = () => {
   }, [categories]);
 
   return (
-    <div className={`explore-page ${sidebarOpen ? "sidebar-open" : ""}`}>
+    <div className={`cart-page ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       {/* SIDEBAR OPEN BUTTON */}
       {!sidebarOpen && (
         <button
           type="button"
-          className="sidebar-toggle"
+          className="sidebar-toggle list-page-toggle"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open sidebar"
         >
@@ -371,9 +370,8 @@ const ListPage = () => {
       </div>
 
       {/* CENTER */}
-      <div className="center" style={{ padding: "1.75rem", background: "transparent" }}>
-        {/* We reuse review-container styling but let it fill the center */}
-        <div className="review-container" style={{ padding: "0", minHeight: "auto", background: "transparent" }}>
+      <div className="cart-content-wrapper" style={{ padding: 0 }}>
+        <div className="review-container" style={{ width: "100%" }}>
           
           {/* LEFT */}
           <div className="left">
@@ -420,7 +418,7 @@ const ListPage = () => {
               ))}
             </div>
 
-            <div className="items" style={{ maxHeight: "calc(100vh - 15rem)" }}>
+            <div className="items">
               {filteredItems.map((item) => (
                 <div key={item.product_id} className="item-card">
                   <div className="item-image">

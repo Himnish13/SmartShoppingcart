@@ -146,15 +146,29 @@ const RoutingPage = () => {
   return (
     <div className="routing-container">
       <div className="routing-header">
-        <button
-          type="button"
-          className="routing-back-btn"
-          onClick={() => navigate("/review-list")}
-        >
-          ← Back
-        </button>
-        <h1>Plan Your Shopping Route</h1>
-        <p>Select products you want to visit</p>
+        <div className="routing-header-buttons">
+          <button
+            type="button"
+            className="routing-back-btn"
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+          <button
+            type="button"
+            className={`action-btn primary ${
+              selectedItems.size === 0 || loading ? "disabled" : ""
+            }`}
+            onClick={handleGenerateRoute}
+            disabled={selectedItems.size === 0 || loading}
+          >
+            {loading ? "Generating Route..." : "Generate Route"}
+          </button>
+        </div>
+        <div className="routing-header-text">
+          <h1>Plan Your Shopping Route</h1>
+          <p>Select products you want to visit</p>
+        </div>
       </div>
 
       <div className="routing-content">
@@ -222,26 +236,6 @@ const RoutingPage = () => {
           )}
 
           {error && <div className="error-message">{error}</div>}
-
-          <div className="selection-actions">
-            <button
-              type="button"
-              className="action-btn secondary"
-              onClick={() => navigate("/review-list")}
-            >
-              Back to Review
-            </button>
-            <button
-              type="button"
-              className={`action-btn primary ${
-                selectedItems.size === 0 || loading ? "disabled" : ""
-              }`}
-              onClick={handleGenerateRoute}
-              disabled={selectedItems.size === 0 || loading}
-            >
-              {loading ? "Generating Route..." : "Generate Route"}
-            </button>
-          </div>
         </div>
 
         <div className="routing-info-panel">

@@ -212,7 +212,7 @@ const RemainingPage = () => {
       <div className="cart-content-wrapper">
         <div className="cart-page-header">
           <div className="cart-page-title-wrap">
-            <span className="cart-page-icon">📋</span>
+            <span className="cart-page-icon"></span>
             <h1 className="cart-page-title">Remaining Items<span className="cart-page-count"> &nbsp;({remaining.length})</span></h1>
           </div>
         </div>
@@ -226,7 +226,7 @@ const RemainingPage = () => {
             ) : (
               <div className="cart-list">
                 {remaining.map((item, idx) => (
-                  <div className="cart-row" key={item.product_id ?? idx}>
+                  <div className="cart-row" key={item.product_id ?? idx} style={{ gridTemplateColumns: '2.25rem 5.5rem 1fr auto auto' }}>
                     <span className="cart-row-idx">{idx + 1}</span>
 
                     <div className="cart-row-img-wrap">
@@ -270,6 +270,37 @@ const RemainingPage = () => {
               </div>
             )}
           </div>
+
+          {/* ── RIGHT: SUMMARY ── */}
+          <aside className="cart-summary">
+            <h2 className="cart-summary-title">List Summary</h2>
+
+            <div className="cart-summary-rows">
+              <div className="cart-summary-row">
+                <span>Total Items</span>
+                <span>{shoppingItems.length}</span>
+              </div>
+              <div className="cart-summary-row">
+                <span>Items Picked</span>
+                <span>{shoppingItems.length - remaining.length}</span>
+              </div>
+            </div>
+
+            <div className="cart-summary-divider" />
+
+            <div className="cart-summary-total">
+              <span>Items Remaining:</span>
+              <strong>{remaining.length}</strong>
+            </div>
+
+            <button
+              className="cart-continue-btn"
+              type="button"
+              onClick={() => navigate("/explore")}
+            >
+              ← Add Items
+            </button>
+          </aside>
         </div>
       </div>
       {stockError && (
