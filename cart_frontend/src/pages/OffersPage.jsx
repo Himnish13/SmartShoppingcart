@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import "./CartPage.css";
 import "./OffersPage.css";
 import { useNavigate } from "react-router-dom";
 
@@ -77,7 +78,7 @@ const OffersPage = () => {
   };
 
   return (
-    <div className={`offers-page ${sidebarOpen ? "sidebar-open" : ""}`}>
+    <div className={`cart-page ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       {/* SIDEBAR TOGGLE */}
       {!sidebarOpen && (
         <button
@@ -169,43 +170,52 @@ const OffersPage = () => {
         </div>
       </div>
 
-      <div className="offers-content-wrapper">
-        <div className="offers-top">
-          <h2>Offers</h2>
+      <div className="cart-content-wrapper">
+        <div className="cart-page-header" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="cart-page-title-wrap">
+            <span className="cart-page-icon"></span>
+            <h1 className="cart-page-title">Special Offers</h1>
+          </div>
 
-          <input
-            className="search-input"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          {/* GLOBAL SORT */}
-          <button
-            className={`sort-btn ${globalSort}`}
-            onClick={() => setGlobalSort(globalSort === "asc" ? "desc" : "asc")}
-          >
-            {globalSort === "asc" ? "↑" : "↓"}
-          </button>
+          <div className="offers-actions">
+            <input
+              className="search-input"
+              placeholder="Search offers..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <button
+              className={`sort-btn ${globalSort}`}
+              onClick={() => setGlobalSort(globalSort === "asc" ? "desc" : "asc")}
+            >
+              {globalSort === "asc" ? "Sort: Price ↑" : "Sort: Price ↓"}
+            </button>
+          </div>
         </div>
+
+        <div className="offers-body">
 
         {/* ALL OFFERS */}
         <section>
-          <h3 className="section-title">All Offers</h3>
+          <div className="cart-page-title-wrap" style={{ marginBottom: '1.25rem' }}>
+            <h2 className="cart-page-title" style={{ fontSize: '1.5rem' }}>All Offers</h2>
+          </div>
 
           <div className="offers-grid">
             {filtered.length === 0 ? (
-              <p className="empty">No offers</p>
+              <p className="empty">No offers found</p>
             ) : (
               sortList(filtered, globalSort).map((o) => (
                 <div key={o.product_id} className="offer-card">
-                  <img src={o.image_url} alt={o.name} />
+                  <div className="offer-img-wrapper">
+                    <img src={o.image_url} alt={o.name} />
+                    <span className="discount-badge-absolute">{o.discount}% OFF</span>
+                  </div>
 
                   <div className="offer-content">
                     <div className="offer-name">{o.name}</div>
 
                     <div className="offer-row">
-                      <span className="discount-badge">{o.discount}% OFF</span>
                       <span className="price-original">
                         ₹{Number(o.price || 0).toFixed(2)}
                       </span>
@@ -222,31 +232,35 @@ const OffersPage = () => {
 
         {/* BY CATEGORY */}
         <section>
-          <h3 className="section-title">By Category</h3>
+          <div className="cart-page-title-wrap" style={{ marginTop: '2.5rem', marginBottom: '1.25rem' }}>
+            <h2 className="cart-page-title" style={{ fontSize: '1.5rem' }}>By Category</h2>
+          </div>
 
           {Object.keys(categories).map((cat) => (
             <div key={cat} className="category-block">
               <div className="category-head">
-                <h4>{cat}</h4>
+                <h4 style={{ fontSize: '1.25rem', color: '#0f172a', fontWeight: '700' }}>{cat}</h4>
 
                 <button
                   className={`sort-btn ${sortMap[cat] || "desc"}`}
                   onClick={() => toggleSort(cat)}
                 >
-                  {sortMap[cat] === "asc" ? "↑" : "↓"}
+                  {sortMap[cat] === "asc" ? "Sort: Price ↑" : "Sort: Price ↓"}
                 </button>
               </div>
 
               <div className="offers-grid">
                 {sortList(categories[cat], sortMap[cat] || "desc").map((o) => (
                   <div key={o.product_id} className="offer-card small">
-                    <img src={o.image_url} alt={o.name} />
+                    <div className="offer-img-wrapper">
+                      <img src={o.image_url} alt={o.name} />
+                      <span className="discount-badge-absolute">{o.discount}% OFF</span>
+                    </div>
 
                     <div className="offer-content">
                       <div className="offer-name">{o.name}</div>
 
                       <div className="offer-row">
-                        <span className="discount-badge">{o.discount}% OFF</span>
                         <span className="price-original">
                           ₹{Number(o.price || 0).toFixed(2)}
                         </span>
@@ -261,6 +275,7 @@ const OffersPage = () => {
             </div>
           ))}
         </section>
+        </div>
       </div>
     </div>
   );

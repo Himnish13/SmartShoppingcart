@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./ExplorePage.css"; // Custom layout for explore page
-import "./HomePage.css"; // Import sidebar styles
-import "./CreateListPage.css"; // Import product grid styles
+import "./CartPage.css";
+import "./ExplorePage.css";
 
 const ExplorePage = () => {
   const [products, setProducts] = useState([]);
@@ -205,7 +204,7 @@ const ExplorePage = () => {
   }, {});
 
   return (
-    <div className={`explore-page ${sidebarOpen ? "sidebar-open" : ""}`}>
+    <div className={`cart-page ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       {/* SIDEBAR OPEN BUTTON */}
       {!sidebarOpen && (
         <button
@@ -312,82 +311,93 @@ const ExplorePage = () => {
       </div>
 
       {/* CENTER */}
-      <div className="center">
-        {/* We use create-container styles for the inner layout */}
-        <div className="create-container" style={{ padding: "0" }}>
-          {/* NAVBAR */}
-          <div className="navbar" style={{ paddingTop: "1rem" }}>
-            <h2>Explore Store</h2>
-            <div className="search-box">
-              <span>🔍</span>
+      <div className="cart-content-wrapper" style={{ padding: 0 }}>
+        <div className="explore-page-header" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1.75rem' }}>
+          <div className="cart-page-title-wrap">
+            <span className="cart-page-icon"></span>
+            <h1 className="cart-page-title">Explore Store</h1>
+          </div>
+
+          <div className="explore-actions">
+            <div className="search-box-wrapper">
+              <span className="search-icon">🔍</span>
               <input
+                className="search-input"
                 type="text"
-                placeholder="Search"
+                placeholder="Search products..."
+                value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
+        </div>
 
+        <div className="explore-body">
           {/* CATEGORIES */}
-          <h3>Categories</h3>
-          <div className="categories">
-            <div
-              className={`category-card ${selectedCategory === null ? "active" : ""}`}
-              onClick={() => fetchByCategory(null)}
-            >
-              All
-            </div>
-
-            {visibleCategories.map((cat) => (
-              <div
-                key={cat.category_id}
-                className={`category-card ${
-                  selectedCategory === cat.category_id ? "active" : ""
-                }`}
-                onClick={() => fetchByCategory(cat.category_id)}
+          <div className="explore-section">
+            <h3 className="section-subtitle">Categories</h3>
+            <div className="categories-row">
+              <button
+                type="button"
+                className={`exploreCategory-pill ${selectedCategory === null ? "active" : ""}`}
+                onClick={() => fetchByCategory(null)}
               >
-                {cat.category_name}
-              </div>
-            ))}
+                All
+              </button>
+
+              {visibleCategories.map((cat) => (
+                <button
+                  key={cat.category_id}
+                  type="button"
+                  className={`exploreCategory-pill ${
+                    selectedCategory === cat.category_id ? "active" : ""
+                  }`}
+                  onClick={() => fetchByCategory(cat.category_id)}
+                >
+                  {cat.category_name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* PRODUCTS */}
-          <div className="products">
+          <div className="products-container">
             {selectedCategory ? (
-              <div className="category-section">
-                <h3 className="category-title">
-                  {
-                    visibleCategories.find(c => c.category_id === selectedCategory)?.category_name
-                  }
-                </h3>
+              <div className="category-group">
+                <div className="category-header">
+                  <h3 className="category-name">
+                    {visibleCategories.find(c => c.category_id === selectedCategory)?.category_name}
+                  </h3>
+                </div>
 
-                <div className="products-grid">
+                <div className="explore-grid">
                   {filtered.map((item) => (
-                    <div key={item.product_id} className={`product-card ${item.stock === 0 ? 'out-of-stock' : ''}`}>
-                      <div className="product-card-inner">
-                        <div className="image-box">
+                    <div key={item.product_id} className={`explore-card ${item.stock === 0 ? 'out-of-stock' : ''}`}>
+                      <div className="explore-card-inner">
+                        <div className="explore-image-wrapper">
                           <img src={item.image_url} alt={item.name} />
                           {item.stock === 0 && (
-                            <div className="out-of-stock-overlay">OUT OF STOCK</div>
+                            <div className="stock-overlay">OUT OF STOCK</div>
                           )}
                         </div>
                         
-                        <div className="product-info">
-                          <h4 className="product-name">{item.name}</h4>
-                          <p className="product-price">Price: ₹{Number(item.price || 0).toFixed(0)}</p>
+                        <div className="explore-info">
+                          <h4 className="explore-name">{item.name}</h4>
+                          <div className="explore-price-row">
+                            <span className="explore-price">₹{Number(item.price || 0).toFixed(0)}</span>
+                          </div>
                           
-                          <div className="product-actions">
+                          <div className="explore-actions-footer">
                             {!cart[item.product_id] ? (
                               <button 
-                                className="add-btn" 
+                                className="explore-add-btn" 
                                 onClick={() => item.stock > 0 && addItem(item)}
                                 disabled={item.stock === 0}
-                                style={{ background: item.stock === 0 ? '#ccc' : undefined }}
                               >
-                                {item.stock === 0 ? 'Unavailable' : 'Add'}
+                                {item.stock === 0 ? 'Sold Out' : 'Add to List'}
                               </button>
                             ) : (
-                              <div className="qty-control">
+                              <div className="explore-qty-control">
                                 <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
                                 <span className="qty-value">{cart[item.product_id].qty}</span>
                                 <button className="qty-btn plus" onClick={() => increaseQty(item.product_id)}>+</button>
@@ -409,37 +419,40 @@ const ExplorePage = () => {
                 if (billingCategoryIds.has(Number(catId))) return null;
 
                 return (
-                  <div key={catId} className="category-section">
-                    <h3 className="category-title">
-                      {category ? category.category_name : `Category ${catId}`}
-                    </h3>
-                    <div className="products-grid">
+                  <div key={catId} className="category-group">
+                    <div className="category-header">
+                      <h3 className="category-name">
+                        {category ? category.category_name : `Category ${catId}`}
+                      </h3>
+                    </div>
+                    <div className="explore-grid">
                       {groupedProducts[catId].map((item) => (
-                        <div key={item.product_id} className={`product-card ${item.stock === 0 ? 'out-of-stock' : ''}`}>
-                          <div className="product-card-inner">
-                            <div className="image-box">
+                        <div key={item.product_id} className={`explore-card ${item.stock === 0 ? 'out-of-stock' : ''}`}>
+                          <div className="explore-card-inner">
+                            <div className="explore-image-wrapper">
                               <img src={item.image_url} alt={item.name} />
                               {item.stock === 0 && (
-                                <div className="out-of-stock-overlay">OUT OF STOCK</div>
+                                <div className="stock-overlay">OUT OF STOCK</div>
                               )}
                             </div>
                             
-                            <div className="product-info">
-                              <h4 className="product-name">{item.name}</h4>
-                              <p className="product-price">Price: ₹{Number(item.price || 0).toFixed(0)}</p>
+                            <div className="explore-info">
+                              <h4 className="explore-name">{item.name}</h4>
+                              <div className="explore-price-row">
+                                <span className="explore-price">₹{Number(item.price || 0).toFixed(0)}</span>
+                              </div>
                               
-                              <div className="product-actions">
+                              <div className="explore-actions-footer">
                                 {!cart[item.product_id] ? (
                                   <button 
-                                    className="add-btn" 
+                                    className="explore-add-btn" 
                                     onClick={() => item.stock > 0 && addItem(item)}
                                     disabled={item.stock === 0}
-                                    style={{ background: item.stock === 0 ? '#ccc' : undefined }}
                                   >
-                                    {item.stock === 0 ? 'Unavailable' : 'Add'}
+                                    {item.stock === 0 ? 'Sold Out' : 'Add to List'}
                                   </button>
                                 ) : (
-                                  <div className="qty-control">
+                                  <div className="explore-qty-control">
                                     <button className="qty-btn minus" onClick={() => decreaseQty(item.product_id)}>−</button>
                                     <span className="qty-value">{cart[item.product_id].qty}</span>
                                     <button className="qty-btn plus" onClick={() => increaseQty(item.product_id)}>+</button>

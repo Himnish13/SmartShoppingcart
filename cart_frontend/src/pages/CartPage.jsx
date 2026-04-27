@@ -205,7 +205,7 @@ const CartPage = () => {
         {/* ── HEADER ── */}
         <div className="cart-page-header">
           <div className="cart-page-title-wrap">
-            <span className="cart-page-icon">🛒</span>
+            <span className="cart-page-icon"></span>
             <h1 className="cart-page-title">
               Your Shopping Cart
               <span className="cart-page-count">

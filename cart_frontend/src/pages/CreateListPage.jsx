@@ -363,7 +363,7 @@ const CreateListPage = () => {
       </div>
 
       {/* Display imported/added list */}
-      <div className="paste-box">
+       <div className="paste-box">
         <h4 className="paste-title">Your Shopping List</h4>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <textarea
@@ -377,28 +377,30 @@ const CreateListPage = () => {
           />
         </div>
       </div>
-      {/* CATEGORIES */}
-      <h3>Categories</h3>
-      <div className="categories">
-
-        <div
-          className={`category-card ${selectedCategory === null ? "active" : ""}`}
-          onClick={() => fetchByCategory(null)}
-        >
-          All
-        </div>
-
-        {visibleCategories.map((cat) => (
-          <div
-            key={cat.category_id}
-            className={`category-card ${
-              selectedCategory === cat.category_id ? "active" : ""
-            }`}
-            onClick={() => fetchByCategory(cat.category_id)}
+      {/* CATEGORIES BAR */}
+      <div className="categories-wrapper">
+        <div className="categories-row">
+          <button
+            type="button"
+            className={`createList-category-pill ${selectedCategory === null ? "active" : ""}`}
+            onClick={() => fetchByCategory(null)}
           >
-            {cat.category_name}
-          </div>
-        ))}
+            All
+          </button>
+
+          {visibleCategories.map((cat) => (
+            <button
+              key={cat.category_id}
+              type="button"
+              className={`createList-category-pill ${
+                selectedCategory === cat.category_id ? "active" : ""
+              }`}
+              onClick={() => fetchByCategory(cat.category_id)}
+            >
+              {cat.category_name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* PRODUCTS */}

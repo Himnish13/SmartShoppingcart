@@ -35,5 +35,7 @@ const PORT = 3500;
 const HOST = "0.0.0.0"; // listen on all network interfaces (hotspot, LAN, etc.)
 app.listen(PORT, HOST, () => {
     console.log(`Server running at http://${HOST}:${PORT}`);
-    console.log(`Mobile page accessible at http://<device-hotspot-ip>:${PORT}/mobile`);
+    console.log(
+        `Mobile page accessible at http://<device-hotspot-ip>:${PORT}/mobile`
+    );
 });

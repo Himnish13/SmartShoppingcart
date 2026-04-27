@@ -1,7 +1,7 @@
 import React from "react";
 import { QRCodeSVG } from "qrcode.react";
 
-export default function QRGenerator({ value, size = 160 }) {
+export default function QRGenerator({ value, size = 200 }) {
   if (!value) {
     return (
       <div style={{
@@ -23,7 +23,7 @@ export default function QRGenerator({ value, size = 160 }) {
   return (
     <QRCodeSVG
       value={value}
-      size={size}
+      size={200}
       bgColor="#ffffff"
       fgColor="#4141a8"
       level="M"
