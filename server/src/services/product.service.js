@@ -9,6 +9,7 @@ function transformProduct(dbProduct) {
     category: dbProduct.category_name || "Uncategorized",
     price: Number(dbProduct.price) || 0,
     stock: Number(dbProduct.stock) || 0,
+    image: dbProduct.images || "",
     images: dbProduct.images || "",
     status: dbProduct.is_active ? "active" : "inactive",
   };
@@ -18,6 +19,10 @@ function transformProduct(dbProduct) {
 async function fetchAllProducts() {
   const products = await productModel.getAllProductsFromDB();
   return products.map(transformProduct);
+}
+
+async function fetchAllCategories() {
+  return productModel.getAllCategoriesFromDB();
 }
 
 // Get product by barcode
@@ -54,6 +59,7 @@ function deleteProduct(id) {
 
 module.exports = {
   fetchAllProducts,
+  fetchAllCategories,
   fetchProductByBarcode,
   searchProducts,
   addProduct,

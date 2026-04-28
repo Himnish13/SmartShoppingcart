@@ -58,6 +58,22 @@ function getAllProductsFromDB() {
   });
 }
 
+function getAllCategoriesFromDB() {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT category_id, category_name
+      FROM category
+      WHERE category_name IS NOT NULL AND TRIM(category_name) <> ''
+      ORDER BY category_name ASC
+    `;
+
+    db.query(query, (err, results) => {
+      if (err) return reject(err);
+      resolve(results);
+    });
+  });
+}
+
 function getProductByBarcodeFromDB(barcode) {
   return new Promise((resolve, reject) => {
     const query = `
@@ -229,6 +245,7 @@ function deleteProduct(id) {
 
 module.exports = {
   getAllProductsFromDB,
+  getAllCategoriesFromDB,
   getProductByBarcodeFromDB,
   searchProductsFromDB,
   insertProduct,
