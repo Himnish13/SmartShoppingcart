@@ -138,9 +138,11 @@ export const useFeedbackSummary = () => {
   return useQuery({
     queryKey: queryKeys.feedbackSummary,
     queryFn: () => api.getFeedbackSummary(),
-    staleTime: 1000 * 60 * 1, // 1 minute
+    staleTime: 0,
     retry: 2,
     gcTime: 1000 * 60 * 5,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -149,9 +151,11 @@ export const useProductFeedback = (productId: string) => {
     queryKey: queryKeys.productFeedback(productId),
     queryFn: () => api.getProductFeedback(productId),
     enabled: !!productId,
-    staleTime: 1000 * 60 * 1,
+    staleTime: 0,
     retry: 2,
     gcTime: 1000 * 60 * 5,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 };
 
