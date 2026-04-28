@@ -1,9 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StartPage.css";
 
+const API = "http://localhost:3500";
+
 const StartPage = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+      // New user/session behavior: clear any previous feedback stored locally.
+      fetch(`${API}/feedback/clear`, { method: "POST" }).catch(() => {});
+    }, []);
   return (
     <div className="start-container">
       
