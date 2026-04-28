@@ -1,16 +1,9 @@
 import { useMemo, useState } from "react";
-import { MapPin, Loader, Play, Square } from "lucide-react";
+import { MapPin, Loader, Search, Square } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useCartDevices, useCartMutations, useCarts, useProducts } from "@/store/useStore";
+import { useCartMutations, useCarts, useProducts } from "@/store/useStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const positions = [
   "md:col-start-1 md:row-start-1",
@@ -21,28 +14,25 @@ const positions = [
 ];
 
 export default function CartsPage() {
-  const [selectedCartId, setSelectedCartId] = useState("");
-  const [userId, setUserId] = useState("");
+  const [q, setQ] = useState("");
   const { data: carts = [], isLoading: cartsLoading } = useCarts();
-  const { data: devices = [], isLoading: devicesLoading } = useCartDevices();
   const { data: products = [], isLoading: productsLoading } = useProducts();
-  const { startCart, stopCart } = useCartMutations();
+  const { stopCart } = useCartMutations();
   const map = useMemo(() => {
     if (!products || !Array.isArray(products)) return {};
     return Object.fromEntries(products.map((p) => [p.id, p]));
   }, [products]);
 
-  const availableDevices = useMemo(
-    () => devices.filter((device: any) => String(device.status || "").toUpperCase() !== "ACTIVE" || !device.session_id),
-    [devices]
+  const filteredCarts = useMemo(
+    () =>
+      carts.filter((cart: any) => {
+        const haystack = `${cart.cartId || cart.id} ${cart.location || ""}`.toLowerCase();
+        return haystack.includes(q.toLowerCase());
+      }),
+    [carts, q]
   );
 
-  const activateCart = () => {
-    if (!selectedCartId) return;
-    startCart.mutate({ cartId: selectedCartId, userId });
-  };
-
-  if (cartsLoading || productsLoading || devicesLoading) {
+  if (cartsLoading || productsLoading) {
     return (
       <AdminLayout
         title="Live Carts"
@@ -60,43 +50,22 @@ export default function CartsPage() {
       title="Live Carts"
       subtitle="Assign cart devices and monitor active shopping sessions."
     >
-      <section className="mb-6 rounded-lg border border-border bg-card p-4">
-        <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_auto]">
-          <Select value={selectedCartId} onValueChange={setSelectedCartId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select cart device" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableDevices.map((device: any) => (
-                <SelectItem key={device.cart_id} value={device.cart_id}>
-                  {device.cart_id} - {device.status || "UNKNOWN"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            value={userId}
-            onChange={(event) => setUserId(event.target.value)}
-            inputMode="numeric"
-            placeholder="User ID optional"
-          />
-          <Button
-            onClick={activateCart}
-            disabled={!selectedCartId || startCart.isPending}
-          >
-            <Play />
-            Activate
-          </Button>
+      <section className="sticky top-0 z-10 mb-6 rounded-lg border border-border bg-card/95 p-4 shadow-card backdrop-blur">
+        <div className="mb-3">
+          <div className="relative w-full max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search cart by ID or location..." className="pl-9" />
+          </div>
         </div>
       </section>
 
-      {!Array.isArray(carts) || carts.length === 0 ? (
+      {!Array.isArray(filteredCarts) || filteredCarts.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-8 text-center">
           <p className="text-muted-foreground">No active cart sessions</p>
         </div>
       ) : (
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {carts.map((cart, i) => {
+        {filteredCarts.map((cart, i) => {
           const items = cart.items
             .map((it) => ({ ...it, product: map[it.productId] }))
             .filter((x) => x.product);

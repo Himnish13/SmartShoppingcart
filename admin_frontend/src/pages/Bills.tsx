@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Download, Eye, Pencil, Plus, Trash2, X, Loader } from "lucide-react";
+import { Download, Eye, Pencil, Plus, Search, Trash2, X, Loader } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,8 +163,17 @@ export default function BillsPage() {
   const [draft, setDraft] = useState<Bill>(empty());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewBill, setPreviewBill] = useState<Bill | null>(null);
+  const [q, setQ] = useState("");
   const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
-  const normalizedBills = useMemo(() => bills.map((bill) => computeTotals(bill)), [bills]);
+  const normalizedBills = useMemo(
+    () =>
+      bills
+        .map((bill) => computeTotals(bill))
+        .filter((bill) =>
+          `${bill.number} ${bill.customer} ${bill.email}`.toLowerCase().includes(q.toLowerCase())
+        ),
+    [bills, q]
+  );
 
   const startNew = () => { setDraft(empty()); setOpen(true); };
   const startEdit = (b: Bill) => { setDraft(computeTotals(b)); setOpen(true); };
@@ -208,6 +217,16 @@ export default function BillsPage() {
         </Button>
       }
     >
+      <div className="sticky top-0 z-10 mb-4 rounded-2xl border border-border bg-card/95 shadow-card backdrop-blur">
+        <div className="flex items-center gap-3 p-4">
+          <div className="relative w-full max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search invoice, customer, or email..." className="pl-9" />
+          </div>
+          <p className="ml-auto text-sm text-muted-foreground">{normalizedBills.length} matching</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {normalizedBills.map((bill) => (
           <article

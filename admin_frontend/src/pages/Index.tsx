@@ -4,9 +4,7 @@ import {
 } from "recharts";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useBills, useCarts, useProducts, useRevenueTrend, useCategoryShare, useOrdersCustomers } from "@/store/useStore";
-import { useNavigate } from "react-router-dom";
 
 const COLORS = ["hsl(245 44% 59%)", "hsl(258 60% 68%)", "hsl(245 70% 78%)", "hsl(232 50% 65%)", "hsl(270 50% 70%)"];
 
@@ -35,7 +33,6 @@ const Dashboard = () => {
   const { data: revenueTrend = [], isLoading: revenueTrendLoading } = useRevenueTrend();
   const { data: categoryShare = [], isLoading: categoryShareLoading } = useCategoryShare();
   const { data: ordersCustomers = [], isLoading: ordersCustomersLoading } = useOrdersCustomers();
-  const nav = useNavigate();
 
   const isLoading = billsLoading || cartsLoading || productsLoading || revenueTrendLoading || categoryShareLoading || ordersCustomersLoading;
 
@@ -92,11 +89,6 @@ const Dashboard = () => {
     <AdminLayout
       title="Dashboard"
       subtitle="Welcome back — here's how your store is performing today."
-      actions={
-        <Button onClick={() => nav("/bills")} className="bg-gradient-primary text-primary-foreground shadow-elegant hover:opacity-95">
-          New invoice
-        </Button>
-      }
     >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KPI
