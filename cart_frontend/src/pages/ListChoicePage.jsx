@@ -29,13 +29,30 @@ const ListChoicePage = () => {
 
   // 1. On mount: fetch local IP to build the QR URL, then start polling
   useEffect(() => {
-    fetch(`${API}/system/ip`)
-      .then((r) => r.json())
-      .then(({ ip }) => {
-        const url = `http://${ip}:3500/mobile`;
-        setMobileUrl(url);
-      })
-      .catch(() => setMobileUrl(`${API}/mobile`));
+    let alive = true;
+    let retryTimer = null;
+
+    const resolveMobileUrl = async () => {
+      try {
+        const res = await fetch(`${API}/system/ip`);
+        if (!res.ok) throw new Error("system/ip failed");
+        const data = await res.json();
+        const ip = String(data?.ip || "").trim();
+
+        // Don't fall back to localhost: the QR is scanned on the PHONE.
+        if (!ip || ip === "localhost" || ip === "127.0.0.1") {
+          throw new Error("invalid ip");
+        }
+
+        if (alive) setMobileUrl(`http://${ip}:3500/mobile`);
+      } catch (_) {
+        if (!alive) return;
+        setMobileUrl("");
+        retryTimer = setTimeout(resolveMobileUrl, 2500);
+      }
+    };
+
+    resolveMobileUrl();
 
     // Reset mobile status to idle on cart side when entering this page
     fetch(`${API}/mobile/status`, {
@@ -69,7 +86,11 @@ const ListChoicePage = () => {
       } catch (_) {}
     }, 1200);
 
-    return () => clearInterval(pollingRef.current);
+    return () => {
+      alive = false;
+      if (retryTimer) clearTimeout(retryTimer);
+      clearInterval(pollingRef.current);
+    };
   }, [navigate]);
 
   // ── IMPORTING screen ──────────────────────────────────────────────────────
@@ -146,6 +167,11 @@ const ListChoicePage = () => {
       </div>
 
       <div className="right-section">
+        <div className="top-dots" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
         <div className="listChoiceContent">
           <h1>Have Your list Ready?</h1>
           <p>Scan the QR code with your phone to import your list</p>
@@ -153,6 +179,10 @@ const ListChoicePage = () => {
           {/* Real QR code */}
           <div className="qr-box">
             <QRGenerator value={mobileUrl} size={qrSize} />
+          </div>
+
+          <div className="qr-url-hint">
+            {mobileUrl || "Waiting for backend…"}
           </div>
 
           <p className="or-text">OR</p>

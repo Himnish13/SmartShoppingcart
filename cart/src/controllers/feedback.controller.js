@@ -14,3 +14,10 @@ exports.addFeedback = (req, res) => {
     }
   );
 };
+
+exports.clearFeedback = (req, res) => {
+  db.run("DELETE FROM feedback", (err) => {
+    if (err) return res.status(500).json(err);
+    res.json({ ok: true });
+  });
+};
