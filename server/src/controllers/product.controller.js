@@ -29,6 +29,16 @@ async function getAllProducts(req, res) {
   }
 }
 
+async function getAllCategories(req, res) {
+  try {
+    const categories = await productService.fetchAllCategories();
+    res.json(categories);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+}
+
 async function searchProducts(req, res) {
   try {
     const { name, category } = req.query;
@@ -91,6 +101,7 @@ async function deleteProduct(req, res) {
 module.exports = {
   getProductByBarcode,
   getAllProducts,
+  getAllCategories,
   searchProducts,
   addProduct,
   updateProduct,

@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
-import { Product, Offer, Cart, Bill } from "@/data/mock";
+import { Product, Offer, Cart, Bill, CategoryOption } from "@/data/mock";
 import { toast } from "sonner";
 
 // Query keys
 export const queryKeys = {
   products: ["products"],
+  categories: ["categories"],
   offers: ["offers"],
   carts: ["carts"],
   cartDevices: ["cart-devices"],
@@ -22,6 +23,16 @@ export const useProducts = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
     gcTime: 1000 * 60 * 10, // 10 minutes cache
+  });
+};
+
+export const useCategories = () => {
+  return useQuery<CategoryOption[]>({
+    queryKey: queryKeys.categories,
+    queryFn: () => api.getCategories(),
+    staleTime: 1000 * 60 * 10,
+    retry: 2,
+    gcTime: 1000 * 60 * 10,
   });
 };
 

@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProducts, useProductMutations } from "@/store/useStore";
+import { useProducts, useProductMutations, useCategories } from "@/store/useStore";
 import { Product } from "@/data/mock";
 import { toast } from "sonner";
 
@@ -36,10 +36,11 @@ const empty: Product = {
   id: "",
   name: "",
   sku: "",
-  category: "Audio",
+  category: "",
   price: 0,
   stock: 0,
   status: "active",
+  image: "",
 };
 
 const statusBadge = (s: Product["status"]) =>
@@ -53,8 +54,10 @@ const statusBadge = (s: Product["status"]) =>
 
 export default function ProductsPage() {
   const { data: products = [], isLoading, error } = useProducts();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { addProduct, updateProduct, deleteProduct } = useProductMutations();
   const [q, setQ] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Product>(empty);
   const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
@@ -63,24 +66,27 @@ export default function ProductsPage() {
     () =>
       products.filter(
         (p) =>
-          p.name.toLowerCase().includes(q.toLowerCase()) ||
-          p.sku.toLowerCase().includes(q.toLowerCase()) ||
-          p.category.toLowerCase().includes(q.toLowerCase()),
+          (selectedCategory === "all" || p.category === selectedCategory) &&
+          (
+            p.name.toLowerCase().includes(q.toLowerCase()) ||
+            p.sku.toLowerCase().includes(q.toLowerCase()) ||
+            p.category.toLowerCase().includes(q.toLowerCase())
+          ),
       ),
-    [products, q],
+    [products, q, selectedCategory],
   );
 
   const startNew = () => {
-    setDraft(empty);
+    setDraft({ ...empty, category: categories[0]?.category_name || "" });
     setOpen(true);
   };
   const startEdit = (p: Product) => {
-    setDraft(p);
+    setDraft({ ...p, image: p.image || "" });
     setOpen(true);
   };
   const save = () => {
-    if (!draft.name || !draft.sku) {
-      toast.error("Name and SKU are required");
+    if (!draft.name || !draft.sku || !draft.category) {
+      toast.error("Name, SKU and category are required");
       return;
     }
     if (draft.id) {
@@ -124,6 +130,24 @@ export default function ProductsPage() {
               `${list.length} items`
             )}
           </p>
+        </div>
+        <div className="p-4 pt-0">
+          <div className="w-full max-w-sm space-y-1.5">
+            <Label>Category</Label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Filter by category"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.category_id} value={category.category_name}>
+                    {category.category_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <div className="rounded-2xl border border-border bg-card shadow-card">
@@ -207,7 +231,22 @@ export default function ProductsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Category</Label>
-              <Input value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} />
+              <Select
+                value={draft.category}
+                onValueChange={(value) => setDraft({ ...draft, category: value })}
+                disabled={categoriesLoading || categories.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select category"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.category_id} value={category.category_name}>
+                      {category.category_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Price (₹)</Label>
@@ -216,6 +255,14 @@ export default function ProductsPage() {
             <div className="space-y-1.5">
               <Label>Stock</Label>
               <Input type="number" value={draft.stock} onChange={(e) => setDraft({ ...draft, stock: Number(e.target.value) })} />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Image URL</Label>
+              <Input
+                value={draft.image || ""}
+                onChange={(e) => setDraft({ ...draft, image: e.target.value })}
+                placeholder="https://example.com/product-image.jpg"
+              />
             </div>
             <div className="col-span-2 space-y-1.5">
               <Label>Status</Label>

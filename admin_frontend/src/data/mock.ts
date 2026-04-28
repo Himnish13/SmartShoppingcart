@@ -9,6 +9,11 @@ export type Product = {
   image?: string;
 };
 
+export type CategoryOption = {
+  category_id: number;
+  category_name: string;
+};
+
 export type Offer = {
   id: string;
   productId: string;
