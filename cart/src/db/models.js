@@ -2,6 +2,29 @@ const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 
+function clearCartData(db) {
+  db.serialize(() => {
+    db.run("PRAGMA foreign_keys = OFF");
+
+    db.run(`DELETE FROM feedback`);
+    db.run(`DELETE FROM cart_items`);
+    db.run(`DELETE FROM shopping_list`);
+    db.run(`DELETE FROM user_session`);
+    db.run(`DELETE FROM cart_position`);
+    db.run(`DELETE FROM sync_meta`);
+    db.run(`DELETE FROM offers`);
+    db.run(`DELETE FROM beacons`);
+    db.run(`DELETE FROM edges`);
+    db.run(`DELETE FROM products`);
+    db.run(`DELETE FROM category`);
+    db.run(`DELETE FROM nodes`);
+    db.run(`DELETE FROM crowd`);
+
+    db.run("PRAGMA foreign_keys = ON");
+    console.log("Cart DB data cleared on startup");
+  });
+}
+
 function initializeTables() {
 
   const dbPath = path.join(__dirname, "../../data/cart.db");
@@ -117,6 +140,8 @@ function initializeTables() {
 
     console.log("Cart DB schema ready; data will come from server sync");
   });
+
+  clearCartData(db);
 
   return db;
 }

@@ -29,8 +29,16 @@ const makeRequest = async (
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "API request failed");
+    let errorMessage = "API request failed";
+
+    try {
+      const error = await response.json();
+      errorMessage = error.message || error.error || errorMessage;
+    } catch {
+      errorMessage = response.statusText || errorMessage;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return response.json();
