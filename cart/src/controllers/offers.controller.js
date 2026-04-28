@@ -1,4 +1,5 @@
 const db = require("../config/sqlite");
+const { normalizeRowsImageUrls } = require("../utils/imageUrl");
 
 exports.getAllOffers = (req, res) => {
     db.all(
@@ -9,7 +10,7 @@ exports.getAllOffers = (req, res) => {
         [],
         (err, rows) => {
             if (err) return res.status(500).json(err);
-            res.json(rows);
+            res.json(normalizeRowsImageUrls(req, rows));
         }
     );
 };

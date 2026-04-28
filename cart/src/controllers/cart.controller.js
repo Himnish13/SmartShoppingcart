@@ -1,4 +1,5 @@
 const db = require("../config/sqlite");
+const { normalizeRowsImageUrls } = require("../utils/imageUrl");
 
 exports.addItem = (req, res) => {
     const { barcode, quantity } = req.body;
@@ -96,7 +97,7 @@ exports.getItems = (req, res) => {
         [],
         (err, rows) => {
             if (err) return res.status(500).json(err);
-            res.json(rows);
+            res.json(normalizeRowsImageUrls(req, rows));
         }
     );
 };

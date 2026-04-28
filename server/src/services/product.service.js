@@ -9,6 +9,7 @@ function transformProduct(dbProduct) {
     category: dbProduct.category_name || "Uncategorized",
     price: Number(dbProduct.price) || 0,
     stock: Number(dbProduct.stock) || 0,
+    images: dbProduct.images || "",
     status: dbProduct.is_active ? "active" : "inactive",
   };
 }

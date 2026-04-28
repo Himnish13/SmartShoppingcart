@@ -40,6 +40,7 @@ function getAllProductsFromDB() {
         p.name,
         p.price,
         p.stock,
+        p.images,
         c.category_name,
         c.node_id,
         p.is_active,
@@ -65,6 +66,7 @@ function getProductByBarcodeFromDB(barcode) {
         p.barcode,
         p.name,
         p.price,
+        p.images,
         c.category_name,
         c.node_id
       FROM product_mastery p
@@ -91,6 +93,7 @@ function searchProductsFromDB(name, category) {
         p.name,
         p.price,
         p.stock,
+        p.images,
         c.category_name,
         c.node_id
       FROM product_mastery p
@@ -132,13 +135,13 @@ function insertProduct(data) {
 
       const query = `
         INSERT INTO product_mastery
-        (barcode, name, price, category_id, stock, is_active)
-        VALUES (?, ?, ?, ?, ?, 1)
+        (barcode, name, price, category_id, stock, images, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, 1)
       `;
 
       db.query(
         query,
-        [data.barcode, data.name, data.price, categoryId, stock],
+        [data.barcode, data.name, data.price, categoryId, stock, data.images || data.image_url || null],
         (err, results) => {
           if (err) return reject(err);
           resolve(results);
@@ -162,13 +165,13 @@ function updateProduct(id, data) {
 
       const query = `
         UPDATE product_mastery
-        SET name = ?, price = ?, category_id = ?, stock = ?, is_active = ?
+        SET name = ?, price = ?, category_id = ?, stock = ?, images = COALESCE(?, images), is_active = ?
         WHERE product_id = ?
       `;
 
       db.query(
         query,
-        [data.name, data.price, categoryId, data.stock, data.is_active, id],
+        [data.name, data.price, categoryId, data.stock, data.images || data.image_url || null, data.is_active, id],
         (err, results) => {
           if (err) return reject(err);
           resolve(results);

@@ -2,6 +2,7 @@ const db = require("../config/sqlite");
 const aStar = require("../routing/astar");
 const graph = require("../routing/graph");
 const heuristic = require("../routing/heuristic");
+const { normalizeImageUrl } = require("../utils/imageUrl");
 
 // Promisified DB helpers
 const dbAll = (query, params = []) =>
@@ -53,7 +54,7 @@ exports.getNearbyRecommendations = async (req, res) => {
                     product_id: o.product_id,
                     name: o.name,
                     price: o.price,
-                    image_url: o.image_url,
+                    image_url: normalizeImageUrl(req, o.image_url),
                     discount: o.discount,
                     node_id: o.node_id,
                     distance

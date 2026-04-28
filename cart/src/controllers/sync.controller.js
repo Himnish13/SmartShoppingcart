@@ -1,6 +1,7 @@
 const axios = require("axios");
 const db = require("../config/sqlite");
 const syncService = require("../services/sync.service");
+const { attachLocalImageUrls } = require("../services/productImage.service");
 
 // Use environment variable or fallback to localhost
 const SERVER_URL = process.env.SERVER_URL || "http://localhost:3200";
@@ -20,6 +21,8 @@ exports.fullSync = async (req, res) => {
             offers = [],
             crowd = []
         } = response.data;
+
+        const productsWithLocalImages = await attachLocalImageUrls(products);
 
         db.serialize(() => {
 
@@ -51,14 +54,15 @@ exports.fullSync = async (req, res) => {
                 );
             });
 
-            products.forEach(p => {
+            productsWithLocalImages.forEach(p => {
                 db.run(
                     `INSERT INTO products 
-                     (product_id, barcode, name, price, stock, category_id, node_id)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                     (product_id, barcode, image_url, name, price, stock, category_id, node_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         p.product_id,
                         p.barcode,
+                        p.image_url ?? null,
                         p.name,
                         p.price,
                         p.stock ?? 20,

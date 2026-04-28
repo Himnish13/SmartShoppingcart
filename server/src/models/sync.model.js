@@ -25,6 +25,7 @@ const getProducts = (lastUpdated) => {
         p.price,
         p.category_id,
         p.stock,
+        p.images,
         c.node_id,
         p.updated_at
       FROM product_mastery p
@@ -50,6 +51,7 @@ const getAllProducts = () => {
         p.price,
         p.category_id,
         p.stock,
+        p.images,
         c.node_id,
         p.updated_at
       FROM product_mastery p

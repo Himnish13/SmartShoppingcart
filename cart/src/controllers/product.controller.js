@@ -1,9 +1,10 @@
 const db = require("../config/sqlite");
+const { normalizeRowsImageUrls } = require("../utils/imageUrl");
 
 exports.getAllProducts = (req, res) => {
     db.all(`SELECT * FROM products`, [], (err, rows) => {
         if (err) return res.status(500).json(err);
-        res.json(rows);
+        res.json(normalizeRowsImageUrls(req, rows));
     });
 };
 
@@ -19,7 +20,7 @@ exports.getProductByCategory = (req, res) => {
         [categoryId],
         (err, rows) => {
             if (err) return res.status(500).json(err);
-            res.json(rows);
+            res.json(normalizeRowsImageUrls(req, rows));
         }
     );
 };
