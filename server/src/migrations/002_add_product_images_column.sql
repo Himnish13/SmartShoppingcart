@@ -1,0 +1,2 @@
+ALTER TABLE product_mastery
+ADD COLUMN IF NOT EXISTS images TEXT NULL;

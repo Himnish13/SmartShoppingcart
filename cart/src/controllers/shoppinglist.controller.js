@@ -1,4 +1,5 @@
 const db = require("../config/sqlite");
+const { normalizeRowsImageUrls } = require("../utils/imageUrl");
 
 exports.syncList = (req, res) => {
     const { user_id, items } = req.body;
@@ -178,7 +179,7 @@ exports.getList = (req, res) => {
         [],
         (err, rows) => {
             if (err) return res.status(500).json(err);
-            res.json(rows);
+            res.json(normalizeRowsImageUrls(req, rows));
         }
     );
 };
@@ -202,7 +203,7 @@ exports.getByCategory = (req, res) => {
         [category_id],
         (err, rows) => {
             if (err) return res.status(500).json(err);
-            res.json(rows);
+            res.json(normalizeRowsImageUrls(req, rows));
         }
     );
 };

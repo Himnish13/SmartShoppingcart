@@ -1,5 +1,5 @@
 const syncService = require("../services/sync.service");
-const db = require("../config/db"); // 🔥 MISSING IMPORT
+const db = require("../config/db");
 
 // FULL SYNC
 const fullSync = async (req, res) => {
@@ -69,14 +69,14 @@ const syncCategories = async (req, res) => {
 };
 
 const bulkFeedback = (req, res) => {
-  const { cart_id, feedbacks } = req.body;
+  const { feedbacks } = req.body;
 
   if (!feedbacks || feedbacks.length === 0) {
     return res.json({ message: "No data" });
   }
 
   const values = feedbacks.map(f => [
-    f.cart_id || cart_id || null,
+    f.cart_id || null,
     f.product_name || null,
     f.product_id || null,
     f.message || null
@@ -105,5 +105,5 @@ module.exports = {
   syncNodes,
   syncEdges,
   syncCategories,
-  bulkFeedback // 🔥 IMPORTANT: EXPORT ADDED
+  bulkFeedback
 };

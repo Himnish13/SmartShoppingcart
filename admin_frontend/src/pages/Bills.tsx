@@ -164,9 +164,10 @@ export default function BillsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewBill, setPreviewBill] = useState<Bill | null>(null);
   const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
+  const normalizedBills = useMemo(() => bills.map((bill) => computeTotals(bill)), [bills]);
 
   const startNew = () => { setDraft(empty()); setOpen(true); };
-  const startEdit = (b: Bill) => { setDraft(b); setOpen(true); };
+  const startEdit = (b: Bill) => { setDraft(computeTotals(b)); setOpen(true); };
   const save = async () => {
     if (!draft.customer || draft.items.length === 0) {
       toast.error("Customer and at least one item are required");
@@ -208,7 +209,7 @@ export default function BillsPage() {
       }
     >
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {bills.map((bill) => (
+        {normalizedBills.map((bill) => (
           <article
             key={bill.id}
             className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card transition-all hover:-translate-y-1 hover:shadow-elegant"

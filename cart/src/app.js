@@ -6,9 +6,15 @@ require("dotenv").config({
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const initializeTables = require("./db/models");
+const { clearImageCacheDir, getImageCacheDir } = require("./services/productImage.service");
+
+initializeTables();
+clearImageCacheDir();
 
 app.use(cors());
 app.use(express.json());
+app.use("/product-images", express.static(getImageCacheDir()));
 
 const productRoutes = require("./routes/product.routes");
 const cartRoutes = require("./routes/localCart.routes");
@@ -37,7 +43,7 @@ app.get("/system/ip", mobileController.getLocalIp);
 
 
 // initPositionSystem();
-const PORT = 3500;
+const PORT = Number(process.env.PORT || 3500);
 const HOST = "0.0.0.0"; // listen on all network interfaces (hotspot, LAN, etc.)
 app.listen(PORT, HOST, () => {
     console.log(`Server running at http://${HOST}:${PORT}`);
