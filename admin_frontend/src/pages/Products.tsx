@@ -64,7 +64,8 @@ export default function ProductsPage() {
       products.filter(
         (p) =>
           p.name.toLowerCase().includes(q.toLowerCase()) ||
-          p.sku.toLowerCase().includes(q.toLowerCase()),
+          p.sku.toLowerCase().includes(q.toLowerCase()) ||
+          p.category.toLowerCase().includes(q.toLowerCase()),
       ),
     [products, q],
   );
@@ -110,7 +111,7 @@ export default function ProductsPage() {
           Failed to load products: {error.message}
         </div>
       )}
-      <div className="rounded-2xl border border-border bg-card shadow-card">
+      <div className="sticky top-0 z-10 mb-4 rounded-2xl border border-border bg-card/95 shadow-card backdrop-blur">
         <div className="flex items-center gap-3 border-b border-border p-4">
           <div className="relative w-full max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -124,6 +125,8 @@ export default function ProductsPage() {
             )}
           </p>
         </div>
+      </div>
+      <div className="rounded-2xl border border-border bg-card shadow-card">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

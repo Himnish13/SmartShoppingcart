@@ -217,7 +217,7 @@ export default function BillsPage() {
         </Button>
       }
     >
-      <div className="mb-4 rounded-2xl border border-border bg-card shadow-card">
+      <div className="sticky top-0 z-10 mb-4 rounded-2xl border border-border bg-card/95 shadow-card backdrop-blur">
         <div className="flex items-center gap-3 p-4">
           <div className="relative w-full max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

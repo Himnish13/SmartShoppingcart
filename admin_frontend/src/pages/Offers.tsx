@@ -34,6 +34,15 @@ const statusBadge = (s: Offer["status"]) =>
     <Badge variant="secondary">Expired</Badge>
   );
 
+const renderProductCell = (name: string) => (
+  <div className="flex items-center gap-3">
+    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-soft text-primary font-semibold">
+      {name.charAt(0)}
+    </div>
+    <span className="font-medium">{name}</span>
+  </div>
+);
+
 export default function OffersPage() {
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const { data: offers = [], isLoading: offersLoading } = useOffers();
@@ -111,21 +120,23 @@ export default function OffersPage() {
         ) : undefined
       }
     >
-      <div className="mb-4 rounded-2xl border border-border bg-card shadow-card">
-        <div className="flex items-center gap-3 p-4">
-          <div className="relative w-full max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search offers or products..." className="pl-9" />
-          </div>
-          <p className="ml-auto text-sm text-muted-foreground">{withOffers.length + withoutOffers.length} matching</p>
-        </div>
-      </div>
-
       <Tabs defaultValue="with" className="space-y-4">
-        <TabsList className="bg-secondary/60">
-          <TabsTrigger value="with">Products with offers ({withOffers.length})</TabsTrigger>
-          <TabsTrigger value="without">Without offers ({withoutOffers.length})</TabsTrigger>
-        </TabsList>
+        <div className="sticky top-0 z-10 mb-4 space-y-4 bg-gradient-soft pb-1">
+          <div className="rounded-2xl border border-border bg-card/95 shadow-card backdrop-blur">
+            <div className="flex items-center gap-3 p-4">
+              <div className="relative w-full max-w-sm">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search offers or products..." className="pl-9" />
+              </div>
+              <p className="ml-auto text-sm text-muted-foreground">{withOffers.length + withoutOffers.length} matching</p>
+            </div>
+          </div>
+
+          <TabsList className="bg-secondary/60">
+            <TabsTrigger value="with">Products with offers ({withOffers.length})</TabsTrigger>
+            <TabsTrigger value="without">Without offers ({withoutOffers.length})</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="with">
           <div className="rounded-2xl border border-border bg-card shadow-card">
@@ -145,7 +156,7 @@ export default function OffersPage() {
                 <TableBody>
                   {withOffers.map((o) => (
                     <TableRow key={o.id}>
-                      <TableCell className="font-medium">{o.product!.name}</TableCell>
+                      <TableCell>{renderProductCell(o.product!.name)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Tag className="h-3.5 w-3.5 text-primary" />
@@ -202,7 +213,7 @@ export default function OffersPage() {
                 <TableBody>
                   {withoutOffers.map((p) => (
                     <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.name}</TableCell>
+                      <TableCell>{renderProductCell(p.name)}</TableCell>
                       <TableCell>{p.category}</TableCell>
                       <TableCell className="text-right">₹{Number(p.price).toFixed(2)}</TableCell>
                       <TableCell className="text-right">{p.stock}</TableCell>
