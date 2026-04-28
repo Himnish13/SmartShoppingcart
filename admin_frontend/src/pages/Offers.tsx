@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Tag, Trash2, Loader } from "lucide-react";
+import { Pencil, Plus, Search, Tag, Trash2, Loader } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,12 +40,22 @@ export default function OffersPage() {
   const { addOffer, updateOffer, deleteOffer } = useOfferMutations();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Offer>(empty());
+  const [q, setQ] = useState("");
   const isAdmin = localStorage.getItem("userRole")?.toUpperCase() === "ADMIN";
 
   const productMap = useMemo(() => Object.fromEntries(products.map((p) => [p.id, p])), [products]);
-  const withOffers = offers.map((o) => ({ ...o, product: productMap[o.productId] })).filter((x) => x.product);
+  const withOffers = offers
+    .map((o) => ({ ...o, product: productMap[o.productId] }))
+    .filter((x) => x.product)
+    .filter((x) =>
+      x.product!.name.toLowerCase().includes(q.toLowerCase()) ||
+      x.title.toLowerCase().includes(q.toLowerCase())
+    );
   const productIdsWithOffer = new Set(offers.map((o) => o.productId));
-  const withoutOffers = products.filter((p) => !productIdsWithOffer.has(p.id));
+  const withoutOffers = products.filter((p) => !productIdsWithOffer.has(p.id)).filter((p) =>
+    p.name.toLowerCase().includes(q.toLowerCase()) ||
+    p.category.toLowerCase().includes(q.toLowerCase())
+  );
 
   const startNew = (productId = "") => {
     setDraft(empty(productId));
@@ -101,6 +111,16 @@ export default function OffersPage() {
         ) : undefined
       }
     >
+      <div className="mb-4 rounded-2xl border border-border bg-card shadow-card">
+        <div className="flex items-center gap-3 p-4">
+          <div className="relative w-full max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search offers or products..." className="pl-9" />
+          </div>
+          <p className="ml-auto text-sm text-muted-foreground">{withOffers.length + withoutOffers.length} matching</p>
+        </div>
+      </div>
+
       <Tabs defaultValue="with" className="space-y-4">
         <TabsList className="bg-secondary/60">
           <TabsTrigger value="with">Products with offers ({withOffers.length})</TabsTrigger>
