@@ -167,11 +167,6 @@ const ListChoicePage = () => {
       </div>
 
       <div className="right-section">
-        <div className="top-dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
         <div className="listChoiceContent">
           <h1>Have Your list Ready?</h1>
           <p>Scan the QR code with your phone to import your list</p>
@@ -181,14 +176,10 @@ const ListChoicePage = () => {
             <QRGenerator value={mobileUrl} size={qrSize} />
           </div>
 
-          <div className="qr-url-hint">
-            {mobileUrl || "Waiting for backend…"}
-          </div>
-
           <p className="or-text">OR</p>
 
           <p className="small-text">
-            Don't have a list ready? Lets make it together
+            Don't have a list ready? Let's make it together
           </p>
 
           <button 

@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3200";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://10.76.31.249:3200";
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem("authToken");
