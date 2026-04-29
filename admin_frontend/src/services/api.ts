@@ -53,9 +53,29 @@ export const api = {
   getAllProducts: async () => {
     try {
       const response = await makeRequest("/products");
-      return Array.isArray(response) ? response : response.data || [];
+      const products = Array.isArray(response) ? response : response.data || [];
+      return products.map((product: any) => ({
+        ...product,
+        id: String(product.id),
+        image: product.image || product.images || "",
+        status:
+          product.status === "active"
+            ? "active"
+            : product.stock > 0
+              ? "draft"
+              : "out_of_stock",
+      }));
     } catch (error) {
       console.error("Failed to fetch products:", error);
+      return [];
+    }
+  },
+  getCategories: async () => {
+    try {
+      const response = await makeRequest("/products/categories");
+      return Array.isArray(response) ? response : response.data || [];
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
       return [];
     }
   },
@@ -72,6 +92,7 @@ export const api = {
     price: product.price,
     category_id: product.category,
     stock: product.stock,
+    image_url: product.image || null,
   }),
   updateProduct: (id: string, product: any) =>
     makeRequest(`/admin/products/${id}`, "PUT", {
@@ -79,6 +100,7 @@ export const api = {
       price: product.price,
       category_id: product.category,
       stock: product.stock,
+      image_url: product.image || null,
       is_active: product.status === "active",
     }),
   deleteProduct: (id: string) => makeRequest(`/admin/products/${id}`, "DELETE"),
