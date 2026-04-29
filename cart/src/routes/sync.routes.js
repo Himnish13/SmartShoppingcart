@@ -11,7 +11,7 @@ router.post("/push/feedback", controller.pushFeedback);
 
 // Debug endpoint to test sync
 router.get("/debug/status", (req, res) => {
-  const SERVER_URL = process.env.SERVER_URL || "http://localhost:3200";
+  const SERVER_URL = process.env.SERVER_URL || "http://10.76.31.249:3200";
   res.json({
     status: "Sync system operational",
     SERVER_URL,

@@ -4,7 +4,7 @@ const syncService = require("../services/sync.service");
 const { attachLocalImageUrls } = require("../services/productImage.service");
 
 // Use environment variable or fallback to localhost
-const SERVER_URL = process.env.SERVER_URL || "http://localhost:3200";
+const SERVER_URL = process.env.SERVER_URL || "http://10.76.31.249:3200";
 
 exports.fullSync = async (req, res) => {
 

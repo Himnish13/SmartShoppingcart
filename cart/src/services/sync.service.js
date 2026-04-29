@@ -1,7 +1,7 @@
 const axios = require("axios");
 const db = require("../config/sqlite");
 
-const SERVER_URL = process.env.SERVER_URL || "http://localhost:3200";
+const SERVER_URL = process.env.SERVER_URL || "http://10.76.31.249:3200";
 
 function getCartId() {
   return new Promise((resolve) => {

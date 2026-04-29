@@ -1,0 +1,32 @@
+/* Global drag-to-scroll UX helpers.
+   - `drag-scroll-no-select` is applied immediately on press.
+   - `drag-scroll-active` is applied once an actual drag begins. */
+
+.drag-scroll-no-select,
+.drag-scroll-no-select * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+.drag-scroll-no-select {
+  -webkit-touch-callout: none;
+}
+
+.drag-scroll-active {
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.drag-scroll-active img,
+.drag-scroll-active a {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+.drag-scroll-active {
+  cursor: grabbing;
+}
+
+.drag-scroll-active * {
+  cursor: grabbing;
+}
