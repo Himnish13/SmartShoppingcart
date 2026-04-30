@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 
 .routing-container {
@@ -155,10 +155,26 @@
   transition: all 0.2s ease;
   background: #ffffff;
 }
+.selection-item.out-of-stock {
+  opacity: 0.55;
+  filter: grayscale(0.9);
+  cursor: not-allowed;
+}
+.oos-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.55);
+}
 
 .selection-item:hover {
   border-color: #cbd5e1;
   background: #f8fafc;
+}
+
+.selection-item.out-of-stock:hover {
+  border-color: #f1f5f9;
+  background: #ffffff;
 }
 
 .selection-item.selected {

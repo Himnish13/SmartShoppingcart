@@ -14,7 +14,128 @@ export const ScanProvider = ({ children }) => {
   const [scanType, setScanType] = useState("add");
   const [scanStatus, setScanStatus] = useState("idle"); // "idle", "waiting", "success"
 
+  // Shopping-list out-of-stock watcher (global)
+  const SHOP_OOS_SKIPPED_KEY = "smartcart:shoplist:oosSkipped";
+  const [shoppingOosPopupVisible, setShoppingOosPopupVisible] = useState(false);
+  const [shoppingOosPending, setShoppingOosPending] = useState([]); // [{product_id, name, image_url, quantity}]
+  const [shoppingOosLiveIds, setShoppingOosLiveIds] = useState([]); // product_ids currently out of stock AND in shopping list
+  const [shoppingOosSkippedIds, setShoppingOosSkippedIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem(SHOP_OOS_SKIPPED_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
   const lastScannedRef = useRef(null);
+
+  const persistSkipped = (next) => {
+    setShoppingOosSkippedIds(next);
+    try {
+      localStorage.setItem(SHOP_OOS_SKIPPED_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const uniq = (arr) => Array.from(new Set((arr || []).map((x) => String(x))));
+
+  const isShoppingOosSkipped = (productId) => {
+    const id = String(productId);
+    return shoppingOosSkippedIds.some((x) => String(x) === id);
+  };
+
+  const isShoppingOosLive = (productId) => {
+    const id = String(productId);
+    return shoppingOosLiveIds.some((x) => String(x) === id);
+  };
+
+  const isShoppingOosDisabled = (productId) => {
+    return isShoppingOosLive(productId) && isShoppingOosSkipped(productId);
+  };
+
+  const closeShoppingOosPopup = () => setShoppingOosPopupVisible(false);
+
+  const skipShoppingOos = (productIds) => {
+    const ids = Array.isArray(productIds) ? productIds : [productIds];
+    const next = uniq([...(shoppingOosSkippedIds || []), ...ids]);
+    persistSkipped(next);
+
+    setShoppingOosPending((prev) => {
+      const remaining = (prev || []).filter(
+        (p) => !ids.some((id) => String(id) === String(p.product_id))
+      );
+      if (remaining.length === 0) setShoppingOosPopupVisible(false);
+      return remaining;
+    });
+  };
+
+  const removeShoppingListItems = async (productIds) => {
+    const ids = Array.isArray(productIds) ? productIds : [productIds];
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          fetch("http://localhost:3500/shopping-list/remove", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id: id }),
+          }).catch(() => null)
+        )
+      );
+    } finally {
+      // Whether remove succeeded or not, remove from pending and mark skipped so we don't spam.
+      skipShoppingOos(ids);
+    }
+  };
+
+  const fetchShoppingListAndProducts = async () => {
+    const [shopRes, prodRes] = await Promise.all([
+      fetch("http://localhost:3500/shopping-list/items").catch(() => null),
+      fetch("http://localhost:3500/products").catch(() => null),
+    ]);
+
+    const shop = shopRes ? await shopRes.json().catch(() => []) : [];
+    const prods = prodRes ? await prodRes.json().catch(() => []) : [];
+
+    const productsById = new Map();
+    (Array.isArray(prods) ? prods : []).forEach((p) => {
+      productsById.set(String(p.product_id), p);
+    });
+
+    const outNow = [];
+    (Array.isArray(shop) ? shop : []).forEach((s) => {
+      const p = productsById.get(String(s.product_id));
+      const stock = Number(p?.stock);
+      if (Number.isFinite(stock) && stock <= 0) {
+        outNow.push({
+          product_id: s.product_id,
+          name: s.name ?? p?.name ?? "Unknown",
+          image_url: s.image_url ?? p?.image_url ?? "",
+          quantity: s.quantity ?? 1,
+        });
+      }
+    });
+
+    const outIds = uniq(outNow.map((x) => x.product_id));
+    setShoppingOosLiveIds(outIds);
+
+    // If something came back in stock, clear its skipped flag so future changes can notify again.
+    const skippedStillOut = (shoppingOosSkippedIds || []).filter((id) =>
+      outIds.some((o) => String(o) === String(id))
+    );
+    if (skippedStillOut.length !== shoppingOosSkippedIds.length) {
+      persistSkipped(skippedStillOut);
+    }
+
+    // Show popup only for newly out-of-stock items not yet skipped.
+    const pending = outNow.filter((x) => !isShoppingOosSkipped(x.product_id));
+    if (pending.length > 0) {
+      setShoppingOosPending(pending);
+      setShoppingOosPopupVisible(true);
+    }
+  };
 
   // Fetch Cart Items
   const fetchCartItems = async () => {
@@ -174,6 +295,33 @@ export const ScanProvider = ({ children }) => {
     fetchCartItems();
   }, []);
 
+  // Poll shopping list + products to detect sudden out-of-stock items.
+  useEffect(() => {
+    let cancelled = false;
+
+    const tick = async () => {
+      try {
+        await fetchShoppingListAndProducts();
+      } catch {
+        // ignore
+      }
+    };
+
+    // Kick once on mount.
+    tick();
+
+    const interval = setInterval(() => {
+      if (cancelled) return;
+      tick();
+    }, 8000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shoppingOosSkippedIds]);
+
   return (
     <ScanContext.Provider
       value={{
@@ -188,7 +336,19 @@ export const ScanProvider = ({ children }) => {
         popupIncrease,
         popupDecrease,
         closePopup,
-        fetchCartItems
+        fetchCartItems,
+
+        // Shopping-list out-of-stock API
+        shoppingOosPopupVisible,
+        shoppingOosPending,
+        shoppingOosLiveIds,
+        shoppingOosSkippedIds,
+        isShoppingOosLive,
+        isShoppingOosSkipped,
+        isShoppingOosDisabled,
+        closeShoppingOosPopup,
+        skipShoppingOos,
+        removeShoppingListItems,
       }}
     >
       {children}

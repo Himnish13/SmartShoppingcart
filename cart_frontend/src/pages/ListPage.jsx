@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./CartPage.css";
 import "./ReviewListPage.css";
 import { useNavigate } from "react-router-dom";
+import { useScan } from "../context/ScanContext";
 
 const ListPage = () => {
   const [items, setItems] = useState([]);
@@ -16,6 +17,7 @@ const ListPage = () => {
   const [stockError, setStockError] = useState(null);
   const [allProducts, setAllProducts] = useState([]);
   const navigate = useNavigate();
+  const { isShoppingOosDisabled } = useScan();
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -420,7 +422,10 @@ const ListPage = () => {
 
             <div className="items">
               {filteredItems.map((item) => (
-                <div key={item.product_id} className="item-card">
+                <div
+                  key={item.product_id}
+                  className={`item-card ${isShoppingOosDisabled(item.product_id) ? "out-of-stock" : ""}`}
+                >
                   <div className="item-image">
                     <img src={item.image_url} alt={item.name} />
                   </div>
@@ -434,6 +439,7 @@ const ListPage = () => {
                         type="button"
                         className="qty-btn"
                         onClick={() => decreaseQty(item.product_id, item.quantity)}
+                        disabled={isShoppingOosDisabled(item.product_id)}
                         aria-label={`Decrease quantity of ${item.name}`}
                       >
                         −
@@ -445,6 +451,7 @@ const ListPage = () => {
                         type="button"
                         className="qty-btn"
                         onClick={() => increaseQty(item.product_id, item.quantity)}
+                        disabled={isShoppingOosDisabled(item.product_id)}
                         aria-label={`Increase quantity of ${item.name}`}
                       >
                         +
@@ -455,6 +462,7 @@ const ListPage = () => {
                   <button
                     className="remove"
                     onClick={() => removeItem(item.product_id)}
+                    disabled={isShoppingOosDisabled(item.product_id)}
                     aria-label={`Remove ${item.name}`}
                     type="button"
                   >

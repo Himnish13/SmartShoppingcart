@@ -152,6 +152,17 @@
   border-bottom: 0.0625rem solid #e7e7e7;
 }
 
+.review-container .item-card.out-of-stock {
+  opacity: 0.5;
+  filter: grayscale(0.9);
+}
+
+.review-container .item-card.out-of-stock .qty-btn,
+.review-container .item-card.out-of-stock .remove {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .review-container .item-image {
   width: 4.875rem;
   height: 4.875rem;

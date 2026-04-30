@@ -9,6 +9,8 @@ const selectors = [
   'input[placeholder^="Search"]',
   'input[placeholder*="Search"]',
   'textarea.search',
+  // Enable for general editable textareas (e.g., feedback boxes)
+  'textarea',
 ];
 
 export default function VirtualKeyboardGlobal() {
