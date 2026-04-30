@@ -24,7 +24,7 @@
   border-radius: 0.9rem;
   border: 0.0625rem solid var(--vk-border);
   box-shadow: 0 0.75rem 2rem rgba(0,0,0,0.12);
-  z-index: 9999;
+  z-index: 40000;
   width: 200rem;
   color: var(--vk-text);
   font-family: inherit;
@@ -151,7 +151,7 @@
 
 /* responsive transitions */
 .vk-global { transition: left 160ms ease, top 160ms ease, width 160ms ease, right 160ms ease, bottom 160ms ease; }
-.hg-candidate-box { z-index: 10000; }
+.hg-candidate-box { z-index: 40001; }
 
 @media (max-width: 48em) {
   .vk-global {

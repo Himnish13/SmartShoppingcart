@@ -13,6 +13,7 @@ import RemainingPage from "./pages/RemainingPage";
 import VirtualKeyboardGlobal from "./components/VirtualKeyboard";
 import OffersPage from "./pages/OffersPage";
 import { ScanProvider } from "./context/ScanContext";
+import { useScan } from "./context/ScanContext";
 import ScanPopup from "./components/ScanPopup";
 
 function isEditableTarget(target) {
@@ -438,32 +439,130 @@ function setupGlobalDragToScroll() {
   };
 }
 
-function App() {
+function ShoppingOutOfStockPopup() {
+  const {
+    shoppingOosPopupVisible,
+    shoppingOosPending,
+    closeShoppingOosPopup,
+    skipShoppingOos,
+    removeShoppingListItems,
+  } = useScan();
+
+  if (!shoppingOosPopupVisible || !shoppingOosPending?.length) return null;
+
+  return (
+    <div className="scan-modal-backdrop" onClick={closeShoppingOosPopup} style={{ zIndex: 20000 }}>
+      <div className="scan-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 650 }}>
+        <button className="scan-close" onClick={closeShoppingOosPopup}>
+          ✕
+        </button>
+
+        <div className="scan-body" style={{ alignItems: "stretch" }}>
+          <div className="scan-info" style={{ width: "100%" }}>
+            <div className="scan-header-row" style={{ marginBottom: 8 }}>
+              <h3 style={{ margin: 0, color: "#b91c1c" }}>Out of Stock</h3>
+              <span className="scan-badge">Shopping List</span>
+            </div>
+            <div style={{ color: "#666", fontSize: 14 }}>
+              Some items in your shopping list are now out of stock.
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16, maxHeight: "45vh", overflowY: "auto", paddingRight: 6 }}>
+              {shoppingOosPending.map((it) => (
+                <div key={it.product_id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: 12, borderRadius: 12, border: "1px solid #eee", background: "#fff" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 12, background: "#fdf5e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                      {it.image_url ? (
+                        <img src={it.image_url} alt={it.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      ) : (
+                        <div style={{ fontSize: 24 }}>📦</div>
+                      )}
+                    </div>
+
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: "#1f1f1f", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {it.name}
+                      </div>
+                      <div style={{ fontSize: 13, color: "#666", marginTop: 2 }}>Qty: {it.quantity ?? 1}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => removeShoppingListItems(it.product_id)}
+                      style={{ background: "#fee2e2", color: "#b91c1c", border: "1px solid #fecaca", padding: "10px 12px", borderRadius: 10, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Remove
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => skipShoppingOos(it.product_id)}
+                      style={{ background: "#f3f1ff", color: "#2b2b2b", border: "1px solid #ddd", padding: "10px 12px", borderRadius: 10, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Keep
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="scan-footer" style={{ justifyContent: "flex-end", gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => skipShoppingOos(shoppingOosPending.map((x) => x.product_id))}
+            style={{ background: "transparent", border: "1px solid #ddd", padding: "10px 14px", borderRadius: 10, cursor: "pointer", fontWeight: 800 }}
+          >
+            Keep All
+          </button>
+          <button
+            type="button"
+            onClick={() => removeShoppingListItems(shoppingOosPending.map((x) => x.product_id))}
+            style={{ background: "#b91c1c", color: "#fff", border: "none", padding: "10px 14px", borderRadius: 10, cursor: "pointer", fontWeight: 800 }}
+          >
+            Remove All
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppShell() {
   useEffect(() => {
     return setupGlobalDragToScroll();
   }, []);
 
   return (
+    <BrowserRouter>
+      <VirtualKeyboardGlobal />
+      <ScanPopup />
+      <ShoppingOutOfStockPopup />
+      <Routes>
+        <Route path="/" element={<StartPage />} />
+        <Route path="/list-choice" element={<ListChoicePage />} />
+        <Route path="/create-list" element={<CreateListPage />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/list" element={<ListPage />} />
+        <Route path="/review-list" element={<ReviewListPage />} />
+        <Route path="/routing" element={<RoutingPage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/remaining" element={<RemainingPage />} />
+        <Route path="/offers" element={<OffersPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
     <ScanProvider>
-      <BrowserRouter>
-        <VirtualKeyboardGlobal />
-        <ScanPopup />
-        <Routes>
-          <Route path="/" element={<StartPage />} />
-          <Route path="/list-choice" element={<ListChoicePage />} />
-          <Route path="/create-list" element={<CreateListPage />} />
-          <Route path="/explore" element={<ExplorePage />} />
-          <Route path="/list" element={<ListPage />} />
-          <Route path="/review-list" element={<ReviewListPage />} />
-          <Route path="/routing" element={<RoutingPage />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/remaining" element={<RemainingPage />} />
-          <Route path="/offers" element={<OffersPage />} />
-        </Routes>
-      </BrowserRouter>
+      <AppShell />
     </ScanProvider>
-  )
+  );
 }
 
 export default App

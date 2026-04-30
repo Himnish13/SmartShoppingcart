@@ -31,7 +31,7 @@
 .listchoice-container .logo,
 .listchoice-container .startlogo {
   font-size: 1.6rem;
-  font-family: poppins, sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   font-weight: 600;
   color: black;
 }
@@ -131,7 +131,7 @@
 
 .listchoice-container .primary-btn {
   background: #fbd796;
-  color: black;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   border: none;
   padding: 0.75rem 1.875rem;
   border-radius: 0.625rem;

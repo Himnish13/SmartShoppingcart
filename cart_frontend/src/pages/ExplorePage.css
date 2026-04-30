@@ -57,7 +57,7 @@
   padding: 0.75rem 1rem 0.75rem 3.5rem;
   border-radius: 0.875rem;
   border: 2px solid #e8e2f8;
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   font-size: 0.95rem;
   color: #2d2456;
   outline: none;
@@ -127,7 +127,7 @@
   border: 1.5px solid #e2e8f0;
   background: #ffffff;
   color: #64748b;
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -289,7 +289,7 @@
   border: none;
   background: #6b63c6;
   color: white;
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;

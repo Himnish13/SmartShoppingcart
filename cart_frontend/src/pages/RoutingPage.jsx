@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./RoutingPage.css";
 import { useNavigate } from "react-router-dom";
 import { routingService } from "../services/routing.service";
+import { useScan } from "../context/ScanContext";
 
 const ROUTE_CACHE_KEY = "smartcart:lastRoute";
 const ROUTE_PRODUCTS_KEY = "smartcart:lastRouteProductIds";
@@ -13,6 +14,7 @@ const RoutingPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { isShoppingOosDisabled } = useScan();
 
   const fetchJson = async (url, options) => {
     const res = await fetch(url, options);
@@ -200,18 +202,29 @@ const RoutingPage = () => {
           ) : (
             <div className="items-list">
               {items.map((item) => (
+                (() => {
+                  const disabled = isShoppingOosDisabled(item.product_id);
+                  const selected = selectedItems.has(item.product_id);
+                  return (
                 <div
                   key={item.product_id}
                   className={`selection-item ${
-                    selectedItems.has(item.product_id) ? "selected" : ""
+                    selected ? "selected" : ""
+                  } ${
+                    disabled ? "out-of-stock" : ""
                   }`}
-                  onClick={() => handleItemToggle(item.product_id)}
+                  onClick={() => {
+                    if (!disabled) handleItemToggle(item.product_id);
+                  }}
                 >
                   <div className="item-checkbox">
                     <input
                       type="checkbox"
-                      checked={selectedItems.has(item.product_id)}
-                      onChange={() => handleItemToggle(item.product_id)}
+                      checked={selected}
+                      disabled={disabled}
+                      onChange={() => {
+                        if (!disabled) handleItemToggle(item.product_id);
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
@@ -223,6 +236,9 @@ const RoutingPage = () => {
                   <div className="item-info">
                     <h4>{item.name}</h4>
                     <p>Qty: {item.quantity}</p>
+                    {disabled && (
+                      <p className="oos-note">Out of stock</p>
+                    )}
                   </div>
 
                   <div className="item-section">
@@ -231,6 +247,8 @@ const RoutingPage = () => {
                     </span>
                   </div>
                 </div>
+                  );
+                })()
               ))}
             </div>
           )}
