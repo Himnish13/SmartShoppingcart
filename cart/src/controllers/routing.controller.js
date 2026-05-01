@@ -4,6 +4,7 @@ const { getGraph } = require("../routing/graph");
 const aStar = require("../routing/astar");
 const multiRoute = require("../routing/multiRoute");
 const { loadStoreLayout } = require("../routing/graphLoader");
+const mapService = require("../services/map.services");
 
 const crowdService = require("../services/crowd.service");
 
@@ -23,9 +24,9 @@ function createHeuristic(targetNode, allNodes) {
 }
 
 exports.getRoute = (req, res) => {
-    const { startNode, productId, productIds } = req.body;
+   const { startNode, productId, productIds, x, y } = req.body;
 
-    console.log("🚀 Routing Request:", { startNode, productId, productIds });
+    console.log("🚀 Routing Request:", { startNode, productId, productIds, x, y });
 
     // Load graph and nodes in parallel
     getGraph((graphErr, graph) => {
@@ -34,8 +35,26 @@ exports.getRoute = (req, res) => {
             return res.status(500).json({ message: "Graph loading failed" });
         }
 
-        if (!graph[startNode]) {
-            console.error("❌ Invalid start node:", startNode);
+        let currentStartNode = startNode;
+
+        // 🔥 NEW: If BLE coordinates are sent
+        if (x !== undefined && y !== undefined) {
+            const nearest = mapService.getNearestNode(x, y);
+
+            if (!nearest) {
+                console.error("❌ No nearest node found for:", x, y);
+                return res.status(400).json({ message: "Invalid position" });
+            }
+
+            currentStartNode = nearest.node_id;
+
+            console.log("📍 BLE Position:", x, y);
+            console.log("📍 Mapped to Node:", currentStartNode);
+        }
+
+        // fallback validation
+        if (!graph[currentStartNode]) {
+            console.error("❌ Invalid start node:", currentStartNode);
             return res.status(400).json({ message: "Invalid start node" });
         }
 
@@ -92,7 +111,7 @@ exports.getRoute = (req, res) => {
                                     const heuristic = createHeuristic(targets[0], allNodes);
                                     const path = multiRoute(
                                         graph,
-                                        startNode,
+                                        currentStartNode,
                                         targets,
                                         heuristic,
                                         crowdData
@@ -145,7 +164,7 @@ exports.getRoute = (req, res) => {
                                     const heuristic = createHeuristic(targets[0], allNodes);
                                     const path = multiRoute(
                                         graph,
-                                        startNode,
+                                        currentStartNode,
                                         targets,
                                         heuristic,
                                         crowdData
@@ -187,7 +206,7 @@ exports.getRoute = (req, res) => {
                                             const heuristic = createHeuristic(product.node_id, allNodes);
                                             const path = aStar(
                                                 graph,
-                                                startNode,
+                                                currentStartNode,
                                                 product.node_id,
                                                 heuristic,
                                                 crowdData
