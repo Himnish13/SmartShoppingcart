@@ -29,6 +29,7 @@ const mobileController = require("./controllers/mobile.controller");
 const feedbackRoutes = require("./routes/feedback.routes");
 const { startAutoSync } = require("./services/autoSync.service");
 // const { initPositionSystem } = require("./services/position.system");
+const mapService = require("./services/map.services");
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/shopping-list", shoppingListRoutes);
@@ -40,7 +41,12 @@ app.use("/offers", offersRoutes);
 app.use("/mobile", mobileRoutes);
 app.use("/feedback", feedbackRoutes);
 app.get("/system/ip", mobileController.getLocalIp);
+mapService.loadNodes((err) => {
 
+  if (err) console.error("Node load error");
+  else console.log("✅ Nodes ready");
+
+});
 
 // initPositionSystem();
 const PORT = Number(process.env.PORT || 3500);
