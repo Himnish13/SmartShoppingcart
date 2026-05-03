@@ -10,6 +10,8 @@ export const queryKeys = {
   offers: ["offers"],
   carts: ["carts"],
   cartDevices: ["cart-devices"],
+  crowd: ["crowd"],
+  mapNodes: ["map-nodes"],
   bills: ["bills"],
   feedbackSummary: ["feedback", "summary"],
   productFeedback: (productId: string) => ["feedback", "product", productId],
@@ -68,6 +70,26 @@ export const useCartDevices = () => {
   });
 };
 
+export const useCrowd = () => {
+  return useQuery({
+    queryKey: queryKeys.crowd,
+    queryFn: () => api.getCrowd(),
+    staleTime: 1000 * 15,
+    retry: 2,
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+export const useMapNodes = () => {
+  return useQuery({
+    queryKey: queryKeys.mapNodes,
+    queryFn: () => api.getMapNodes(),
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
 export const useCartMutations = () => {
   const queryClient = useQueryClient();
 
@@ -99,6 +121,26 @@ export const useCartMutations = () => {
   return {
     startCart: startCartMutation,
     stopCart: stopCartMutation,
+  };
+};
+
+export const useCrowdMutations = () => {
+  const queryClient = useQueryClient();
+
+  const updateCrowdMutation = useMutation({
+    mutationFn: ({ nodeId, crowdLevel }: { nodeId: string; crowdLevel: number }) =>
+      api.updateCrowd(nodeId, crowdLevel),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.crowd });
+      toast.success(`Updated crowd for node ${variables.nodeId}`);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update crowd data");
+    },
+  });
+
+  return {
+    updateCrowd: updateCrowdMutation,
   };
 };
 

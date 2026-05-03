@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Products from "./pages/Products.tsx";
 import Offers from "./pages/Offers.tsx";
 import Carts from "./pages/Carts.tsx";
+import Crowd from "./pages/Crowd.tsx";
 import Bills from "./pages/Bills.tsx";
 import Feedback from "./pages/Feedback.tsx";
 import Login from "./pages/Login.tsx";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/products" element={<Products />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/carts" element={<Carts />} />
+            <Route path="/crowd" element={<Crowd />} />
             <Route path="/bills" element={<Bills />} />
             <Route path="/feedback" element={<Feedback />} />
           </Route>

@@ -102,6 +102,11 @@ router.get(
   crowdController.getCrowd
 );
 
+router.put(
+  "/crowd",
+  crowdController.setCrowd
+);
+
 router.get(
   "/carts",
   cartController.getActiveCarts
