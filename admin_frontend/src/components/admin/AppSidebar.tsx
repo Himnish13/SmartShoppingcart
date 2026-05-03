@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, Package, ReceiptText, ShoppingCart, Sparkles, Tag } from "lucide-react";
+import { LayoutDashboard, LogOut, Package, ReceiptText, ShoppingCart, Sparkles, Tag, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const items = [
   { title: "Products", url: "/products", icon: Package },
   { title: "Offers", url: "/offers", icon: Tag },
   { title: "Carts", url: "/carts", icon: ShoppingCart },
+  { title: "Crowd", url: "/crowd", icon: Users },
   { title: "Bills", url: "/bills", icon: ReceiptText },
   { title: "Feedback", url: "/feedback", icon: Sparkles },
 ];

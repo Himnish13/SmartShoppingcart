@@ -173,6 +173,20 @@ export const api = {
 
   // Analytics
   getCrowd: () => makeRequest("/admin/crowd"),
+  updateCrowd: (nodeId: string, crowdLevel: number) =>
+    makeRequest("/admin/crowd", "PUT", {
+      node_id: nodeId,
+      crowd_level: crowdLevel,
+    }),
+  getMapNodes: async () => {
+    try {
+      const response = await makeRequest("/map/nodes");
+      return Array.isArray(response) ? response : response.data || [];
+    } catch (error) {
+      console.error("Failed to fetch map nodes:", error);
+      return [];
+    }
+  },
 
   // Analytics Charts
   getRevenueTrend: async () => {
