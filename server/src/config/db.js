@@ -1,6 +1,6 @@
 const mysql = require("mysql2");
 
-const db = mysql.createPool(process.env.MYSQL_URL);
+const db = mysql.createPool(process.env.MYSQL_PUBLIC_URL);
 
 function ensureProductImagesColumn() {
   db.query(
