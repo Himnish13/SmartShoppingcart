@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://10.76.31.249:3200";
+const API_BASE_URL = import.meta.env.VITE_API_URL ;
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem("authToken");
@@ -12,38 +12,42 @@ const makeRequest = async (
     "Content-Type": "application/json",
   };
 
-  const token = getToken();
+  const token = localStorage.getItem("authToken");
+
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const config: RequestInit = {
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  console.log("Request URL:", url);
+
+  const response = await fetch(url, {
     method,
     headers,
-  };
+    ...(body &&
+      (method === "POST" ||
+        method === "PUT" ||
+        method === "PATCH") && {
+        body: JSON.stringify(body),
+      }),
+  });
 
-  if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
-    config.body = JSON.stringify(body);
-  }
+  const text = await response.text();
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  console.log("Response:", text.substring(0, 200));
 
   if (!response.ok) {
-    let errorMessage = "API request failed";
-
-    try {
-      const error = await response.json();
-      errorMessage = error.message || error.error || errorMessage;
-    } catch {
-      errorMessage = response.statusText || errorMessage;
-    }
-
-    throw new Error(errorMessage);
+    throw new Error(`HTTP ${response.status}: ${text}`);
   }
 
-  return response.json();
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("Invalid JSON received:", text);
+    throw err;
+  }
 };
-
 // Products API
 export const api = {
   // Auth

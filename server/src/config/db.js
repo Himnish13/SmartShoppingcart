@@ -1,11 +1,15 @@
 const mysql = require("mysql2");
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
-  user: process.env.DB_USER ,
+  user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 function ensureProductImagesColumn() {
@@ -25,7 +29,10 @@ function ensureProductImagesColumn() {
         "ALTER TABLE product_mastery ADD COLUMN images TEXT NULL",
         (alterErr) => {
           if (alterErr) {
-            console.error("Failed to add images column to product_mastery:", alterErr);
+            console.error(
+              "Failed to add images column to product_mastery:",
+              alterErr
+            );
             return;
           }
 
@@ -36,13 +43,16 @@ function ensureProductImagesColumn() {
   );
 }
 
-db.connect(err => {
+db.getConnection((err, connection) => {
   if (err) {
     console.error("MySQL connection error:", err);
-  } else {
-    console.log("Connected to MySQL");
-    ensureProductImagesColumn();
+    return;
   }
+
+  console.log("Connected to MySQL");
+  connection.release();
+
+  ensureProductImagesColumn();
 });
 
 module.exports = db;
