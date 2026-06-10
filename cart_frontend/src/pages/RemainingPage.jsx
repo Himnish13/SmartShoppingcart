@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./CartPage.css";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../config/api";
 
 const RemainingPage = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const RemainingPage = () => {
 
   const fetchShopping = async () => {
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/items");
+      const res = await fetch(apiUrl("/shopping-list/items"));
       const data = await res.json();
       setShoppingItems(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -23,7 +24,7 @@ const RemainingPage = () => {
 
   const fetchCart = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
       const data = await res.json();
       setCartItems(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -70,7 +71,7 @@ const RemainingPage = () => {
       return removeFromShoppingList(product_id);
     }
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/update", {
+      const res = await fetch(apiUrl("/shopping-list/update"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id, quantity: newQty }),
@@ -90,7 +91,7 @@ const RemainingPage = () => {
 
   const removeFromShoppingList = async (product_id) => {
     try {
-      await fetch("http://localhost:3500/shopping-list/remove", {
+      await fetch(apiUrl("/shopping-list/remove"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id }),

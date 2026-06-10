@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import "./ListChoicePage.css";
 import { useNavigate } from "react-router-dom";
 import QRGenerator from "../components/QRGenerator";
-
-const API = "http://localhost:3500";
+import { apiUrl } from "../config/api";
 
 const ListChoicePage = () => {
   const navigate = useNavigate();
   const [mobileUrl, setMobileUrl] = useState("");
   const [importStatus, setImportStatus] = useState("idle"); // idle | importing | success
   const [qrSize, setQrSize] = useState(200);
+  const [mobileImportAvailable, setMobileImportAvailable] = useState(true);
   const pollingRef = useRef(null);
 
   useEffect(() => {
@@ -30,11 +30,10 @@ const ListChoicePage = () => {
   // 1. On mount: fetch local IP to build the QR URL, then start polling
   useEffect(() => {
     let alive = true;
-    let retryTimer = null;
 
     const resolveMobileUrl = async () => {
       try {
-        const res = await fetch(`${API}/system/ip`);
+        const res = await fetch(apiUrl("/system/ip"));
         if (!res.ok) throw new Error("system/ip failed");
         const data = await res.json();
         const ip = String(data?.ip || "").trim();
@@ -48,23 +47,30 @@ const ListChoicePage = () => {
       } catch (_) {
         if (!alive) return;
         setMobileUrl("");
-        retryTimer = setTimeout(resolveMobileUrl, 2500);
+        setMobileImportAvailable(false);
       }
     };
 
     resolveMobileUrl();
 
     // Reset mobile status to idle on cart side when entering this page
-    fetch(`${API}/mobile/status`, {
+    fetch(apiUrl("/mobile/status"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "idle" }),
-    }).catch(() => {});
+    }).catch(() => {
+      if (alive) setMobileImportAvailable(false);
+    });
 
     // Start polling for mobile status
     pollingRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`${API}/mobile/status`);
+        const res = await fetch(apiUrl("/mobile/status"));
+        if (!res.ok) {
+          setMobileImportAvailable(false);
+          clearInterval(pollingRef.current);
+          return;
+        }
         const data = await res.json();
         const { status, missingItems: missing } = data;
 
@@ -83,12 +89,14 @@ const ListChoicePage = () => {
             } 
           }), 2000);
         }
-      } catch (_) {}
+      } catch (_) {
+        setMobileImportAvailable(false);
+        clearInterval(pollingRef.current);
+      }
     }, 1200);
 
     return () => {
       alive = false;
-      if (retryTimer) clearTimeout(retryTimer);
       clearInterval(pollingRef.current);
     };
   }, [navigate]);
@@ -169,7 +177,11 @@ const ListChoicePage = () => {
       <div className="right-section">
         <div className="listChoiceContent">
           <h1>Have Your list Ready?</h1>
-          <p>Scan the QR code with your phone to import your list</p>
+          <p>
+            {mobileImportAvailable
+              ? "Scan the QR code with your phone to import your list"
+              : "Mobile import is unavailable right now on the deployed backend. You can still make the list here."}
+          </p>
 
           {/* Real QR code */}
           <div className="qr-box">
@@ -187,8 +199,8 @@ const ListChoicePage = () => {
             onClick={async () => {
               try {
                 await Promise.all([
-                  fetch(`${API}/shopping-list/clear`, { method: "POST" }),
-                  fetch(`${API}/cart/clear`, { method: "POST" })
+                  fetch(apiUrl("/shopping-list/clear"), { method: "POST" }),
+                  fetch(apiUrl("/cart/clear"), { method: "POST" })
                 ]);
               } catch (e) {
                 console.error("Failed to clear previous session data", e);

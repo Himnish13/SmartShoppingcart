@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CartPage.css";
 import "./ExplorePage.css";
+import { apiUrl } from "../config/api";
 
 const ExplorePage = () => {
   const [products, setProducts] = useState([]);
@@ -20,7 +21,7 @@ const ExplorePage = () => {
   // Sidebar specific cart items fetch
   const fetchCartItems = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
       const data = await res.json();
       setCartItems(data);
     } catch (err) {
@@ -44,7 +45,7 @@ const ExplorePage = () => {
 
   // ✅ FETCH ALL PRODUCTS
   const fetchAllProducts = () => {
-    fetch("http://localhost:3500/products")
+    fetch(apiUrl("/products"))
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.log(err));
@@ -52,7 +53,7 @@ const ExplorePage = () => {
 
   // ✅ FETCH CATEGORIES + PRELOAD EXISTING SHOPPING LIST
   useEffect(() => {
-    fetch("http://localhost:3500/products/categories")
+    fetch(apiUrl("/products/categories"))
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.log(err));
@@ -60,7 +61,7 @@ const ExplorePage = () => {
     fetchAllProducts();
     fetchCartItems();
 
-    fetch("http://localhost:3500/shopping-list/items")
+    fetch(apiUrl("/shopping-list/items"))
       .then((res) => res.json())
       .then((items) => {
         if (!Array.isArray(items) || items.length === 0) return;
@@ -84,7 +85,7 @@ const ExplorePage = () => {
       fetchAllProducts();
       setSelectedCategory(null);
     } else {
-      fetch(`http://localhost:3500/products/category/${id}`)
+      fetch(apiUrl(`/products/category/${id}`))
         .then((res) => res.json())
         .then((data) => setProducts(data))
         .catch((err) => console.log(err));
@@ -97,7 +98,7 @@ const ExplorePage = () => {
   const addItem = async (item) => {
     const newQty = 1;
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/add", {
+      const res = await fetch(apiUrl("/shopping-list/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -125,7 +126,7 @@ const ExplorePage = () => {
   const increaseQty = async (id) => {
     const newQty = cart[id].qty + 1;
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/update", {
+      const res = await fetch(apiUrl("/shopping-list/update"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -156,7 +157,7 @@ const ExplorePage = () => {
 
     try {
       if (newQty === 0) {
-        await fetch("http://localhost:3500/shopping-list/remove", {
+        await fetch(apiUrl("/shopping-list/remove"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ product_id: id }),
@@ -168,7 +169,7 @@ const ExplorePage = () => {
           return updated;
         });
       } else {
-        await fetch("http://localhost:3500/shopping-list/update", {
+        await fetch(apiUrl("/shopping-list/update"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./CartPage.css";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../config/api";
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const CartPage = () => {
   // ─── fetch cart ──────────────────────────────────────────────────────────────
   const fetchCart = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
       const data = await res.json();
       setCartItems(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -36,7 +37,7 @@ const CartPage = () => {
     // remove entire line (send quantity equal to current qty)
     setRemoving(barcode);
     try {
-      await fetch("http://localhost:3500/cart/remove", {
+      await fetch(apiUrl("/cart/remove"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode, quantity: qtyToRemove }),
@@ -51,7 +52,7 @@ const CartPage = () => {
 
   const handleIncrease = async (barcode) => {
     try {
-      const res = await fetch("http://localhost:3500/cart/add", {
+      const res = await fetch(apiUrl("/cart/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode, quantity: 1 }),
@@ -71,7 +72,7 @@ const CartPage = () => {
 
   const handleDecrease = async (barcode) => {
     try {
-      await fetch("http://localhost:3500/cart/remove", {
+      await fetch(apiUrl("/cart/remove"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode, quantity: 1 }),

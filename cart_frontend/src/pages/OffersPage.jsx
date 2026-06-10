@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./CartPage.css";
 import "./OffersPage.css";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../config/api";
 
 const OffersPage = () => {
   const [offers, setOffers] = useState([]);
@@ -15,7 +16,7 @@ const OffersPage = () => {
 
   const fetchCartItems = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
       const data = await res.json();
       setCartItems(data);
     } catch (err) {
@@ -30,7 +31,7 @@ const OffersPage = () => {
 
   const fetchOffers = async () => {
     try {
-      const res = await fetch("http://localhost:3500/offers");
+      const res = await fetch(apiUrl("/offers"));
       const data = await res.json();
       setOffers(Array.isArray(data) ? data : []);
     } catch (e) {

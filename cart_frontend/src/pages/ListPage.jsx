@@ -3,6 +3,7 @@ import "./CartPage.css";
 import "./ReviewListPage.css";
 import { useNavigate } from "react-router-dom";
 import { useScan } from "../context/ScanContext";
+import { apiUrl } from "../config/api";
 
 const ListPage = () => {
   const [items, setItems] = useState([]);
@@ -26,7 +27,7 @@ const ListPage = () => {
   // Sidebar specific cart items fetch
   const fetchCartItems = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
       const data = await res.json();
       setCartItems(data);
     } catch (err) {
@@ -58,7 +59,7 @@ const ListPage = () => {
   // ✅ FETCH FULL LIST
   const fetchAllList = async ({ updateVisible = selectedCategory === null } = {}) => {
     try {
-      const data = await fetchJson("http://localhost:3500/shopping-list/items");
+      const data = await fetchJson(apiUrl("/shopping-list/items"));
       setAllItems(data);
       if (updateVisible) setItems(data);
       return data;
@@ -72,7 +73,7 @@ const ListPage = () => {
   const fetchListByCategory = async (categoryId) => {
     try {
       const data = await fetchJson(
-        `http://localhost:3500/shopping-list/categoryItems/${categoryId}`
+        apiUrl(`/shopping-list/categoryItems/${categoryId}`)
       );
       setItems(data);
       return data;
@@ -86,7 +87,7 @@ const ListPage = () => {
   // ✅ FETCH SUGGESTIONS
   const fetchSuggestions = async (shoppingItems) => {
     try {
-      const allProducts = await fetchJson("http://localhost:3500/products");
+      const allProducts = await fetchJson(apiUrl("/products"));
       const ids = shoppingItems.map((i) => i.product_id);
       const filtered = allProducts.filter((p) => !ids.includes(p.product_id));
       const random = filtered.sort(() => 0.5 - Math.random()).slice(0, 4);
@@ -101,7 +102,7 @@ const ListPage = () => {
       const list = await fetchAllList();
       fetchSuggestions(list);
       try {
-        const allProds = await fetchJson("http://localhost:3500/products");
+        const allProds = await fetchJson(apiUrl("/products"));
         setAllProducts(allProds);
       } catch (err) {
         console.log(err);
@@ -110,14 +111,14 @@ const ListPage = () => {
     load();
     fetchCartItems();
 
-    fetchJson("http://localhost:3500/products/categories")
+    fetchJson(apiUrl("/products/categories"))
       .then((data) => setCategories(Array.isArray(data) ? data : []))
       .catch((err) => console.log(err));
   }, []);
 
   // ❌ REMOVE
   const removeItem = async (id) => {
-    await fetch("http://localhost:3500/shopping-list/remove", {
+    await fetch(apiUrl("/shopping-list/remove"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id }),
@@ -132,7 +133,7 @@ const ListPage = () => {
 
   // ➕ INCREASE
   const increaseQty = async (id, qty) => {
-    const res = await fetch("http://localhost:3500/shopping-list/update", {
+    const res = await fetch(apiUrl("/shopping-list/update"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id, quantity: qty + 1 }),
@@ -158,7 +159,7 @@ const ListPage = () => {
       return;
     }
 
-    await fetch("http://localhost:3500/shopping-list/update", {
+    await fetch(apiUrl("/shopping-list/update"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id, quantity: qty - 1 }),
@@ -173,7 +174,7 @@ const ListPage = () => {
 
   // ➕ ADD FROM SUGGESTIONS
   const addSuggestion = async (item) => {
-    const res = await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch(apiUrl("/shopping-list/add"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -219,7 +220,7 @@ const ListPage = () => {
   };
 
   const handleAddSearchResult = async (product) => {
-    const res = await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch(apiUrl("/shopping-list/add"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

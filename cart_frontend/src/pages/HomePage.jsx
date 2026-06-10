@@ -3,6 +3,7 @@ import "./HomePage.css";
 import MapDisplay from "../components/MapDisplay";
 import { routingService } from "../services/routing.service";
 import { useLocation, useNavigate } from "react-router-dom";
+import { apiUrl } from "../config/api";
 
 const ROUTE_CACHE_KEY = "smartcart:lastRoute";
 
@@ -49,7 +50,7 @@ const HomePage = () => {
   const addOfferToList = async (offer) => {
     manualRouteRef.current = false;
     try {
-      await fetch("http://localhost:3500/shopping-list/add", {
+      await fetch(apiUrl("/shopping-list/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: offer.product_id, quantity: 1 }),
@@ -66,7 +67,7 @@ const HomePage = () => {
   const removeOfferFromList = async (offer) => {
     manualRouteRef.current = false;
     try {
-      await fetch("http://localhost:3500/shopping-list/remove", {
+      await fetch(apiUrl("/shopping-list/remove"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: offer.product_id }),
@@ -82,7 +83,7 @@ const HomePage = () => {
   // ✅ FETCH CART ITEMS
   const fetchCartItems = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
       const data = await res.json();
       setCartItems(data);
     } catch (err) {
@@ -107,7 +108,7 @@ const HomePage = () => {
   // ✅ FETCH PRODUCTS FOR SUGGESTIONS
   const fetchSuggestions = async () => {
     try {
-      const res = await fetch("http://localhost:3500/products");
+      const res = await fetch(apiUrl("/products"));
       const all = await res.json();
       setSuggestions(Array.isArray(all) ? all : []);
     } catch (err) {
@@ -118,7 +119,7 @@ const HomePage = () => {
   // ✅ FETCH SHOPPING LIST (for Upnext + route)
   const fetchShoppingList = async () => {
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/items");
+      const res = await fetch(apiUrl("/shopping-list/items"));
       const data = await res.json();
       setShoppingItems(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -132,7 +133,7 @@ const HomePage = () => {
     if (lastFetchedNodeRef.current === nodeId) return;
 
     try {
-      const res = await fetch("http://localhost:3500/recommend/near", {
+      const res = await fetch(apiUrl("/recommend/near"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentNode: nodeId })
@@ -409,7 +410,7 @@ const HomePage = () => {
   const removeItem = async (product_id) => {
     manualRouteRef.current = false;
     try {
-      await fetch("http://localhost:3500/shopping-list/remove", {
+      await fetch(apiUrl("/shopping-list/remove"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

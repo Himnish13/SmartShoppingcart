@@ -1,6 +1,6 @@
 // ✅ Routing Service - Handles all routing-related API calls
 
-const API_BASE = "http://localhost:3500";
+import { apiUrl } from "../config/api";
 
 const fetchJson = async (url, options) => {
   const res = await fetch(url, options);
@@ -30,7 +30,7 @@ export const routingService = {
    */
   generateRoute: async (startNode, productIds) => {
     try {
-      const response = await fetchJson(`${API_BASE}/routing/generate`, {
+      const response = await fetchJson(apiUrl("/routing/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +54,7 @@ export const routingService = {
    */
   generateRouteForAll: async (startNode) => {
     try {
-      const response = await fetchJson(`${API_BASE}/routing/generate`, {
+      const response = await fetchJson(apiUrl("/routing/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,7 +78,7 @@ export const routingService = {
    */
   generateSingleRoute: async (startNode, productId) => {
     try {
-      const response = await fetchJson(`${API_BASE}/routing/generate`, {
+      const response = await fetchJson(apiUrl("/routing/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,7 +101,7 @@ export const routingService = {
    */
   fetchMapNodes: async () => {
     try {
-      const response = await fetchJson(`${API_BASE}/routing/nodes`);
+      const response = await fetchJson(apiUrl("/routing/nodes"));
       return response;
     } catch (error) {
       console.error("❌ Failed to fetch nodes:", error);
@@ -116,7 +116,7 @@ export const routingService = {
    */
   fetchStoreLayout: async () => {
     try {
-      const response = await fetchJson(`${API_BASE}/routing/store-layout`);
+      const response = await fetchJson(apiUrl("/routing/store-layout"));
       return response;
     } catch (error) {
       console.error("❌ Failed to fetch store layout:", error);
@@ -130,7 +130,7 @@ export const routingService = {
    */
   fetchCurrentPosition: async () => {
     try {
-      const response = await fetchJson(`${API_BASE}/position/current`);
+      const response = await fetchJson(apiUrl("/position/current"));
       return response;
     } catch (error) {
       console.error("❌ Failed to fetch current position:", error);
@@ -142,7 +142,7 @@ export const routingService = {
    * Post BLE beacon reading to backend fusion
    */
   postBleReading: async (beaconId, rssi) => {
-    const response = await fetchJson(`${API_BASE}/position/ble`, {
+    const response = await fetchJson(apiUrl("/position/ble"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ beaconId, rssi }),
@@ -155,7 +155,7 @@ export const routingService = {
    * Supports: {x,y,heading} and/or {dx,dy,dHeading}
    */
   postImuUpdate: async (payload) => {
-    const response = await fetchJson(`${API_BASE}/position/imu`, {
+    const response = await fetchJson(apiUrl("/position/imu"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload || {}),
@@ -169,7 +169,7 @@ export const routingService = {
    */
   fetchShoppingProgress: async () => {
     try {
-      const response = await fetchJson(`${API_BASE}/shopping-list/progress`);
+      const response = await fetchJson(apiUrl("/shopping-list/progress"));
       return response;
     } catch (error) {
       console.error("❌ Failed to fetch shopping progress:", error);

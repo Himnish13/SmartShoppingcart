@@ -3,6 +3,7 @@ import "./RoutingPage.css";
 import { useNavigate } from "react-router-dom";
 import { routingService } from "../services/routing.service";
 import { useScan } from "../context/ScanContext";
+import { apiUrl } from "../config/api";
 
 const ROUTE_CACHE_KEY = "smartcart:lastRoute";
 const ROUTE_PRODUCTS_KEY = "smartcart:lastRouteProductIds";
@@ -39,8 +40,8 @@ const RoutingPage = () => {
   const fetchShoppingList = async () => {
     try {
       const [shopData, cartData] = await Promise.all([
-        fetchJson("http://localhost:3500/shopping-list/items"),
-        fetchJson("http://localhost:3500/cart/items").catch(() => [])
+        fetchJson(apiUrl("/shopping-list/items")),
+        fetchJson(apiUrl("/cart/items")).catch(() => [])
       ]);
 
       const cartMap = {};
