@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./ReviewListPage.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useScan } from "../context/ScanContext";
+import { apiUrl } from "../config/api";
 
 const ReviewListPage = () => {
   const [items, setItems] = useState([]);
@@ -63,7 +64,7 @@ const ReviewListPage = () => {
   const submitMissingFeedback = async () => {
     try {
       const promises = missingItems.map(item => 
-        fetch("http://localhost:3500/feedback/add", {
+        fetch(apiUrl("/feedback/add"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -112,7 +113,7 @@ const ReviewListPage = () => {
   // ✅ FETCH FULL LIST (used for Total Items + Suggestions)
   const fetchAllList = async ({ updateVisible = selectedCategory === null } = {}) => {
     try {
-      const data = await fetchJson("http://localhost:3500/shopping-list/items");
+      const data = await fetchJson(apiUrl("/shopping-list/items"));
       setAllItems(data);
       if (updateVisible) setItems(data);
       return data; // needed for suggestions
@@ -126,7 +127,7 @@ const ReviewListPage = () => {
   const fetchListByCategory = async (categoryId) => {
     try {
       const data = await fetchJson(
-        `http://localhost:3500/shopping-list/categoryItems/${categoryId}`
+        apiUrl(`/shopping-list/categoryItems/${categoryId}`)
       );
       setItems(data);
       return data;
@@ -140,7 +141,7 @@ const ReviewListPage = () => {
   // ✅ FETCH ALL PRODUCTS FOR SUGGESTIONS
   const fetchSuggestions = async (shoppingItems) => {
     try {
-      const allProducts = await fetchJson("http://localhost:3500/products");
+      const allProducts = await fetchJson(apiUrl("/products"));
 
       // ❌ remove already added items
       const ids = shoppingItems.map((i) => i.product_id);
@@ -165,7 +166,7 @@ const ReviewListPage = () => {
       
       // Fetch all products for search autocomplete
       try {
-        const allProds = await fetchJson("http://localhost:3500/products");
+        const allProds = await fetchJson(apiUrl("/products"));
         setAllProducts(allProds);
       } catch (err) {
         console.log(err);
@@ -173,14 +174,14 @@ const ReviewListPage = () => {
     };
     load();
 
-    fetchJson("http://localhost:3500/products/categories")
+    fetchJson(apiUrl("/products/categories"))
       .then((data) => setCategories(Array.isArray(data) ? data : []))
       .catch((err) => console.log(err));
   }, []);
 
   // ❌ REMOVE
   const removeItem = async (id) => {
-    await fetch("http://localhost:3500/shopping-list/remove", {
+    await fetch(apiUrl("/shopping-list/remove"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id }),
@@ -195,7 +196,7 @@ const ReviewListPage = () => {
 
   // ➕ INCREASE
   const increaseQty = async (id, qty) => {
-    const res = await fetch("http://localhost:3500/shopping-list/update", {
+    const res = await fetch(apiUrl("/shopping-list/update"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id, quantity: qty + 1 }),
@@ -221,7 +222,7 @@ const ReviewListPage = () => {
       return;
     }
 
-    await fetch("http://localhost:3500/shopping-list/update", {
+    await fetch(apiUrl("/shopping-list/update"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ product_id: id, quantity: qty - 1 }),
@@ -236,7 +237,7 @@ const ReviewListPage = () => {
 
   // ➕ ADD FROM SUGGESTIONS
   const addSuggestion = async (item) => {
-    const res = await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch(apiUrl("/shopping-list/add"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -295,7 +296,7 @@ const ReviewListPage = () => {
   };
 
   const handleAddSearchResult = async (product) => {
-    const res = await fetch("http://localhost:3500/shopping-list/add", {
+    const res = await fetch(apiUrl("/shopping-list/add"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -321,7 +322,7 @@ const ReviewListPage = () => {
 
   const handleSelectAmbiguous = async (enteredName, product, qty) => {
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/add", {
+      const res = await fetch(apiUrl("/shopping-list/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

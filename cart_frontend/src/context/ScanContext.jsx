@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import { apiUrl, scannerApiUrl } from "../config/api";
 
 const ScanContext = createContext();
 
@@ -13,6 +14,7 @@ export const ScanProvider = ({ children }) => {
   const [totalItems, setTotalItems] = useState(0);
   const [scanType, setScanType] = useState("add");
   const [scanStatus, setScanStatus] = useState("idle"); // "idle", "waiting", "success"
+  const scannerEnabled = import.meta.env.VITE_ENABLE_LOCAL_SCANNER === "true";
 
   // Shopping-list out-of-stock watcher (global)
   const SHOP_OOS_SKIPPED_KEY = "smartcart:shoplist:oosSkipped";
@@ -77,7 +79,7 @@ export const ScanProvider = ({ children }) => {
     try {
       await Promise.all(
         ids.map((id) =>
-          fetch("http://localhost:3500/shopping-list/remove", {
+          fetch(apiUrl("/shopping-list/remove"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ product_id: id }),
@@ -92,12 +94,14 @@ export const ScanProvider = ({ children }) => {
 
   const fetchShoppingListAndProducts = async () => {
     const [shopRes, prodRes] = await Promise.all([
-      fetch("http://localhost:3500/shopping-list/items").catch(() => null),
-      fetch("http://localhost:3500/products").catch(() => null),
+      fetch(apiUrl("/shopping-list/items")).catch(() => null),
+      fetch(apiUrl("/products")).catch(() => null),
     ]);
 
-    const shop = shopRes ? await shopRes.json().catch(() => []) : [];
-    const prods = prodRes ? await prodRes.json().catch(() => []) : [];
+    const shop =
+      shopRes && shopRes.ok ? await shopRes.json().catch(() => []) : [];
+    const prods =
+      prodRes && prodRes.ok ? await prodRes.json().catch(() => []) : [];
 
     const productsById = new Map();
     (Array.isArray(prods) ? prods : []).forEach((p) => {
@@ -140,19 +144,24 @@ export const ScanProvider = ({ children }) => {
   // Fetch Cart Items
   const fetchCartItems = async () => {
     try {
-      const res = await fetch("http://localhost:3500/cart/items");
+      const res = await fetch(apiUrl("/cart/items"));
+      if (!res.ok) {
+        throw new Error(`cart/items failed: ${res.status}`);
+      }
+
       const data = await res.json();
+      const items = Array.isArray(data) ? data : [];
       
       let totalCost = 0;
       let totalQty = 0;
-      data.forEach(it => {
+      items.forEach((it) => {
         totalCost += (it.price_at_scan || 0) * (it.quantity || 0);
         totalQty += (it.quantity || 0);
       });
       
       setCartTotal(totalCost);
       setTotalItems(totalQty);
-      return data;
+      return items;
     } catch (e) {
       console.log("Cart fetch error", e);
       setCartTotal(0);
@@ -172,13 +181,13 @@ export const ScanProvider = ({ children }) => {
       const existingItem = currentCartItems.find((c) => String(c.barcode) === String(code));
 
       if (type === "add") {
-        await fetch("http://localhost:3500/cart/add", {
+        await fetch(apiUrl("/cart/add"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ barcode: code, quantity: 1 }),
         });
       } else if (type === "remove") {
-        await fetch("http://localhost:3500/cart/remove", {
+        await fetch(apiUrl("/cart/remove"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ barcode: code, quantity: 1 }),
@@ -215,7 +224,7 @@ export const ScanProvider = ({ children }) => {
   const popupIncrease = async () => {
     if (!scannedItem) return;
     try {
-      await fetch("http://localhost:3500/cart/add", {
+      await fetch(apiUrl("/cart/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode: scannedItem.barcode, quantity: 1 }),
@@ -229,7 +238,7 @@ export const ScanProvider = ({ children }) => {
   const popupDecrease = async () => {
     if (!scannedItem) return;
     try {
-      await fetch("http://localhost:3500/cart/remove", {
+      await fetch(apiUrl("/cart/remove"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ barcode: scannedItem.barcode, quantity: 1 }),
@@ -250,9 +259,11 @@ export const ScanProvider = ({ children }) => {
 
   // Poll for hardware scanner events
   useEffect(() => {
+    if (!scannerEnabled) return undefined;
+
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5200/event");
+        const res = await fetch(scannerApiUrl("/event"));
         const data = await res.json();
 
         if (data.status === "waiting_for_scan") {
@@ -288,7 +299,7 @@ export const ScanProvider = ({ children }) => {
     }, 1500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [scannerEnabled]);
 
   // Initial fetch to set cart totals globally
   useEffect(() => {

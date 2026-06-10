@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./CreateListPage.css";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../config/api";
 
 const CreateListPage = () => {
   const [products, setProducts] = useState([]);
@@ -32,7 +33,7 @@ const CreateListPage = () => {
 
   // ✅ FETCH ALL PRODUCTS
   const fetchAllProducts = () => {
-    fetch("http://localhost:3500/products")
+    fetch(apiUrl("/products"))
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.log(err));
@@ -40,7 +41,7 @@ const CreateListPage = () => {
 
   // ✅ FETCH CATEGORIES + PRELOAD EXISTING SHOPPING LIST
   useEffect(() => {
-    fetch("http://localhost:3500/products/categories")
+    fetch(apiUrl("/products/categories"))
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.log(err));
@@ -48,7 +49,7 @@ const CreateListPage = () => {
     fetchAllProducts();
 
     // Preload any items already in shopping-list (e.g. imported via mobile QR)
-    fetch("http://localhost:3500/shopping-list/items")
+    fetch(apiUrl("/shopping-list/items"))
       .then((res) => res.json())
       .then((items) => {
         if (!Array.isArray(items) || items.length === 0) return;
@@ -72,7 +73,7 @@ const CreateListPage = () => {
       fetchAllProducts();
       setSelectedCategory(null);
     } else {
-      fetch(`http://localhost:3500/products/category/${id}`)
+      fetch(apiUrl(`/products/category/${id}`))
         .then((res) => res.json())
         .then((data) => setProducts(data))
         .catch((err) => console.log(err));
@@ -90,7 +91,7 @@ const CreateListPage = () => {
     const newQty = 1;
 
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/add", {
+      const res = await fetch(apiUrl("/shopping-list/add"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,7 +125,7 @@ const CreateListPage = () => {
     const newQty = cart[id].qty + 1;
 
     try {
-      const res = await fetch("http://localhost:3500/shopping-list/update", {
+      const res = await fetch(apiUrl("/shopping-list/update"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -155,7 +156,7 @@ const CreateListPage = () => {
 
     try {
       if (newQty === 0) {
-        await fetch("http://localhost:3500/shopping-list/remove", {
+        await fetch(apiUrl("/shopping-list/remove"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ product_id: id }),
@@ -167,7 +168,7 @@ const CreateListPage = () => {
           return updated;
         });
       } else {
-        await fetch("http://localhost:3500/shopping-list/update", {
+        await fetch(apiUrl("/shopping-list/update"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -192,7 +193,7 @@ const CreateListPage = () => {
   // ✅ IMPORT PASTE
   const importPaste = async () => {
     try {
-      const res1 = await fetch("http://localhost:3500/shopping-list/paste", {
+      const res1 = await fetch(apiUrl("/shopping-list/paste"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: pasteText }),
@@ -200,7 +201,7 @@ const CreateListPage = () => {
       const result = await res1.json();
 
       // refresh shopping-list from server
-      const res2 = await fetch("http://localhost:3500/shopping-list/items");
+      const res2 = await fetch(apiUrl("/shopping-list/items"));
       const data = await res2.json();
 
       const newCart = {};

@@ -14,14 +14,24 @@ async function pullServerDataToCart() {
   pulling = true;
 
   try {
+    console.log("SERVER_URL =", SERVER_URL);
+
     const response = await axios.get(`${SERVER_URL}/sync/full`);
+
+    console.log(
+      "SYNC RESPONSE =",
+      JSON.stringify(response.data, null, 2)
+    );
+
     console.log(
       "Auto server-to-cart sync:",
-      response.data.counts || response.data.message
+      response.data?.counts ||
+      response.data?.message ||
+      response.data
     );
   } catch (err) {
     console.log(
-      "Auto server-to-cart sync failed:",
+      "SYNC ERROR =",
       err.response?.data || err.message
     );
   } finally {
