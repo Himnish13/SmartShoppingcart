@@ -2,8 +2,13 @@ const axios = require("axios");
 const syncService = require("./sync.service");
 
 const SERVER_URL = process.env.SERVER_URL;
-const SERVER_TO_CART_SYNC_MS = Number(process.env.SERVER_TO_CART_SYNC_MS || 60000);
-const CART_TO_SERVER_SYNC_MS = Number(process.env.CART_TO_SERVER_SYNC_MS || 10000);
+const SERVER_TO_CART_SYNC_MS = Number(
+  process.env.SERVER_TO_CART_SYNC_MS || 300000
+); // 5 min
+
+const CART_TO_SERVER_SYNC_MS = Number(
+  process.env.CART_TO_SERVER_SYNC_MS || 60000
+); // 1 min
 
 let pulling = false;
 let pushing = false;
@@ -14,24 +19,18 @@ async function pullServerDataToCart() {
   pulling = true;
 
   try {
-    console.log("SERVER_URL =", SERVER_URL);
-
     const response = await axios.get(`${SERVER_URL}/sync/full`);
 
-    console.log(
-      "SYNC RESPONSE =",
-      JSON.stringify(response.data, null, 2)
-    );
-
-    console.log(
-      "Auto server-to-cart sync:",
-      response.data?.counts ||
-      response.data?.message ||
-      response.data
-    );
+    console.log("Server → Cart sync successful", {
+      products: response.data?.products?.length || 0,
+      offers: response.data?.offers?.length || 0,
+      crowd: response.data?.crowd?.length || 0,
+      nodes: response.data?.nodes?.length || 0,
+      edges: response.data?.edges?.length || 0,
+    });
   } catch (err) {
-    console.log(
-      "SYNC ERROR =",
+    console.error(
+      "Server → Cart sync failed:",
       err.response?.data || err.message
     );
   } finally {
@@ -77,21 +76,27 @@ async function pushCartDataToServer() {
       lastPositionNode = nodeId;
     }
 
-    console.log("Auto cart-to-server sync:", {
+    console.log("Cart → Server sync successful", {
       shoppingList:
         results.shoppingList.count ??
-        results.shoppingList.warning,
+        results.shoppingList.warning ??
+        0,
+
       cartItems:
         results.cartItems.count ??
-        results.cartItems.warning,
+        results.cartItems.warning ??
+        0,
+
       feedback:
         results.feedback.count ??
-        results.feedback.warning,
+        results.feedback.warning ??
+        0,
+
       position: results.position?.node_id || null,
     });
   } catch (err) {
-    console.log(
-      "Auto cart-to-server sync failed:",
+    console.error(
+      "Cart → Server sync failed:",
       err.response?.data || err.message
     );
   } finally {
