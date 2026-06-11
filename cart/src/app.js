@@ -1,7 +1,11 @@
 const path = require("path");
+
 require("dotenv").config({
   path: path.join(__dirname, "..", ".env"),
 });
+
+console.log("=== APP STARTING ===");
+console.log("PORT env =", process.env.PORT);
 
 const express = require("express");
 const cors = require("cors");
@@ -22,21 +26,21 @@ const {
   getImageCacheDir,
 } = require("./services/productImage.service");
 
-initializeTables()
-  .then(() => console.log("Database initialized"))
-  .catch((err) => console.error("Database initialization failed:", err));
+try {
+  initializeTables();
+  console.log("Database initialized");
+} catch (err) {
+  console.error("Database initialization failed:", err);
+}
 
-clearImageCacheDir();
+try {
+  clearImageCacheDir();
+  console.log("Image cache cleared");
+} catch (err) {
+  console.error("Image cache clear failed:", err);
+}
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      process.env.FRONTEND_URL,
-    ].filter(Boolean),
-    credentials: true,
-  })
-);
+app.use(cors());
 
 app.use(express.json());
 app.use("/product-images", express.static(getImageCacheDir()));
@@ -52,8 +56,6 @@ const offersRoutes = require("./routes/offers.routes");
 const mobileRoutes = require("./routes/mobile.routes");
 const mobileController = require("./controllers/mobile.controller");
 const feedbackRoutes = require("./routes/feedback.routes");
-const { startAutoSync } = require("./services/autoSync.service");
-const mapService = require("./services/map.services");
 
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
@@ -70,9 +72,15 @@ app.get("/system/ip", mobileController.getLocalIp);
 
 app.get("/", (req, res) => {
   res.json({
-    status: "Server Running",
+    success: true,
+    message: "Server Running",
   });
 });
+
+// Temporarily disable these for debugging
+/*
+const { startAutoSync } = require("./services/autoSync.service");
+const mapService = require("./services/map.services");
 
 mapService.loadNodes((err) => {
   if (err) {
@@ -81,9 +89,11 @@ mapService.loadNodes((err) => {
     console.log("✅ Nodes ready");
   }
 });
+*/
 
 app.use((err, req, res, next) => {
   console.error("Express Error:", err);
+
   res.status(500).json({
     success: false,
     error: err.message,
@@ -91,9 +101,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3500;
-const HOST = "0.0.0.0";
 
-app.listen(PORT, HOST, () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  startAutoSync();
 });
