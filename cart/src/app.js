@@ -4,15 +4,40 @@ require("dotenv").config({
 });
 
 const express = require("express");
-const app = express();
 const cors = require("cors");
-const initializeTables = require("./db/models");
-const { clearImageCacheDir, getImageCacheDir } = require("./services/productImage.service");
 
-initializeTables();
+const app = express();
+
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err);
+});
+
+const initializeTables = require("./db/models");
+const {
+  clearImageCacheDir,
+  getImageCacheDir,
+} = require("./services/productImage.service");
+
+initializeTables()
+  .then(() => console.log("Database initialized"))
+  .catch((err) => console.error("Database initialization failed:", err));
+
 clearImageCacheDir();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use("/product-images", express.static(getImageCacheDir()));
 
@@ -28,8 +53,8 @@ const mobileRoutes = require("./routes/mobile.routes");
 const mobileController = require("./controllers/mobile.controller");
 const feedbackRoutes = require("./routes/feedback.routes");
 const { startAutoSync } = require("./services/autoSync.service");
-// const { initPositionSystem } = require("./services/position.system");
 const mapService = require("./services/map.services");
+
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/shopping-list", shoppingListRoutes);
@@ -40,19 +65,35 @@ app.use("/position", positionRoutes);
 app.use("/offers", offersRoutes);
 app.use("/mobile", mobileRoutes);
 app.use("/feedback", feedbackRoutes);
+
 app.get("/system/ip", mobileController.getLocalIp);
-mapService.loadNodes((err) => {
 
-  if (err) console.error("Node load error");
-  else console.log("✅ Nodes ready");
-
+app.get("/", (req, res) => {
+  res.json({
+    status: "Server Running",
+  });
 });
 
-// initPositionSystem();
-const PORT = Number(3500);
-const HOST = "0.0.0.0"; // listen on all network interfaces (hotspot, LAN, etc.)
+mapService.loadNodes((err) => {
+  if (err) {
+    console.error("Node load error:", err);
+  } else {
+    console.log("✅ Nodes ready");
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.error("Express Error:", err);
+  res.status(500).json({
+    success: false,
+    error: err.message,
+  });
+});
+
+const PORT = process.env.PORT || 3500;
+const HOST = "0.0.0.0";
+
 app.listen(PORT, HOST, () => {
-    console.log(`Server running at http://${HOST}:${PORT}`);
-    console.log(`Mobile page accessible at http://<device-hotspot-ip>:${PORT}/mobile`);
-    startAutoSync();
+  console.log(`Server running on port ${PORT}`);
+  startAutoSync();
 });
