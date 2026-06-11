@@ -3,13 +3,14 @@ const db = require("../config/sqlite");
 const syncService = require("../services/sync.service");
 const { attachLocalImageUrls } = require("../services/productImage.service");
 
-// Use environment variable or fallback to localhost
-const SERVER_URL = process.env.SERVER_URL || "http://10.76.31.249:3200";
+const SERVER_URL = process.env.SERVER_URL;
+
+if (!SERVER_URL) {
+    throw new Error("SERVER_URL not configured");
+}
 
 exports.fullSync = async (req, res) => {
-
     try {
-
         const response = await axios.get(`${SERVER_URL}/sync/full`);
 
         const {
@@ -23,6 +24,16 @@ exports.fullSync = async (req, res) => {
         } = response.data;
 
         const productsWithLocalImages = await attachLocalImageUrls(products);
+
+        console.log("SYNC DATA COUNTS:", {
+            products: products.length,
+            categories: categories.length,
+            nodes: nodes.length,
+            edges: edges.length,
+            beacons: beacons.length,
+            offers: offers.length,
+            crowd: crowd.length
+        });
 
         db.serialize(() => {
 
@@ -38,77 +49,148 @@ exports.fullSync = async (req, res) => {
 
             db.run("PRAGMA foreign_keys = ON");
 
-            nodes.forEach(n => {
+            nodes.forEach((n) => {
                 db.run(
                     `INSERT INTO nodes (node_id, x, y)
                      VALUES (?, ?, ?)`,
-                    [n.node_id, n.x_coordinate ?? n.x, n.y_coordinate ?? n.y]
+                    [n.node_id, n.x_coordinate ?? n.x, n.y_coordinate ?? n.y],
+                    (err) => {
+                        if (err) {
+                            console.error("NODE INSERT ERROR:", err.message);
+                        }
+                    }
                 );
             });
 
-            categories.forEach(c => {
+            categories.forEach((c) => {
                 db.run(
                     `INSERT INTO category (category_id, category_name, node_id)
                      VALUES (?, ?, ?)`,
-                    [c.category_id, c.category_name, c.node_id]
+                    [c.category_id, c.category_name, c.node_id],
+                    (err) => {
+                        if (err) {
+                            console.error("CATEGORY INSERT ERROR:", err.message);
+                        }
+                    }
                 );
             });
 
-            productsWithLocalImages.forEach(p => {
-                db.run(
-                    `INSERT INTO products 
-                     (product_id, barcode, image_url, name, price, stock, category_id, node_id)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [
-                        p.product_id,
-                        p.barcode,
-                        p.image_url ?? null,
-                        p.name,
-                        p.price,
-                        p.stock ?? 20,
-                        p.category_id ?? null,
-                        p.node_id ?? null
-                    ]
-                );
-            });
+            console.log("Products received from server:", productsWithLocalImages.length);
 
-            edges.forEach(e => {
+productsWithLocalImages.forEach((p) => {
+  db.run(
+    `INSERT INTO products
+     (product_id, barcode, image_url, name, price, stock, category_id, node_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      p.product_id,
+      p.barcode,
+      p.image_url ?? null,
+      p.name,
+      p.price,
+      p.stock ?? 20,
+      p.category_id ?? null,
+      p.node_id ?? null
+    ],
+    (err) => {
+      if (err) {
+        console.error("PRODUCT INSERT ERROR:", err.message);
+        console.error("PRODUCT DATA:", {
+          product_id: p.product_id,
+          category_id: p.category_id,
+          node_id: p.node_id
+        });
+      }
+    }
+  );
+});
+
+setTimeout(() => {
+  db.get(
+    "SELECT COUNT(*) as cnt FROM products",
+    [],
+    (err, row) => {
+      if (err) {
+        console.error("COUNT ERROR:", err.message);
+      } else {
+        console.log("PRODUCT COUNT =", row.cnt);
+      }
+    }
+  );
+}, 3000);
+
+            edges.forEach((e) => {
                 db.run(
                     `INSERT INTO edges (from_node, to_node, distance)
                      VALUES (?, ?, ?)`,
-                    [e.from_node, e.to_node, e.distance]
+                    [e.from_node, e.to_node, e.distance],
+                    (err) => {
+                        if (err) {
+                            console.error("EDGE INSERT ERROR:", err.message);
+                        }
+                    }
                 );
             });
 
-            beacons.forEach(b => {
+            beacons.forEach((b) => {
                 db.run(
                     `INSERT INTO beacons (beacon_id, node_id)
                      VALUES (?, ?)`,
-                    [b.beacon_id, b.node_id]
+                    [b.beacon_id, b.node_id],
+                    (err) => {
+                        if (err) {
+                            console.error("BEACON INSERT ERROR:", err.message);
+                        }
+                    }
                 );
             });
 
-            offers.forEach(o => {
+            offers.forEach((o) => {
                 db.run(
                     `INSERT INTO offers (product_id, discount)
                      VALUES (?, ?)`,
                     [
                         o.product_id,
                         o.discount_percent ?? o.discount
-                    ]
+                    ],
+                    (err) => {
+                        if (err) {
+                            console.error("OFFER INSERT ERROR:", err.message);
+                        }
+                    }
                 );
             });
 
-            crowd.forEach(c => {
+            crowd.forEach((c) => {
                 db.run(
                     `INSERT INTO crowd (node_id, density)
                      VALUES (?, ?)`,
-                    [c.node_id, c.crowd_level ?? c.density]
+                    [c.node_id, c.crowd_level ?? c.density],
+                    (err) => {
+                        if (err) {
+                            console.error("CROWD INSERT ERROR:", err.message);
+                        }
+                    }
                 );
             });
 
+            db.get(
+                "SELECT COUNT(*) as cnt FROM products",
+                [],
+                (err, row) => {
+                    if (err) {
+                        console.error("COUNT ERROR:", err.message);
+                    } else {
+                        console.log(
+                            "Products currently in SQLite:",
+                            row.cnt
+                        );
+                    }
+                }
+            );
+
             db.run(
-                `UPDATE sync_meta 
+                `UPDATE sync_meta
                  SET last_updated_at = datetime('now')
                  WHERE table_name = 'products'`
             );
@@ -128,8 +210,11 @@ exports.fullSync = async (req, res) => {
         });
 
     } catch (err) {
-        console.log(err);
-        return res.status(500).json({ message: "Sync failed" });
+        console.error("FULL SYNC ERROR:", err);
+        return res.status(500).json({
+            message: "Sync failed",
+            error: err.message
+        });
     }
 };
 

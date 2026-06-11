@@ -141,7 +141,7 @@ function initializeTables() {
     console.log("Cart DB schema ready; data will come from server sync");
   });
 
-  clearCartData(db);
+  // clearCartData(db);
 
   return db;
 }

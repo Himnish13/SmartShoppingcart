@@ -49,7 +49,7 @@ mapService.loadNodes((err) => {
 });
 
 // initPositionSystem();
-const PORT = Number(process.env.PORT || 3500);
+const PORT = Number(3500);
 const HOST = "0.0.0.0"; // listen on all network interfaces (hotspot, LAN, etc.)
 app.listen(PORT, HOST, () => {
     console.log(`Server running at http://${HOST}:${PORT}`);
