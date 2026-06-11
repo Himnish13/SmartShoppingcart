@@ -27,12 +27,20 @@ const {
 } = require("./services/productImage.service");
 
 try {
-  initializeTables();
+  const db = initializeTables();
+
+  db.get("SELECT COUNT(*) as cnt FROM products", [], (err, row) => {
+    if (err) {
+      console.error("Count error:", err);
+    } else {
+      console.log("Products count =", row?.cnt);
+    }
+  });
+
   console.log("Database initialized");
 } catch (err) {
   console.error("Database initialization failed:", err);
 }
-
 try {
   clearImageCacheDir();
   console.log("Image cache cleared");
