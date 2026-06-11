@@ -26,17 +26,10 @@ const {
   getImageCacheDir,
 } = require("./services/productImage.service");
 
+let db;
+
 try {
-  const db = initializeTables();
-
-  db.get("SELECT COUNT(*) as cnt FROM products", [], (err, row) => {
-    if (err) {
-      console.error("Count error:", err);
-    } else {
-      console.log("Products count =", row?.cnt);
-    }
-  });
-
+  db = initializeTables();
   console.log("Database initialized");
 } catch (err) {
   console.error("Database initialization failed:", err);
@@ -169,12 +162,27 @@ try {
 
 try {
   const { startAutoSync } = require("./services/autoSync.service");
+
   startAutoSync();
   console.log("✓ AutoSync started");
+
+  setTimeout(() => {
+    db.get(
+      "SELECT COUNT(*) as cnt FROM products",
+      [],
+      (err, row) => {
+        if (err) {
+          console.error("Count error:", err);
+        } else {
+          console.log("Products after sync =", row?.cnt);
+        }
+      }
+    );
+  }, 15000); // wait 15 seconds for sync
+
 } catch (err) {
   console.error("✗ AutoSync failed:", err);
 }
-
 app.use((err, req, res, next) => {
   console.error("Express Error:", err);
 
