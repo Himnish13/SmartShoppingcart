@@ -5,6 +5,73 @@ let ambiguousItems = [];
 const db = require("../config/sqlite");
 const os = require("os");
 
+function getLocalNetworkIp() {
+  const interfaces = os.networkInterfaces();
+
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+
+  return "localhost";
+}
+
+function isLocalHostName(hostname) {
+  const value = String(hostname || "").toLowerCase();
+  return (
+    value === "localhost" ||
+    value === "127.0.0.1" ||
+    value === "::1" ||
+    value === "[::1]"
+  );
+}
+
+function getRequestProtocol(req) {
+  const forwardedProto = req.get("x-forwarded-proto");
+  if (forwardedProto) {
+    return forwardedProto.split(",")[0].trim();
+  }
+  return req.protocol || "http";
+}
+
+function getRequestHost(req) {
+  const forwardedHost = req.get("x-forwarded-host");
+  if (forwardedHost) {
+    return forwardedHost.split(",")[0].trim();
+  }
+  return req.get("host") || "";
+}
+
+function getMobileBaseUrl(req) {
+  const explicitPublicBaseUrl = String(process.env.CART_PUBLIC_BASE_URL || "").trim();
+  if (explicitPublicBaseUrl) {
+    return explicitPublicBaseUrl.replace(/\/+$/, "");
+  }
+
+  const protocol = getRequestProtocol(req);
+  const requestHost = getRequestHost(req);
+
+  if (requestHost) {
+    const [hostname, port] = requestHost.split(":");
+    if (!isLocalHostName(hostname)) {
+      return `${protocol}://${requestHost}`;
+    }
+
+    const localIp = getLocalNetworkIp();
+    if (localIp && localIp !== "localhost") {
+      const resolvedPort = port || String(process.env.PORT || 3500);
+      return `${protocol}://${localIp}:${resolvedPort}`;
+    }
+  }
+
+  const fallbackIp = getLocalNetworkIp();
+  const fallbackPort = String(process.env.PORT || 3500);
+  return `${protocol}://${fallbackIp}:${fallbackPort}`;
+}
+
 // GET /mobile/status — cart frontend polls this
 exports.getStatus = (req, res) => {
   res.json({ status: mobileStatus, missingItems, ambiguousItems });
@@ -290,18 +357,9 @@ Eggs"></textarea>
 
 // GET /system/ip — return the local network IP address
 exports.getLocalIp = (req, res) => {
-  const interfaces = os.networkInterfaces();
-  let localIp = "localhost";
-
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === "IPv4" && !iface.internal) {
-        localIp = iface.address;
-        break;
-      }
-    }
-    if (localIp !== "localhost") break;
-  }
-
-  res.json({ ip: localIp });
+  const localIp = getLocalNetworkIp();
+  res.json({
+    ip: localIp,
+    mobileUrl: `${getMobileBaseUrl(req)}/mobile`
+  });
 };
