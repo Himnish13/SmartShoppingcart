@@ -36,9 +36,14 @@ const ListChoicePage = () => {
         const res = await fetch(apiUrl("/system/ip"));
         if (!res.ok) throw new Error("system/ip failed");
         const data = await res.json();
-        const ip = String(data?.ip || "").trim();
+        const resolvedMobileUrl = String(data?.mobileUrl || "").trim();
 
-        // Don't fall back to localhost: the QR is scanned on the PHONE.
+        if (resolvedMobileUrl) {
+          if (alive) setMobileUrl(resolvedMobileUrl);
+          return;
+        }
+
+        const ip = String(data?.ip || "").trim();
         if (!ip || ip === "localhost" || ip === "127.0.0.1") {
           throw new Error("invalid ip");
         }

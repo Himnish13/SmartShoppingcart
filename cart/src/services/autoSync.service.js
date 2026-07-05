@@ -1,5 +1,6 @@
 const axios = require("axios");
 const syncService = require("./sync.service");
+const { attachLocalImageUrls } = require("./productImage.service");
 
 const SERVER_URL = process.env.SERVER_URL;
 const SERVER_TO_CART_SYNC_MS = Number(
@@ -31,6 +32,8 @@ async function pullServerDataToCart() {
       offers = [],
       crowd = []
     } = response.data;
+
+    const productsWithLocalImages = await attachLocalImageUrls(products);
 
     console.log("Server → Cart sync successful", {
       products: products.length,
@@ -68,7 +71,7 @@ async function pullServerDataToCart() {
         );
       });
 
-      products.forEach((p) => {
+      productsWithLocalImages.forEach((p) => {
         db.run(
           `INSERT INTO products
           (product_id, barcode, image_url, name, price, stock, category_id, node_id)

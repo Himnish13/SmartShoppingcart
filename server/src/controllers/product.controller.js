@@ -1,5 +1,5 @@
 const productService = require("../services/product.service");
-
+const cloudinary = require("../config/cloudinary");
 async function getProductByBarcode(req, res) {
   try {
     const { barcode } = req.params;
@@ -55,6 +55,14 @@ async function searchProducts(req, res) {
 
 async function addProduct(req, res) {
   try {
+      if (req.file) {
+      const uploaded = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products"
+      });
+
+      req.body.images = uploaded.secure_url;
+    }
+
     const result = await productService.addProduct(req.body);
     res.json({ message: "Product added", id: result.insertId });
   } catch (err) {
@@ -64,6 +72,13 @@ async function addProduct(req, res) {
 
 async function updateProduct(req, res) {
   try {
+    if (req.file) {
+      const uploaded = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products"
+      });
+
+      req.body.images = uploaded.secure_url;
+    }
     await productService.updateProduct(req.params.id, req.body);
     res.json({ message: "Product updated" });
   } catch (err) {
